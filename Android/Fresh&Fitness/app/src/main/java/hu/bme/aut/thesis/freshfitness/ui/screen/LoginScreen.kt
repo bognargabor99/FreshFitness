@@ -26,12 +26,16 @@ import androidx.compose.ui.unit.sp
 import hu.bme.aut.thesis.freshfitness.R
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    onSignIn: () -> Unit
+) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(8.dp),
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp),
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -42,7 +46,9 @@ fun LoginScreen() {
             password = password,
             onPasswordChange = { password = it }
         )
-        LoginFooter()
+        LoginFooter(
+            onSignInClick = onSignIn
+        )
     }
 }
 

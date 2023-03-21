@@ -20,7 +20,11 @@ import hu.bme.aut.thesis.freshfitness.R
 @Composable
 fun ProfileScreen() {
     Column(
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .wrapContentSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ProfileImage()
         ProfileInfo()

@@ -7,4 +7,9 @@
     <string name="dont_have_account">Don\'t have an account? Click here</string>
     <string name="show_less">Show less</string>
     <string name="show_more">Show more</string>
+    <string name="bottom_navigation_profile">Profile</string>
+    <string name="progress">Progress</string>
+    <string name="social">Social</string>
+    <string name="workout">Workout</string>
+    <string name="bottom_navigation_home">home</string>
 </resources>
