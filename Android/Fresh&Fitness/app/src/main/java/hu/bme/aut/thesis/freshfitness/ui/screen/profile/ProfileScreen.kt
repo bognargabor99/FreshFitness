@@ -1,11 +1,9 @@
-package hu.bme.aut.thesis.freshfitness.ui.screen
+package hu.bme.aut.thesis.freshfitness.ui.screen.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -76,27 +74,5 @@ private fun ProfileInfo() {
             modifier = Modifier.padding(3.dp),
             style = MaterialTheme.typography.titleSmall
         )
-    }
-}
-
-@Composable
-private fun Greeting(name: String) {
-    var expanded by remember { mutableStateOf(false) }
-    Surface(
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
-    ) {
-        Row(modifier = Modifier.padding(24.dp)) {
-            Icon(imageVector = Icons.Filled.FitnessCenter, contentDescription = null)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Hello, ")
-                Text(text = name)
-            }
-            ElevatedButton(
-                onClick = { expanded = !expanded }
-            ) {
-                Text(if (expanded) "Show less" else "Show more")
-            }
-        }
     }
 }

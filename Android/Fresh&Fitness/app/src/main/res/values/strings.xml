@@ -11,5 +11,7 @@
     <string name="progress">Progress</string>
     <string name="social">Social</string>
     <string name="workout">Workout</string>
-    <string name="bottom_navigation_home">home</string>
+    <string name="bottom_navigation_home">Home</string>
+    <string name="under_construction">Page is under construction</string>
+    <string name="thanks_for_understanding">Thanks for your understanding!</string>
 </resources>

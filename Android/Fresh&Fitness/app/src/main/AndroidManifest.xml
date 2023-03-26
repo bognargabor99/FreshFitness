@@ -12,7 +12,7 @@
         android:theme="@style/Theme.FreshFitness"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".FreshFitnessActivity"
             android:exported="true"
             android:theme="@style/Theme.FreshFitness">
             <intent-filter>

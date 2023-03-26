@@ -1,4 +1,4 @@
-package hu.bme.aut.thesis.freshfitness.ui.screen
+package hu.bme.aut.thesis.freshfitness.ui.screen.login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
