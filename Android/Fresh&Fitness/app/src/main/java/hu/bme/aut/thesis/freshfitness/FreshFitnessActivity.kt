@@ -16,7 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import hu.bme.aut.thesis.freshfitness.navigation.*
-import hu.bme.aut.thesis.freshfitness.ui.screen.login.LoginScreen
+import hu.bme.aut.thesis.freshfitness.ui.screen.auth.AuthenticationScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.profile.ProfileScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.home.HomeScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.progress.ProgressScreen
@@ -41,11 +41,11 @@ fun FreshFitnessApp() {
         // Fetch your currentDestination:
         val currentDestination = currentBackStack?.destination
 
-        val currentScreen = freshFitnessScreens.find { it.route == currentDestination?.route } ?: Home
+        val currentScreen = freshFitnessBottomTabs.find { it.route == currentDestination?.route } ?: Home
 
         Scaffold(
             bottomBar = { FitnessBottomNavigation(
-                allScreens = freshFitnessScreens,
+                allScreens = freshFitnessBottomTabs,
                 currentScreen = currentScreen,
                 onTabSelected = { newScreen ->
                     navController.navigateSingleTopTo(newScreen.route)
@@ -57,9 +57,14 @@ fun FreshFitnessApp() {
                 startDestination = Home.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(route = Login.route) {
-                    LoginScreen(
-                        onSignIn = { }
+                composable(route = Authentication.route) {
+                    AuthenticationScreen(
+                        onSignIn = {
+                            navController.navigateSingleTopTo(Profile.route)
+                        },
+                        onSignUp = {
+                            navController.navigateSingleTopTo(Profile.route)
+                        }
                     )
                 }
                 composable(route = Profile.route) {

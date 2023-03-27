@@ -1,9 +1,10 @@
-package hu.bme.aut.thesis.freshfitness.ui.screen.login
+package hu.bme.aut.thesis.freshfitness.ui.screen.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
@@ -26,42 +27,47 @@ import androidx.compose.ui.unit.sp
 import hu.bme.aut.thesis.freshfitness.R
 
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     modifier: Modifier = Modifier,
+    onSignUp: () -> Unit,
     onSignIn: () -> Unit
 ) {
+    var username by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(8.dp),
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        LoginHeader()
-        LoginInputFields(
+        RegisterHeader()
+        RegisterInputFields(
             email = email,
             onEmailChange = { email = it },
+            username = username,
+            onUsernameChange = { username = it },
             password = password,
             onPasswordChange = { password = it }
         )
-        LoginFooter(
+        RegisterFooter(
+            onSignUpClick = onSignUp,
             onSignInClick = onSignIn
         )
     }
 }
 
 @Composable
-fun LoginHeader(modifier: Modifier = Modifier) {
+fun RegisterHeader(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Text(
-            text = "Welcome",
+            text = stringResource(R.string.welcome),
             fontSize = 36.sp,
             fontWeight = FontWeight.ExtraBold
         )
         Text(
-            text = "Sign in to continue",
+            text = stringResource(R.string.sign_up_to_continue),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold
         )
@@ -69,14 +75,25 @@ fun LoginHeader(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LoginInputFields(
+fun RegisterInputFields(
     modifier: Modifier = Modifier,
+    username: String,
+    onUsernameChange: (String) -> Unit,
     email: String,
     onEmailChange: (String) -> Unit,
     password: String,
     onPasswordChange: (String) -> Unit,
 ) {
     Column(modifier = modifier) {
+        InputField(
+            value = username,
+            onValueChange = onUsernameChange,
+            label = stringResource(R.string.username),
+            placeholder = stringResource(R.string.username),
+            icon = Icons.Filled.AccountBox,
+            keyBoardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         InputField(
             value = email,
             onValueChange = onEmailChange,
@@ -129,7 +146,7 @@ private fun InputField(
 }
 
 @Composable
-fun LoginFooter(
+fun RegisterFooter(
     modifier: Modifier = Modifier,
     onSignInClick: () -> Unit = { },
     onSignUpClick: () -> Unit = { }
@@ -138,11 +155,11 @@ fun LoginFooter(
         modifier = modifier
             .padding(horizontal = 20.dp)
     ) {
-        Button(onClick = onSignInClick, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.sign_in))
+        Button(onClick = onSignUpClick, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.sign_up))
         }
-        TextButton(onClick = onSignUpClick) {
-            Text(text = stringResource(R.string.dont_have_account))
+        TextButton(onClick = onSignInClick) {
+            Text(text = "Already have an account? Log in here")
         }
     }
 }

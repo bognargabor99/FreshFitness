@@ -14,4 +14,10 @@
     <string name="bottom_navigation_home">Home</string>
     <string name="under_construction">Page is under construction</string>
     <string name="thanks_for_understanding">Thanks for your understanding!</string>
+    <string name="username">Username</string>
+    <string name="sign_in_to_continue">Sign in to continue</string>
+    <string name="welcome_back">Welcome back</string>
+    <string name="sign_up">Sign up</string>
+    <string name="welcome">Welcome</string>
+    <string name="sign_up_to_continue">Sign up to continue</string>
 </resources>
