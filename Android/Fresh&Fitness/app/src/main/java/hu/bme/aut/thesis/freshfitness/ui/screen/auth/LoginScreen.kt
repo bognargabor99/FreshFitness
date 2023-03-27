@@ -56,7 +56,10 @@ fun LoginScreen(
 
 @Composable
 fun LoginHeader(modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
             text = stringResource(R.string.welcome_back),
             fontSize = 36.sp,

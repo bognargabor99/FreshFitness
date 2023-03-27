@@ -60,7 +60,10 @@ fun RegisterScreen(
 
 @Composable
 fun RegisterHeader(modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
             text = stringResource(R.string.welcome),
             fontSize = 36.sp,
