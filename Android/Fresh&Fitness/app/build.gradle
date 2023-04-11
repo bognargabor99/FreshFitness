@@ -67,8 +67,11 @@ dependencies {
     implementation "androidx.navigation:navigation-compose:2.5.3"
 
     // Amazon Web Services
-    implementation 'com.amazonaws:aws-android-sdk-core:2.7.4'
-    implementation 'com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.7.0'
+    //implementation 'com.amazonaws:aws-android-sdk-core:2.65.4'
+    implementation 'com.amazonaws:aws-android-sdk-cognitoauth:2.65.0'
+    implementation 'com.amazonaws:aws-android-sdk-auth-userpools:2.65.0'
+    implementation 'com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.65.0'
+    implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.65.0'
 
     // Test
     testImplementation 'junit:junit:4.13.2'

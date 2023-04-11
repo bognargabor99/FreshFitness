@@ -1,18 +1,13 @@
-package hu.bme.aut.thesis.freshfitness.ui.screen.auth
+package hu.bme.aut.thesis.freshfitness.ui.screen.profile
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -27,14 +22,15 @@ import androidx.compose.ui.unit.sp
 import hu.bme.aut.thesis.freshfitness.R
 
 @Composable
-fun RegisterScreen(
+fun LoginScreen(
     modifier: Modifier = Modifier,
-    onSignUp: () -> Unit,
-    onSignIn: () -> Unit
+    onSignIn: () -> Unit,
+    onNavigateSignUp: () -> Unit,
+    username: String,
+    onUserNameChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit
 ) {
-    var username by rememberSaveable { mutableStateOf("") }
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -42,35 +38,33 @@ fun RegisterScreen(
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        RegisterHeader()
-        RegisterInputFields(
-            email = email,
-            onEmailChange = { email = it },
+        LoginHeader()
+        LoginInputFields(
             username = username,
-            onUsernameChange = { username = it },
+            onUsernameChange = onUserNameChange,
             password = password,
-            onPasswordChange = { password = it }
+            onPasswordChange = onPasswordChange
         )
-        RegisterFooter(
-            onSignUpClick = onSignUp,
-            onSignInClick = onSignIn
+        LoginFooter(
+            onSignInClick = onSignIn,
+            onSignUpClick = onNavigateSignUp
         )
     }
 }
 
 @Composable
-fun RegisterHeader(modifier: Modifier = Modifier) {
+fun LoginHeader(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(R.string.welcome),
+            text = stringResource(R.string.welcome_back),
             fontSize = 36.sp,
             fontWeight = FontWeight.ExtraBold
         )
         Text(
-            text = stringResource(R.string.sign_up_to_continue),
+            text = stringResource(R.string.sign_in_to_continue),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold
         )
@@ -78,12 +72,10 @@ fun RegisterHeader(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun RegisterInputFields(
+fun LoginInputFields(
     modifier: Modifier = Modifier,
     username: String,
     onUsernameChange: (String) -> Unit,
-    email: String,
-    onEmailChange: (String) -> Unit,
     password: String,
     onPasswordChange: (String) -> Unit,
 ) {
@@ -95,15 +87,6 @@ fun RegisterInputFields(
             placeholder = stringResource(R.string.username),
             icon = Icons.Filled.AccountBox,
             keyBoardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        InputField(
-            value = email,
-            onValueChange = onEmailChange,
-            label = stringResource(R.string.email),
-            placeholder = stringResource(R.string.email_address),
-            icon = Icons.Filled.Email,
-            keyBoardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
         )
         Spacer(modifier = Modifier.height(8.dp))
         InputField(
@@ -149,7 +132,7 @@ private fun InputField(
 }
 
 @Composable
-fun RegisterFooter(
+fun LoginFooter(
     modifier: Modifier = Modifier,
     onSignInClick: () -> Unit = { },
     onSignUpClick: () -> Unit = { }
@@ -158,11 +141,11 @@ fun RegisterFooter(
         modifier = modifier
             .padding(horizontal = 20.dp)
     ) {
-        Button(onClick = onSignUpClick, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.sign_up))
+        Button(onClick = onSignInClick, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.sign_in))
         }
-        TextButton(onClick = onSignInClick) {
-            Text(text = "Already have an account? Log in here")
+        TextButton(onClick = onSignUpClick) {
+            Text(text = stringResource(R.string.dont_have_account))
         }
     }
 }

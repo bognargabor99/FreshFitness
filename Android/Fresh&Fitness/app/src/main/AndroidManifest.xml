@@ -11,6 +11,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/freshfitness_logo_round"
         android:label="@string/app_name"
+        android:name=".FreshFitnessApplication"
         android:supportsRtl="true"
         android:theme="@style/Theme.FreshFitness"
         tools:targetApi="31">

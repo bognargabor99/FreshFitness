@@ -1,78 +1,96 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.profile
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.SentimentDissatisfied
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.bme.aut.thesis.freshfitness.R
+import hu.bme.aut.thesis.freshfitness.model.SignUpConfirmationState
+import hu.bme.aut.thesis.freshfitness.ui.util.InformationDialog
+import hu.bme.aut.thesis.freshfitness.ui.util.InputDialog
+import hu.bme.aut.thesis.freshfitness.viewmodel.AuthViewModel
 
 @Composable
-fun ProfileScreen() {
-    Column(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .wrapContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        ProfileImage()
-        ProfileInfo()
+fun ProfileScreen(
+    viewModel: AuthViewModel = viewModel(factory = AuthViewModel.factory)
+) {
+    var isSignUp by rememberSaveable { mutableStateOf(false) }
+    if (viewModel.session?.isValid != true) {
+        if (isSignUp) {
+            if (viewModel.showVerificationBox) {
+                InputDialog(
+                    value = "",
+                    setShowDialog = {
+                        viewModel.showVerificationBox = it
+                    },
+                    title = stringResource(R.string.verify_email_address),
+                    placeholder = stringResource(R.string.enter_verification_code),
+                    subTitle = stringResource(R.string.verification_code_sent)
+                ) { verificationCode ->
+                    viewModel.conformSignUp(verificationCode)
+                }
+            }
+            if (viewModel.showVerificationResultBox != SignUpConfirmationState.UNKNOWN) {
+                InformationDialog(
+                    setShowDialog = { viewModel.showVerificationResultBox = SignUpConfirmationState.UNKNOWN },
+                    title = stringResource(if (viewModel.showVerificationResultBox == SignUpConfirmationState.CONFIRMED) R.string.account_activation_success else R.string.account_activation_failed)
+                ) {
+                    Icon(
+                        modifier = Modifier.size(50.dp),
+                        imageVector = if (viewModel.showVerificationResultBox == SignUpConfirmationState.CONFIRMED) Icons.Filled.CheckCircle else Icons.Filled.Cancel,
+                        tint = if (viewModel.showVerificationResultBox == SignUpConfirmationState.CONFIRMED) Color(0, 144, 0) else Color(144, 0, 0),
+                        contentDescription = null)
+                }
+            }
+            RegisterScreen(
+                onNavigateSignIn = { isSignUp = false },
+                onSignUp = {
+                    viewModel.signUp()
+                },
+                email = viewModel.email,
+                username = viewModel.username,
+                password = viewModel.password,
+                onEmailChange = { newEmail -> viewModel.updateEmail(newEmail) },
+                onUserNameChange = { newUsername -> viewModel.updateUsername(newUsername) },
+                onPasswordChange = { newPassword -> viewModel.updatePassword(newPassword) }
+            )
+        }
+        else {
+            if (viewModel.showSignInFailedResult) {
+                InformationDialog(
+                    title = "Could not sign in",
+                    subTitle = viewModel.signInFailureReason,
+                    setShowDialog = { viewModel.showSignInFailedResult = it }
+                ) {
+                    Icon(
+                        modifier = Modifier.size(50.dp),
+                        imageVector = Icons.Filled.SentimentDissatisfied,
+                        tint = Color(144, 0, 0),
+                        contentDescription = null)
+                }
+            }
+            LoginScreen(
+                onSignIn = { viewModel.signIn() },
+                onNavigateSignUp = { isSignUp = true },
+                username = viewModel.username,
+                password = viewModel.password,
+                onUserNameChange = { newUsername -> viewModel.updateUsername(newUsername) },
+                onPasswordChange = { newPassword -> viewModel.updatePassword(newPassword) }
+            )
+        }
     }
-}
-
-@Composable
-private fun ProfileImage(modifier: Modifier = Modifier) {
-    Surface(
-        modifier = Modifier
-            .size(154.dp)
-            .padding(5.dp),
-        shape = CircleShape,
-        border = BorderStroke(0.5.dp, Color.LightGray),
-        shadowElevation = 4.dp,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.default_profile),
-            contentDescription = "profile image",
-            modifier = modifier.size(135.dp),
-            contentScale = ContentScale.Crop
-        )
-
-    }
-}
-
-@Composable
-private fun ProfileInfo() {
-    Column(
-        modifier = Modifier
-            .padding(6.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            fontSize = 24.sp,
-            style = MaterialTheme.typography.headlineMedium,
-            text = "Gabor Bela Bognar"
-        )
-
-        Text(
-            text = "Android Compose Programmer",
-            modifier = Modifier.padding(4.dp)
-        )
-
-        Text(
-            text = "BME AUT",
-            modifier = Modifier.padding(3.dp),
-            style = MaterialTheme.typography.titleSmall
+    else {
+        LoggedInScreen(
+            onLogOut = { viewModel.signOut() }
         )
     }
 }

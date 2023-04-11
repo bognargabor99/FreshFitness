@@ -20,4 +20,13 @@
     <string name="sign_up">Sign up</string>
     <string name="welcome">Welcome</string>
     <string name="sign_up_to_continue">Sign up to continue</string>
+    <string name="already_have_account_login_here">Already have an account? Log in here</string>
+    <string name="enter_verification_code">Enter verification code</string>
+    <string name="verify_email_address">Verify email address</string>
+    <string name="enter">Enter</string>
+    <string name="verification_code_sent">Verification code has been sent via email. Enter it so you can activate your account.</string>
+    <string name="ok">OK</string>
+    <string name="account_activation_success">Account activation success</string>
+    <string name="account_activation_failed">Account activation failed</string>
+    <string name="logout">Log out</string>
 </resources>

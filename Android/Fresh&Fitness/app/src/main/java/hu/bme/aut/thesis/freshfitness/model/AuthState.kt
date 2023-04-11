@@ -1,7 +1,7 @@
 package hu.bme.aut.thesis.freshfitness.model
 
 data class AuthState(
-    val isLoggedIn: Boolean = false,
     val username: String = "",
-    val imageUrl: String = ""
+    val password: String = "",
+    val isLoggedIn: Boolean = false
 )

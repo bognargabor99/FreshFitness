@@ -9,14 +9,9 @@ interface FitnessDestination {
     val route: String
 }
 
-object Authentication : FitnessDestination {
+object Profile : FitnessDestination {
     override val icon = Icons.Default.Person
-    override val route = "login"
-}
-
-object Register : FitnessDestination {
-    override val icon = Icons.Default.AppRegistration
-    override val route = "register"
+    override val route = "profile"
 }
 
 object Home : FitnessDestination {
@@ -39,9 +34,4 @@ object Progress : FitnessDestination {
     override val route = "progress"
 }
 
-object Profile : FitnessDestination {
-    override val icon = Icons.Filled.Person
-    override val route = "profile"
-}
-
-val freshFitnessBottomTabs = listOf(Home, Workout, Social, Progress, Authentication)
+val freshFitnessBottomTabs = listOf(Home, Workout, Social, Progress, Profile)
