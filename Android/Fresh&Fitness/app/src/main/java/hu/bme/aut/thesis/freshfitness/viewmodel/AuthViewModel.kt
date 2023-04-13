@@ -69,7 +69,7 @@ class AuthViewModel(val context: Context) : ViewModel() {
         this.password = ""
     }
 
-    fun conformSignUp(verificationCode: String) {
+    fun confirmSignUp(verificationCode: String) {
         this.user?.confirmSignUpInBackground(verificationCode, false, confirmationCallback)
     }
 

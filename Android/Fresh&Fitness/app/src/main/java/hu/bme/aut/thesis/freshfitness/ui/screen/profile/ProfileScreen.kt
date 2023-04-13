@@ -27,29 +27,16 @@ fun ProfileScreen(
     if (viewModel.session?.isValid != true) {
         if (isSignUp) {
             if (viewModel.showVerificationBox) {
-                InputDialog(
-                    value = "",
-                    setShowDialog = {
-                        viewModel.showVerificationBox = it
-                    },
-                    title = stringResource(R.string.verify_email_address),
-                    placeholder = stringResource(R.string.enter_verification_code),
-                    subTitle = stringResource(R.string.verification_code_sent)
-                ) { verificationCode ->
-                    viewModel.conformSignUp(verificationCode)
-                }
+                VerificationAlert(
+                    setShowDialog = { viewModel.showVerificationBox = it },
+                    signUpConfirmation = { viewModel.confirmSignUp(it) }
+                )
             }
             if (viewModel.showVerificationResultBox != SignUpConfirmationState.UNKNOWN) {
-                InformationDialog(
-                    setShowDialog = { viewModel.showVerificationResultBox = SignUpConfirmationState.UNKNOWN },
-                    title = stringResource(if (viewModel.showVerificationResultBox == SignUpConfirmationState.CONFIRMED) R.string.account_activation_success else R.string.account_activation_failed)
-                ) {
-                    Icon(
-                        modifier = Modifier.size(50.dp),
-                        imageVector = if (viewModel.showVerificationResultBox == SignUpConfirmationState.CONFIRMED) Icons.Filled.CheckCircle else Icons.Filled.Cancel,
-                        tint = if (viewModel.showVerificationResultBox == SignUpConfirmationState.CONFIRMED) Color(0, 144, 0) else Color(144, 0, 0),
-                        contentDescription = null)
-                }
+                VerificationResultAlert(
+                    onDismiss = { viewModel.showVerificationResultBox = SignUpConfirmationState.UNKNOWN },
+                    verificationResult = viewModel.showVerificationResultBox
+                )
             }
             RegisterScreen(
                 onNavigateSignIn = { isSignUp = false },
@@ -66,17 +53,10 @@ fun ProfileScreen(
         }
         else {
             if (viewModel.showSignInFailedResult) {
-                InformationDialog(
-                    title = "Could not sign in",
+                SignInFailureAlert(
                     subTitle = viewModel.signInFailureReason,
                     setShowDialog = { viewModel.showSignInFailedResult = it }
-                ) {
-                    Icon(
-                        modifier = Modifier.size(50.dp),
-                        imageVector = Icons.Filled.SentimentDissatisfied,
-                        tint = Color(144, 0, 0),
-                        contentDescription = null)
-                }
+                )
             }
             LoginScreen(
                 onSignIn = { viewModel.signIn() },
@@ -92,5 +72,56 @@ fun ProfileScreen(
         LoggedInScreen(
             onLogOut = { viewModel.signOut() }
         )
+    }
+}
+
+@Composable
+fun VerificationAlert(
+    setShowDialog: (Boolean) -> Unit,
+    signUpConfirmation: (String) -> Unit
+) {
+    InputDialog(
+        value = "",
+        setShowDialog = setShowDialog,
+        title = stringResource(R.string.verify_email_address),
+        placeholder = stringResource(R.string.enter_verification_code),
+        subTitle = stringResource(R.string.verification_code_sent)
+    ) { verificationCode ->
+        signUpConfirmation(verificationCode)
+    }
+}
+
+@Composable
+fun VerificationResultAlert(
+    onDismiss: (Boolean) -> Unit,
+    verificationResult: SignUpConfirmationState
+) {
+    InformationDialog(
+        setShowDialog = onDismiss,
+        title = stringResource(if (verificationResult == SignUpConfirmationState.CONFIRMED) R.string.account_activation_success else R.string.account_activation_failed)
+    ) {
+        Icon(
+            modifier = Modifier.size(50.dp),
+            imageVector = if (verificationResult == SignUpConfirmationState.CONFIRMED) Icons.Filled.CheckCircle else Icons.Filled.Cancel,
+            tint = if (verificationResult == SignUpConfirmationState.CONFIRMED) Color(0, 144, 0) else Color(144, 0, 0),
+            contentDescription = null)
+    }
+}
+
+@Composable
+fun SignInFailureAlert(
+    subTitle: String,
+    setShowDialog: (Boolean) -> Unit
+) {
+    InformationDialog(
+        title = stringResource(R.string.could_not_sign_in),
+        subTitle = subTitle,
+        setShowDialog = setShowDialog
+    ) {
+        Icon(
+            modifier = Modifier.size(50.dp),
+            imageVector = Icons.Filled.SentimentDissatisfied,
+            tint = Color(144, 0, 0),
+            contentDescription = null)
     }
 }
