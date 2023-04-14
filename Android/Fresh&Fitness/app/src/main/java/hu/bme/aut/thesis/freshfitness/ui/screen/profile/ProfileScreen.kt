@@ -4,13 +4,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.SentimentDissatisfied
+import androidx.compose.material.icons.filled.SentimentVeryDissatisfied
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.bme.aut.thesis.freshfitness.R
@@ -48,7 +49,8 @@ fun ProfileScreen(
                 password = viewModel.password,
                 onEmailChange = { newEmail -> viewModel.updateEmail(newEmail) },
                 onUserNameChange = { newUsername -> viewModel.updateUsername(newUsername) },
-                onPasswordChange = { newPassword -> viewModel.updatePassword(newPassword) }
+                onPasswordChange = { newPassword -> viewModel.updatePassword(newPassword) },
+                onVerifyExistingAccount = { verificationCode -> viewModel.confirmSignUp(verificationCode) }
             )
         }
         else {
@@ -120,8 +122,32 @@ fun SignInFailureAlert(
     ) {
         Icon(
             modifier = Modifier.size(50.dp),
-            imageVector = Icons.Filled.SentimentDissatisfied,
+            imageVector = Icons.Filled.SentimentVeryDissatisfied,
             tint = Color(144, 0, 0),
             contentDescription = null)
     }
+}
+
+@Preview
+@Composable
+fun VerificationAlertPreview() {
+    VerificationAlert(setShowDialog = { }, signUpConfirmation = { })
+}
+
+@Preview
+@Composable
+fun VerificationConfirmedAlertPreview() {
+    VerificationResultAlert(onDismiss = { }, verificationResult = SignUpConfirmationState.CONFIRMED)
+}
+
+@Preview
+@Composable
+fun VerificationUnconfirmedAlertPreview() {
+    VerificationResultAlert(onDismiss = { }, verificationResult = SignUpConfirmationState.UNCONFIRMED)
+}
+
+@Preview
+@Composable
+fun SignInFailureAlertAlertPreview() {
+    SignInFailureAlert(setShowDialog = { }, subTitle = "Incorrect username or password.")
 }

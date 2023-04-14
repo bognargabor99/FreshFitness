@@ -64,7 +64,10 @@ fun InformationDialog(
 
                     Spacer(modifier = Modifier.height(20.dp))
                     if (subTitle.isNotBlank()){
-                        Text(text = subTitle)
+                        Text(
+                            text = subTitle,
+                            style = TextStyle(fontWeight = FontWeight.Bold)
+                        )
                         Spacer(modifier = Modifier.height(20.dp))
                     }
 
