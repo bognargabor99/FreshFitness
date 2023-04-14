@@ -19,6 +19,7 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.SignUpHan
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amazonaws.services.cognitoidentityprovider.model.SignUpResult
+import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.model.AuthState
 import hu.bme.aut.thesis.freshfitness.model.SignUpConfirmationState
@@ -70,6 +71,8 @@ class AuthViewModel(val context: Context) : ViewModel() {
     }
 
     fun confirmSignUp(verificationCode: String) {
+        if (this.user?.userId == null)
+            this.user = this.getUserPool().getUser(this.username)
         this.user?.confirmSignUpInBackground(verificationCode, false, confirmationCallback)
     }
 
@@ -155,11 +158,21 @@ class AuthViewModel(val context: Context) : ViewModel() {
 
         override fun onFailure(exception: java.lang.Exception?) {
             this@AuthViewModel.showSignInFailedResult = true
-            if (exception is NotAuthorizedException) {
-                this@AuthViewModel.signInFailureReason = if (exception.errorMessage != null) exception.errorMessage else "Something went wrong."
+            when (exception) {
+                is NotAuthorizedException -> {
+                    this@AuthViewModel.signInFailureReason =
+                        if (exception.errorMessage != null) exception.errorMessage
+                        else "Something went wrong."
+                }
+
+                is UserNotConfirmedException -> {
+                    this@AuthViewModel.signInFailureReason =
+                        if (exception.errorMessage != null) exception.errorMessage
+                        else "Something went wrong."
+                }
+
+                else -> this@AuthViewModel.signInFailureReason = "Something went wrong."
             }
-            else
-                this@AuthViewModel.signInFailureReason = "Something went wrong."
         }
 
     }
@@ -178,6 +191,14 @@ class AuthViewModel(val context: Context) : ViewModel() {
             TODO("Not yet implemented")
         }
     }
+
+    private fun getUserPool(): CognitoUserPool = CognitoUserPool(
+        context,
+        BuildConfig.COGNITO_USERPOOL_ID,
+        BuildConfig.COGNITO_CLIENT_ID,
+        BuildConfig.COGNITO_CLIENT_SECRET,
+        Regions.EU_CENTRAL_1
+    )
 
     companion object {
         val factory: ViewModelProvider.Factory = viewModelFactory {

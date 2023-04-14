@@ -9,6 +9,10 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,6 +37,7 @@ fun RegisterScreen(
     onEmailChange: (String) -> Unit,
     onUserNameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
+    onVerifyExistingAccount: (String) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -52,7 +57,8 @@ fun RegisterScreen(
         )
         RegisterFooter(
             onSignUpClick = onSignUp,
-            onSignInClick = onNavigateSignIn
+            onSignInClick = onNavigateSignIn,
+            onVerifyExistingAccount = onVerifyExistingAccount
         )
     }
 }
@@ -151,8 +157,18 @@ private fun InputField(
 fun RegisterFooter(
     modifier: Modifier = Modifier,
     onSignInClick: () -> Unit = { },
-    onSignUpClick: () -> Unit = { }
+    onSignUpClick: () -> Unit = { },
+    onVerifyExistingAccount: (String) -> Unit = { }
 ) {
+    var showVerificationBox by rememberSaveable { mutableStateOf(false) }
+
+    if (showVerificationBox) {
+        VerificationAlert(
+            setShowDialog = { showVerificationBox = it },
+            signUpConfirmation = onVerifyExistingAccount
+        )
+    }
+
     Column(
         modifier = modifier
             .padding(horizontal = 20.dp)
@@ -162,6 +178,9 @@ fun RegisterFooter(
         }
         TextButton(onClick = onSignInClick) {
             Text(text = stringResource(R.string.already_have_account_login_here))
+        }
+        TextButton(onClick = { showVerificationBox = true }) {
+            Text(text = stringResource(R.string.verify_existing_account))
         }
     }
 }

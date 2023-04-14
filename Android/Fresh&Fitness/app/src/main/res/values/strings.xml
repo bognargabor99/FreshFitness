@@ -30,4 +30,5 @@
     <string name="account_activation_failed">Account activation failed</string>
     <string name="logout">Log out</string>
     <string name="could_not_sign_in">Could not sign in</string>
+    <string name="verify_existing_account">Verify existing account</string>
 </resources>
