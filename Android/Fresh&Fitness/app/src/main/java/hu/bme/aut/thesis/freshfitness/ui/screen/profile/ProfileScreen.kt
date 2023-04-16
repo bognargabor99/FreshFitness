@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.bme.aut.thesis.freshfitness.R
+import hu.bme.aut.thesis.freshfitness.model.ProfileScreenState
 import hu.bme.aut.thesis.freshfitness.model.SignUpConfirmationState
 import hu.bme.aut.thesis.freshfitness.ui.util.InformationDialog
 import hu.bme.aut.thesis.freshfitness.ui.util.InputDialog
@@ -24,50 +25,28 @@ import hu.bme.aut.thesis.freshfitness.viewmodel.AuthViewModel
 fun ProfileScreen(
     viewModel: AuthViewModel = viewModel(factory = AuthViewModel.factory)
 ) {
-    var isSignUp by rememberSaveable { mutableStateOf(false) }
+    var screenState: ProfileScreenState by rememberSaveable { mutableStateOf(ProfileScreenState.LOGIN) }
     if (viewModel.session?.isValid != true) {
-        if (isSignUp) {
-            if (viewModel.showVerificationBox) {
-                VerificationAlert(
-                    setShowDialog = { viewModel.showVerificationBox = it },
-                    signUpConfirmation = { viewModel.confirmSignUp(it) }
+        when (screenState) {
+            ProfileScreenState.SIGNUP -> {
+                SignUpProfileScreen(viewModel) { screenState = ProfileScreenState.LOGIN }
+            }
+            ProfileScreenState.LOGIN -> {
+                LoginProfileScreen(
+                    viewModel = viewModel,
+                    onNavigateSignUp = { screenState = ProfileScreenState.SIGNUP },
+                    onNavigateForgotPassword = {
+                        viewModel.forgotPassword()
+                        screenState = ProfileScreenState.FORGOT_PASSWORD
+                    }
                 )
             }
-            if (viewModel.showVerificationResultBox != SignUpConfirmationState.UNKNOWN) {
-                VerificationResultAlert(
-                    onDismiss = { viewModel.showVerificationResultBox = SignUpConfirmationState.UNKNOWN },
-                    verificationResult = viewModel.showVerificationResultBox
+            ProfileScreenState.FORGOT_PASSWORD -> {
+                ForgotPasswordScreen(
+                    viewModel = viewModel,
+                    onNavigateSignIn = { screenState = ProfileScreenState.LOGIN }
                 )
             }
-            RegisterScreen(
-                onNavigateSignIn = { isSignUp = false },
-                onSignUp = {
-                    viewModel.signUp()
-                },
-                email = viewModel.email,
-                username = viewModel.username,
-                password = viewModel.password,
-                onEmailChange = { newEmail -> viewModel.updateEmail(newEmail) },
-                onUserNameChange = { newUsername -> viewModel.updateUsername(newUsername) },
-                onPasswordChange = { newPassword -> viewModel.updatePassword(newPassword) },
-                onVerifyExistingAccount = { verificationCode -> viewModel.confirmSignUp(verificationCode) }
-            )
-        }
-        else {
-            if (viewModel.showSignInFailedResult) {
-                SignInFailureAlert(
-                    subTitle = viewModel.signInFailureReason,
-                    setShowDialog = { viewModel.showSignInFailedResult = it }
-                )
-            }
-            LoginScreen(
-                onSignIn = { viewModel.signIn() },
-                onNavigateSignUp = { isSignUp = true },
-                username = viewModel.username,
-                password = viewModel.password,
-                onUserNameChange = { newUsername -> viewModel.updateUsername(newUsername) },
-                onPasswordChange = { newPassword -> viewModel.updatePassword(newPassword) }
-            )
         }
     }
     else {
@@ -75,6 +54,64 @@ fun ProfileScreen(
             onLogOut = { viewModel.signOut() }
         )
     }
+}
+
+@Composable
+fun SignUpProfileScreen(
+    viewModel: AuthViewModel,
+    onNavigateSignIn: () -> Unit
+) {
+    if (viewModel.showVerificationBox) {
+        VerificationAlert(
+            setShowDialog = { viewModel.showVerificationBox = it },
+            signUpConfirmation = { viewModel.confirmSignUp(it) }
+        )
+    }
+    if (viewModel.showVerificationResultBox != SignUpConfirmationState.UNKNOWN) {
+        VerificationResultAlert(
+            onDismiss = { viewModel.showVerificationResultBox = SignUpConfirmationState.UNKNOWN },
+            verificationResult = viewModel.showVerificationResultBox
+        )
+    }
+    RegisterScreen(
+        onNavigateSignIn = onNavigateSignIn,
+        onSignUp = {
+            viewModel.signUp()
+        },
+        email = viewModel.email,
+        username = viewModel.username,
+        password = viewModel.password,
+        onEmailChange = { newEmail -> viewModel.updateEmail(newEmail) },
+        onUserNameChange = { newUsername -> viewModel.updateUsername(newUsername) },
+        onPasswordChange = { newPassword -> viewModel.updatePassword(newPassword) },
+        onVerifyExistingAccount = { verificationCode -> viewModel.confirmSignUp(verificationCode) }
+    )
+}
+
+@Composable
+fun LoginProfileScreen(
+    viewModel: AuthViewModel,
+    onNavigateSignUp: () -> Unit,
+    onNavigateForgotPassword: () -> Unit
+) {
+    if (viewModel.showSignInFailedResult) {
+        SignInFailureAlert(
+            subTitle = viewModel.signInFailureReason,
+            setShowDialog = { viewModel.showSignInFailedResult = it }
+        )
+    }
+    LoginScreen(
+        onSignIn = { viewModel.signIn() },
+        onNavigateSignUp = onNavigateSignUp,
+        username = viewModel.username,
+        password = viewModel.password,
+        onUserNameChange = { newUsername -> viewModel.updateUsername(newUsername) },
+        onPasswordChange = { newPassword -> viewModel.updatePassword(newPassword) },
+        onForgotPassword = {
+            viewModel.forgotPassword()
+            onNavigateForgotPassword()
+        }
+    )
 }
 
 @Composable
@@ -87,7 +124,7 @@ fun VerificationAlert(
         setShowDialog = setShowDialog,
         title = stringResource(R.string.verify_email_address),
         placeholder = stringResource(R.string.enter_verification_code),
-        subTitle = stringResource(R.string.verification_code_sent)
+        subTitle = stringResource(R.string.verification_code_sent_confirmation)
     ) { verificationCode ->
         signUpConfirmation(verificationCode)
     }

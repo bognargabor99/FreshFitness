@@ -24,11 +24,17 @@
     <string name="enter_verification_code">Enter verification code</string>
     <string name="verify_email_address">Verify email address</string>
     <string name="enter">Enter</string>
-    <string name="verification_code_sent">Verification code has been sent via email. Enter it so you can activate your account.</string>
+    <string name="verification_code_sent_confirmation">Verification code has been sent via email. Enter it so you can activate your account.</string>
+    <string name="verification_code_sent_forgot">Verification code has been sent via email. Enter it so you can set a new password.</string>
     <string name="ok">OK</string>
     <string name="account_activation_success">Account activation success</string>
     <string name="account_activation_failed">Account activation failed</string>
     <string name="logout">Log out</string>
     <string name="could_not_sign_in">Could not sign in</string>
     <string name="verify_existing_account">Verify existing account</string>
+    <string name="forgot_password">Forgot password? Click here!</string>
+    <string name="password_reset">Password reset</string>
+    <string name="verification_code">Verification code</string>
+    <string name="go_back">Go back</string>
+    <string name="reset_password">Reset password</string>
 </resources>

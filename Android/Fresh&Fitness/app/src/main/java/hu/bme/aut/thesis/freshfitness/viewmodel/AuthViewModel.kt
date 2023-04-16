@@ -33,6 +33,8 @@ class AuthViewModel(val context: Context) : ViewModel() {
         private set
     var password by mutableStateOf("")
         private set
+    var verificationCode by mutableStateOf("")
+        private set
 
     var showVerificationBox by mutableStateOf(false)
     var showVerificationResultBox by mutableStateOf(SignUpConfirmationState.UNKNOWN)
@@ -43,15 +45,10 @@ class AuthViewModel(val context: Context) : ViewModel() {
     private var user: CognitoUser? = null
     var session: CognitoUserSession? by mutableStateOf(null)
 
+    private lateinit var forgotPasswordContinuation: ForgotPasswordContinuation
+
     init {
-        val userPool = CognitoUserPool(
-            context,
-            BuildConfig.COGNITO_USERPOOL_ID,
-            BuildConfig.COGNITO_CLIENT_ID,
-            BuildConfig.COGNITO_CLIENT_SECRET,
-            Regions.EU_CENTRAL_1
-        )
-        this.user = userPool.user
+        this.user = getUserPool().user
     }
 
     fun signUp() {
@@ -71,8 +68,7 @@ class AuthViewModel(val context: Context) : ViewModel() {
     }
 
     fun confirmSignUp(verificationCode: String) {
-        if (this.user?.userId == null)
-            this.user = this.getUserPool().getUser(this.username)
+        setUserFromPool()
         this.user?.confirmSignUpInBackground(verificationCode, false, confirmationCallback)
     }
 
@@ -88,13 +84,27 @@ class AuthViewModel(val context: Context) : ViewModel() {
         this.password = password
     }
 
+    fun updateVerificationCode(newCode: String) {
+        this.verificationCode = newCode
+    }
+
     fun signIn() {
         this.authData = AuthState(this.username, this.password)
         this.user?.getSessionInBackground(authenticationHandler)
     }
 
     fun forgotPassword() {
-        TODO("Forgot password in the future")
+        setUserFromPool()
+        this.user?.forgotPasswordInBackground(forgotPasswordHandler)
+    }
+
+    fun continueForgotPasswordFlow() {
+        this.forgotPasswordContinuation.setPassword(this.password)
+        this.forgotPasswordContinuation.setVerificationCode(this.verificationCode)
+        this.password = ""
+        this.email = ""
+        this.username = ""
+        this.forgotPasswordContinuation.continueTask()
     }
 
     fun signOut() {
@@ -160,35 +170,29 @@ class AuthViewModel(val context: Context) : ViewModel() {
             this@AuthViewModel.showSignInFailedResult = true
             when (exception) {
                 is NotAuthorizedException -> {
-                    this@AuthViewModel.signInFailureReason =
-                        if (exception.errorMessage != null) exception.errorMessage
-                        else "Something went wrong."
+                    this@AuthViewModel.signInFailureReason = exception.errorMessage
                 }
-
                 is UserNotConfirmedException -> {
-                    this@AuthViewModel.signInFailureReason =
-                        if (exception.errorMessage != null) exception.errorMessage
-                        else "Something went wrong."
+                    this@AuthViewModel.signInFailureReason = exception.errorMessage
                 }
-
                 else -> this@AuthViewModel.signInFailureReason = "Something went wrong."
             }
         }
 
     }
 
-    // TODO: Implement this
     private var forgotPasswordHandler: ForgotPasswordHandler = object : ForgotPasswordHandler {
         override fun onSuccess() {
-            TODO("Not yet implemented")
+            Log.d("forgot_password", "Successfully changed password of ${user?.userId}")
         }
 
-        override fun getResetCode(continuation: ForgotPasswordContinuation?) {
-            TODO("Not yet implemented")
+        override fun getResetCode(continuation: ForgotPasswordContinuation) {
+            Log.d("forgot_password", "Changing password")
+            this@AuthViewModel.forgotPasswordContinuation = continuation
         }
 
         override fun onFailure(exception: java.lang.Exception?) {
-            TODO("Not yet implemented")
+            Log.d("forgot_password", exception?.localizedMessage.toString())
         }
     }
 
@@ -199,6 +203,11 @@ class AuthViewModel(val context: Context) : ViewModel() {
         BuildConfig.COGNITO_CLIENT_SECRET,
         Regions.EU_CENTRAL_1
     )
+
+    private fun setUserFromPool() {
+        if (this.user?.userId == null)
+            this.user = this.getUserPool().getUser(this.username)
+    }
 
     companion object {
         val factory: ViewModelProvider.Factory = viewModelFactory {

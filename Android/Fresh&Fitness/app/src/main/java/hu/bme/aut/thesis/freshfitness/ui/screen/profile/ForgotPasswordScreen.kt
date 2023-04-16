@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,59 +23,53 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.ui.util.InputField
+import hu.bme.aut.thesis.freshfitness.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(
-    modifier: Modifier = Modifier,
-    onSignIn: () -> Unit,
-    onNavigateSignUp: () -> Unit,
-    username: String,
-    onUserNameChange: (String) -> Unit,
-    password: String,
-    onPasswordChange: (String) -> Unit,
-    onForgotPassword: () -> Unit
+fun ForgotPasswordScreen(
+    viewModel: AuthViewModel,
+    onNavigateSignIn: () -> Unit
 ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(8.dp),
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        LoginHeader()
-        LoginInputFields(
-            username = username,
-            onUsernameChange = onUserNameChange,
-            password = password,
-            onPasswordChange = onPasswordChange,
-            onDone = onSignIn
+        ForgotPasswordHeader()
+        ForgotPasswordInputFields(
+            newPassword = viewModel.password,
+            onNewPasswordChange = { viewModel.updatePassword(it) },
+            verificationCode = viewModel.verificationCode,
+            onVerificationCodeChange = { viewModel.updateVerificationCode(it) },
+            onDone = { viewModel.continueForgotPasswordFlow() }
         )
-        LoginFooter(
-            onSignInClick = onSignIn,
-            onSignUpClick = onNavigateSignUp,
-            onForgotPassword = onForgotPassword
+        ForgotPasswordFooter(
+            onResetPassword = { viewModel.continueForgotPasswordFlow() },
+            onSignInClick = onNavigateSignIn
         )
     }
 }
 
 @Composable
-fun LoginHeader(modifier: Modifier = Modifier) {
+fun ForgotPasswordHeader(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier,
+        modifier = modifier
+            .padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(R.string.welcome_back),
+            text = stringResource(R.string.password_reset),
             fontSize = 36.sp,
             fontWeight = FontWeight.ExtraBold
         )
         Text(
-            text = stringResource(R.string.sign_in_to_continue),
+            text = stringResource(R.string.verification_code_sent_forgot),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold
         )
@@ -83,62 +77,53 @@ fun LoginHeader(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LoginInputFields(
+fun ForgotPasswordInputFields(
     modifier: Modifier = Modifier,
-    username: String,
-    onUsernameChange: (String) -> Unit,
-    password: String,
-    onPasswordChange: (String) -> Unit,
+    newPassword: String,
+    onNewPasswordChange: (String) -> Unit,
+    verificationCode: String,
+    onVerificationCodeChange: (String) -> Unit,
     onDone: () -> Unit
 ) {
     Column(modifier = modifier) {
         InputField(
-            value = username,
-            onValueChange = onUsernameChange,
-            label = stringResource(R.string.username),
-            placeholder = stringResource(R.string.username),
-            icon = Icons.Filled.AccountBox,
-            keyBoardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        InputField(
-            value = password,
-            onValueChange = onPasswordChange,
+            value = newPassword,
+            onValueChange = onNewPasswordChange,
             label = stringResource(R.string.password),
             placeholder = stringResource(R.string.password),
             visualTransFormation = PasswordVisualTransformation(),
             icon = Icons.Filled.Lock,
-            keyBoardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyBoardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        InputField(
+            value = verificationCode,
+            onValueChange = onVerificationCodeChange,
+            label = stringResource(R.string.verification_code),
+            placeholder = stringResource(R.string.verification_code),
+            visualTransFormation = PasswordVisualTransformation(),
+            icon = Icons.Filled.VpnKey,
+            keyBoardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             keyBoardActions = KeyboardActions(onDone = { onDone() })
         )
     }
 }
 
 @Composable
-fun LoginFooter(
+fun ForgotPasswordFooter(
     modifier: Modifier = Modifier,
     onSignInClick: () -> Unit = { },
-    onSignUpClick: () -> Unit = { },
-    onForgotPassword: () -> Unit = { }
+    onResetPassword: () -> Unit
 ) {
     Column(
         modifier = modifier
             .padding(horizontal = 20.dp)
     ) {
-        Button(onClick = onSignInClick, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.sign_in))
+        Button(onClick = onResetPassword, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.reset_password))
         }
-        TextButton(onClick = onSignUpClick) {
-            Text(text = stringResource(R.string.dont_have_account))
-        }
-        TextButton(onClick = onForgotPassword) {
-            Text(text = stringResource(R.string.forgot_password))
+        TextButton(onClick = onSignInClick) {
+            Text(text = stringResource(R.string.go_back))
         }
     }
-}
-
-@Preview
-@Composable
-fun LoginFooterPreview() {
-    LoginFooter()
 }

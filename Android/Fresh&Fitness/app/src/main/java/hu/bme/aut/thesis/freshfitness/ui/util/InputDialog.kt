@@ -144,6 +144,6 @@ fun VerificationDialogPreview() {
         setShowDialog = { },
         title = stringResource(R.string.verify_email_address),
         placeholder = stringResource(R.string.enter_verification_code),
-        subTitle = stringResource(R.string.verification_code_sent)
+        subTitle = stringResource(R.string.verification_code_sent_confirmation)
     ) { }
 }
