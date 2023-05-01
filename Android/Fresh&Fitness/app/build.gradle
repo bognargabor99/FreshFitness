@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+    id 'kotlin-kapt'
 }
 
 def apikeyPropertiesFile = rootProject.file("apikey.properties")
@@ -66,8 +68,19 @@ dependencies {
     implementation 'androidx.compose.material3:material3:1.0.0-alpha11'
     implementation "androidx.navigation:navigation-compose:2.5.3"
 
+    // Permissions
+    //implementation "com.github.permissions-dispatcher:permissionsdispatcher:4.9.2"
+    //kapt "com.github.permissions-dispatcher:permissionsdispatcher-processor:4.9.2"
+    implementation 'com.google.accompanist:accompanist-permissions:0.31.1-alpha'
+
+    // Images
+    implementation 'io.coil-kt:coil-compose:2.3.0'
+
+    // Maps
+    implementation 'com.google.maps.android:maps-compose:2.11.4'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
+
     // Amazon Web Services
-    //implementation 'com.amazonaws:aws-android-sdk-core:2.65.4'
     implementation 'com.amazonaws:aws-android-sdk-cognitoauth:2.65.0'
     implementation 'com.amazonaws:aws-android-sdk-auth-userpools:2.65.0'
     implementation 'com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.65.0'

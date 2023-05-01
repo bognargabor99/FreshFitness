@@ -2,6 +2,7 @@ package hu.bme.aut.thesis.freshfitness.ui.screen.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -12,10 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import hu.bme.aut.thesis.freshfitness.R
 
 @Composable
@@ -56,13 +61,21 @@ private fun ProfileImage(modifier: Modifier = Modifier) {
         shadowElevation = 4.dp,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.default_profile),
-            contentDescription = "profile image",
-            modifier = modifier.size(135.dp),
-            contentScale = ContentScale.Crop
+        val painter = rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data("https://i.pinimg.com/originals/ae/ec/c2/aeecc22a67dac7987a80ac0724658493.jpg")
+                .crossfade(500)
+                .build(),
+            error = painterResource(R.drawable.default_profile)
         )
-
+        Image(
+            painter = painter,
+            contentDescription = "profile image",
+            modifier = modifier
+                .size(145.dp)
+                .background(Color.White),
+            contentScale = ContentScale.Crop,
+        )
     }
 }
 
@@ -91,4 +104,10 @@ private fun ProfileInfo() {
             style = MaterialTheme.typography.titleSmall
         )
     }
+}
+
+@Preview
+@Composable
+fun ProfileImagePreview() {
+    ProfileImage()
 }

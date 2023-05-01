@@ -52,13 +52,7 @@ class AuthViewModel(val context: Context) : ViewModel() {
     }
 
     fun signUp() {
-        val userPool = CognitoUserPool(
-            context,
-            BuildConfig.COGNITO_USERPOOL_ID,
-            BuildConfig.COGNITO_CLIENT_ID,
-            BuildConfig.COGNITO_CLIENT_SECRET,
-            Regions.EU_CENTRAL_1
-        )
+        val userPool = getUserPool()
         val userAttributes = CognitoUserAttributes()
         userAttributes.addAttribute("email", email)
         userPool.signUpInBackground(username, password, userAttributes, null, signupCallback)
