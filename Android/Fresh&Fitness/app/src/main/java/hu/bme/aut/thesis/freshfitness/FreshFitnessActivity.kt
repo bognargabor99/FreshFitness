@@ -15,10 +15,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import hu.bme.aut.thesis.freshfitness.navigation.*
-import hu.bme.aut.thesis.freshfitness.ui.screen.profile.ProfileScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.home.HomeScreen
+import hu.bme.aut.thesis.freshfitness.ui.screen.profile.ProfileScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.progress.ProgressScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.social.SocialScreen
+import hu.bme.aut.thesis.freshfitness.ui.screen.workout.NearbyGymsScreen
+import hu.bme.aut.thesis.freshfitness.ui.screen.workout.TrackRunningScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutScreen
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 
@@ -59,7 +61,10 @@ fun FreshFitnessApp() {
                     ProfileScreen()
                 }
                 composable(route = Workout.route) {
-                    WorkoutScreen()
+                    WorkoutScreen(
+                        onNavigateNearbyGyms = { navController.navigate(NearbyGyms.route) },
+                        onNavigateRunning = { navController.navigate(TrackRunning.route) }
+                    )
                 }
                 composable(route = Social.route) {
                     SocialScreen()
@@ -69,6 +74,12 @@ fun FreshFitnessApp() {
                 }
                 composable(route = Home.route) {
                     HomeScreen()
+                }
+                composable(route = NearbyGyms.route) {
+                    NearbyGymsScreen()
+                }
+                composable(route = TrackRunning.route) {
+                    TrackRunningScreen()
                 }
             }
         }

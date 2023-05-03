@@ -1,113 +1,98 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
-import android.Manifest
-import android.annotation.SuppressLint
+import android.util.Log
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.accompanist.permissions.shouldShowRationale
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import hu.bme.aut.thesis.freshfitness.R
+import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 
 @Composable
-fun WorkoutScreen() {
-    MultiplePermissions()
+fun WorkoutScreen(
+    onNavigateRunning: () -> Unit,
+    onNavigateNearbyGyms: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        ImageWithTextOverlay(
+            modifier = Modifier.fillMaxHeight(0.5f),
+            painter = painterResource(R.drawable.workout_running),
+            contentDescription = "Go running",
+            text = "Track running",
+            onClick = {
+                Log.i("fresh_fitness_workout", "Clicked Start running")
+                onNavigateRunning()
+            }
+        )
+        ImageWithTextOverlay(
+            modifier = Modifier.fillMaxHeight(1f),
+            painter = painterResource(R.drawable.workout_places),
+            contentDescription = "Go running",
+            text = "Gyms nearby",
+            onClick = {
+                Log.i("fresh_fitness_workout", "Clicked gyms near you")
+                onNavigateNearbyGyms()
+            }
+        )
+    }
 }
 
-@SuppressLint("PermissionLaunchedDuringComposition")
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MultiplePermissions() {
-    val permissionStates =
-        rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    DisposableEffect(key1 = lifecycleOwner, effect = {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> {
-                    permissionStates.launchMultiplePermissionRequest()
-                }
-                else -> {}
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    })
-
-    Column {
-        permissionStates.permissions.forEach {
-            when (it.permission) {
-                Manifest.permission.ACCESS_COARSE_LOCATION -> {
-                    when {
-                        it.status.isGranted -> {
-                            /* Permission has been granted by the user.
-                               You can use this permission to now acquire the location of the device.
-                               You can perform some other tasks here.
-                            */
-                            Text(text = "Coarse location permission has been granted")
-                        }
-
-                        it.status.shouldShowRationale -> {
-                            /* Happens if a user denies the permission two times */
-                            Text(text = "Coarse location permission is needed")
-                        }
-
-                        !it.status.isGranted && !it.status.shouldShowRationale -> {
-                            /* If the permission is denied and the should not show rationale
-                                You can only allow the permission manually through app settings
-                             */
-                            Text(text = "Navigate to settings and enable the Coarse location permission")
-
-                        }
-                    }
-                }
-
-                Manifest.permission.ACCESS_FINE_LOCATION -> {
-                    when {
-                        it.status.isGranted -> {
-                            /* Permission has been granted by the user.
-                               You can use this permission to now acquire the location of the device.
-                               You can perform some other tasks here.
-                            */
-                            Text(text = "Fine location permission has been granted")
-                        }
-
-                        it.status.shouldShowRationale -> {
-                            /*Happens if a user denies the permission two times
-
-                             */
-                            Text(text = "Fine location permission is needed")
-
-                        }
-
-                        !it.status.isGranted && !it.status.shouldShowRationale -> {
-                            /* If the permission is denied and the should not show rationale
-                                You can only allow the permission manually through app settings
-                             */
-                            Text(text = "Navigate to settings and enable the Fine location permission")
-
-                        }
-                    }
-                }
-            }
-        }
+fun ImageWithTextOverlay(
+    modifier: Modifier = Modifier,
+    painter: Painter,
+    contentDescription: String? = null,
+    text: String,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier.padding(20.dp),
+        contentAlignment = Alignment.BottomStart,
+    ) {
+        Image(
+            painter = painter,
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Crop,
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onClick() },
+        )
+        Text(
+            text = text,
+            textAlign = TextAlign.Start,
+            lineHeight = 48.sp,
+            fontSize = 48.sp,
+            fontFamily = FontFamily.Monospace,
+            color = White.copy(alpha = 0.85f)
+        )
     }
 }
 
@@ -120,12 +105,22 @@ fun ShowVac() {
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
-
         ) {
         Marker(
             state = MarkerState(position = vac),
             title = "Singapore",
             snippet = "Marker in Vac"
+        )
+    }
+}
+
+@Preview
+@Composable
+fun WorkoutScreenPreview() {
+    FreshFitnessTheme() {
+        WorkoutScreen(
+            onNavigateNearbyGyms = {},
+            onNavigateRunning = {}
         )
     }
 }
