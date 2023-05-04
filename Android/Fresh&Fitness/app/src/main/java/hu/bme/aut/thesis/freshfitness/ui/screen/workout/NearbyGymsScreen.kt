@@ -1,8 +1,14 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,8 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,12 +32,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.maps.model.PlacesSearchResult
+import hu.bme.aut.thesis.freshfitness.model.LocationEnabledState
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 import hu.bme.aut.thesis.freshfitness.ui.util.RequireLocationPermissions
 import hu.bme.aut.thesis.freshfitness.viewmodel.NearbyGymsViewModel
@@ -38,20 +50,132 @@ fun NearbyGymsScreen(
     viewModel: NearbyGymsViewModel = viewModel(factory = NearbyGymsViewModel.factory)
 ) {
     RequireLocationPermissions {
-        LaunchedEffect(true) { viewModel.startCurrentLocationQueryFlow() }
+        LaunchedEffect(true) { viewModel.startLocationFlow() }
 
-        if (viewModel.gyms.isEmpty())
-            Text(text = "No gyms found")
-        else
-            LazyColumn(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                items(viewModel.gyms.size) { placeIndex ->
-                    NearByGymItem(place = viewModel.gyms[placeIndex])
+        when (viewModel.locationEnabled) {
+            LocationEnabledState.UNKNOWN -> {
+                LocationEnabledUnknown()
+            }
+            LocationEnabledState.DISABLED -> {
+                LocationDisabled {
+                    viewModel.startLocationFlow()
                 }
             }
+            LocationEnabledState.ENABLED_SEARCHING -> {
+                LocationEnabledSearching()
+            }
+            LocationEnabledState.ENABLED_SEARCHING_FINISHED -> {
+                LocationSearchFinished(gyms = viewModel.gyms)
+            }
+        }
     }
+}
+
+@Composable
+fun LocationDisabled(
+    onTryAgain: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.wrapContentSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(text = "To continue, please turn on device location and then try again")
+            Button(onClick = { onTryAgain() }) {
+                Text(text = "Try again")
+            }
+        }
+    }
+}
+
+@Composable
+fun LocationSearchFinished(gyms: List<PlacesSearchResult>) {
+    if (gyms.isEmpty())
+        Text(text = "No gyms found")
+    else
+        LazyColumn(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            items(gyms.size) { placeIndex ->
+                NearByGymItem(place = gyms[placeIndex])
+            }
+        }
+}
+
+@Composable
+fun LocationEnabledUnknown() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.wrapContentSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            InfiniteCircularProgressBar()
+            Text(
+                text = "Checking settings...",
+                fontStyle = FontStyle.Italic,
+                color = Color.Black.copy(alpha = 0.5f)
+            )
+        }
+    }
+}
+
+@Composable
+fun LocationEnabledSearching() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.wrapContentSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            InfiniteCircularProgressBar()
+            Text(
+                text = "Retrieving location...",
+                fontStyle = FontStyle.Italic,
+                color = Color.Black.copy(alpha = 0.5f)
+            )
+        }
+    }
+}
+
+@Composable
+fun InfiniteCircularProgressBar() {
+    val infiniteTransition = rememberInfiniteTransition()
+    val progress by infiniteTransition.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+            },
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    val rotationDegrees by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+            },
+            repeatMode = RepeatMode.Restart
+        )
+    )
+    CircularProgressIndicator(
+        modifier = Modifier.rotate(rotationDegrees),
+        progress = progress
+    )
 }
 
 @Composable
@@ -101,7 +225,7 @@ fun NearbyGymItem(
                 text = "$rating",
 
                 modifier = Modifier
-                    .padding(start = 4.dp, top = 4.dp, bottom = 4. dp, end = 16.dp)
+                    .padding(start = 4.dp, top = 4.dp, bottom = 4.dp, end = 16.dp)
                     .size(24.dp),
             )
 

@@ -39,11 +39,10 @@ class TrackRunningViewModel(val context: Context) : ViewModel() {
     @SuppressLint("MissingPermission")
     fun startLocationUpdates() {
         locationCallback?.let {
-            val locationRequest = LocationRequest.create().apply {
-                interval = 10000
-                fastestInterval = 5000
-                priority = Priority.PRIORITY_HIGH_ACCURACY
-            }
+            val locationRequest = LocationRequest
+                .Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
+                .build()
+
             fusedLocationClient?.requestLocationUpdates(
                 locationRequest,
                 it,
