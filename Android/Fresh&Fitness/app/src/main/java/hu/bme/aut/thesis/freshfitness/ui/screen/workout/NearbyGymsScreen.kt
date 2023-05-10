@@ -1,10 +1,5 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +15,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.maps.model.PlacesSearchResult
 import hu.bme.aut.thesis.freshfitness.model.LocationEnabledState
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
+import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.ui.util.RequireLocationPermissions
 import hu.bme.aut.thesis.freshfitness.viewmodel.NearbyGymsViewModel
 
@@ -80,7 +74,9 @@ fun LocationDisabled(
         contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.wrapContentSize(),
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .wrapContentSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -147,35 +143,6 @@ fun LocationEnabledSearching() {
             )
         }
     }
-}
-
-@Composable
-fun InfiniteCircularProgressBar() {
-    val infiniteTransition = rememberInfiniteTransition()
-    val progress by infiniteTransition.animateFloat(
-        initialValue = 0.1f,
-        targetValue = 0.9f,
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                durationMillis = 1000
-            },
-            repeatMode = RepeatMode.Reverse
-        )
-    )
-    val rotationDegrees by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                durationMillis = 1000
-            },
-            repeatMode = RepeatMode.Restart
-        )
-    )
-    CircularProgressIndicator(
-        modifier = Modifier.rotate(rotationDegrees),
-        progress = progress
-    )
 }
 
 @Composable
