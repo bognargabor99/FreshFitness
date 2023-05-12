@@ -37,4 +37,6 @@
     <string name="verification_code">Verification code</string>
     <string name="go_back">Go back</string>
     <string name="reset_password">Reset password</string>
+    <string name="search">Search</string>
+    <string name="distance">Distance (m)</string>
 </resources>

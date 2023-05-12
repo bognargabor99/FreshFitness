@@ -33,6 +33,9 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
 
     var locationEnabled by mutableStateOf(LocationEnabledState.UNKNOWN)
 
+    var radius by mutableStateOf(2500)
+        private set
+
     private fun findNearbyGyms() {
         val response: PlacesSearchResponse
         val geoContext = GeoApiContext.Builder()
@@ -41,7 +44,7 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
 
         try {
             response = PlacesApi.nearbySearchQuery(geoContext, currentLocation)
-                .radius(6000)
+                .radius(this.radius)
                 .type(PlaceType.GYM)
                 .language("en")
                 .await()
@@ -94,6 +97,10 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
                 locationEnabled = LocationEnabledState.DISABLED
             }
         )
+    }
+
+    fun changeRadius(newRadius: Int) {
+        this.radius = newRadius
     }
 
     companion object {
