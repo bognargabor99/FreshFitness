@@ -24,7 +24,6 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.model.LocationEnabledState
 
 class NearbyGymsViewModel(val context: Context) : ViewModel() {
-    //private val placesClient: PlacesClient by lazy { Places.createClient(context) }
     private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
 
     private var currentLocation = LatLng(47.0, 19.0)
@@ -68,12 +67,6 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
             }
             .addOnFailureListener {
                 onFailure()
-                /* TODO: implement onActivityResult for this
-                if (exception is ResolvableApiException) {
-                    try {
-                        exception.startResolutionForResult(context as Activity, )
-                    }
-                } */
             }
     }
 

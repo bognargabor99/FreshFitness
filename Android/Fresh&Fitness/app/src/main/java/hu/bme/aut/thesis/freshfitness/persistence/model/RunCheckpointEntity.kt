@@ -17,9 +17,9 @@ import androidx.room.PrimaryKey
 )
 data class RunCheckpointEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val runId: Int = 0,
+    var runId: Long = 0,
     val latitude: Double,
     val longitude: Double,
     val height: Double,
-    val timestamp: String
+    val timestamp: Long
 )

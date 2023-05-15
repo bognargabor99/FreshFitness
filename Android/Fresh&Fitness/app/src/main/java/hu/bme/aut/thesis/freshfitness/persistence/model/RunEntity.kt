@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "runs")
 data class RunEntity(
-    @PrimaryKey(autoGenerate = false)
-    val id: Int,
-    val time: String
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val startTime: Long,
+    val endTime: Long,
 )

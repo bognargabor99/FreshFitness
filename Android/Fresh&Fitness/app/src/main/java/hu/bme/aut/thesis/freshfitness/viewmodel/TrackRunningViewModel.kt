@@ -1,60 +1,52 @@
 package hu.bme.aut.thesis.freshfitness.viewmodel
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Looper
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import hu.bme.aut.thesis.freshfitness.model.LocationState
+import com.google.android.gms.location.LocationSettingsRequest
+import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
+import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
+import hu.bme.aut.thesis.freshfitness.repository.RunningRepository
+import kotlinx.coroutines.launch
 
 class TrackRunningViewModel(val context: Context) : ViewModel() {
-    private var locationCallback: LocationCallback? = null
-    private var fusedLocationClient: FusedLocationProviderClient? = null
-    var currentLocation by mutableStateOf(LocationState())
-    var isTracking by mutableStateOf(false)
 
-    init {
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(p0: LocationResult) {
-                for (lo in p0.locations) {
-                    // Update UI with location data
-                    currentLocation = LocationState(lo.latitude, lo.longitude)
-                }
+    private val repository: RunningRepository =
+        RunningRepository(FreshFitnessApplication.runningDatabase.runningDao())
+
+    var allRuns: MutableLiveData<List<RunWithCheckpoints>> = MutableLiveData()
+
+    var locationSettingState by mutableStateOf(false)
+
+    fun fetchRuns() {
+        viewModelScope.launch {
+            allRuns.value = repository.getRunEntities()
+        }
+    }
+
+    fun deleteRun(runId: Long) {
+        viewModelScope.launch {
+            repository.delete(runId)
+        }.invokeOnCompletion { fetchRuns() }
+    }
+
+    fun checkLocationState() {
+        val client = LocationServices.getSettingsClient(context)
+        client.checkLocationSettings(LocationSettingsRequest.Builder().setAlwaysShow(true).build())
+            .addOnSuccessListener {
+                locationSettingState = it.locationSettingsStates?.run { isGpsUsable || isLocationUsable || isNetworkLocationUsable } == true
             }
-        }
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    }
-
-    @SuppressLint("MissingPermission")
-    fun startLocationUpdates() {
-        locationCallback?.let {
-            val locationRequest = LocationRequest
-                .Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
-                .build()
-
-            fusedLocationClient?.requestLocationUpdates(
-                locationRequest,
-                it,
-                Looper.getMainLooper()
-            )
-            isTracking = true
-        }
-    }
-
-    fun stopLocationUpdates() {
-        locationCallback?.let { fusedLocationClient?.removeLocationUpdates(it) }
-        isTracking = false
+            .addOnFailureListener {
+                locationSettingState = false
+            }
     }
 
     companion object {

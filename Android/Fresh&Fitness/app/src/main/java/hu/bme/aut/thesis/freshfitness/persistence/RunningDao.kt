@@ -12,21 +12,21 @@ import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
 @Dao
 interface RunningDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertNewRun(run: RunEntity): Long
+    fun insertNewRun(run: RunEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertNewRunCheckpoint(checkpoint: RunCheckpointEntity): Long
+    fun insertCheckpointsForRun(checkpoints: List<RunCheckpointEntity>)
 
     @Query("SELECT * FROM runs")
-    suspend fun getRuns(): List<RunEntity>
+    fun getRuns(): List<RunWithCheckpoints>
 
     @Transaction
     @Query("SELECT * FROM runs WHERE id = :runId")
-    suspend fun getCheckpointsForRun(runId: Long): RunWithCheckpoints
+    fun getCheckpointsForRun(runId: Long): RunWithCheckpoints
 
     @Query("DELETE FROM runs")
-    suspend fun deleteAllRuns()
+    fun deleteAllRuns()
 
     @Query("DELETE FROM runs WHERE id = :runId")
-    suspend fun deleteRun(runId: Long)
+    fun deleteRun(runId: Long)
 }
