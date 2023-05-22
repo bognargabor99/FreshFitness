@@ -2,7 +2,6 @@ package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.icu.text.SimpleDateFormat
@@ -96,9 +95,9 @@ fun TrackRunningScreen(
                 onClick = {
                     if (!TrackRunningService.isRunning) {
                         if (permissions.all { ContextCompat.checkSelfPermission(viewModel.context, it) == PackageManager.PERMISSION_GRANTED })
-                            viewModel.context.startService(Intent(viewModel.context, TrackRunningService::class.java))
+                            viewModel.startLocationTrackingService()
                     } else {
-                        viewModel.context.stopService(Intent(viewModel.context, TrackRunningService::class.java))
+                        viewModel.stopLocationTrackingService()
                     }
                 }) {
                 Text(text = stringResource(if (!TrackRunningService.isRunning) R.string.start else R.string.stop))

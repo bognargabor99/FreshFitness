@@ -129,7 +129,14 @@ class TrackRunningService : Service() {
         override fun onLocationResult(result: LocationResult) {
             val location = result.locations.last() ?: return
 
-            lastKnownLocation = location
+            result.locations.forEach {
+                if (lastKnownLocation != null) {
+                    if (lastKnownLocation!!.distanceTo(it) > 1000f && it.time - lastKnownLocation!!.time < 60000)
+                        lastKnownLocation = location
+                }
+                else
+                    lastKnownLocation = location
+            }
 
             val checkpoint = RunCheckpointEntity(
                 latitude = location.latitude,

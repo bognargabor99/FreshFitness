@@ -1,6 +1,7 @@
 package hu.bme.aut.thesis.freshfitness.viewmodel
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -15,6 +16,7 @@ import com.google.android.gms.location.LocationSettingsRequest
 import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
 import hu.bme.aut.thesis.freshfitness.repository.RunningRepository
+import hu.bme.aut.thesis.freshfitness.service.TrackRunningService
 import kotlinx.coroutines.launch
 
 class TrackRunningViewModel(val context: Context) : ViewModel() {
@@ -36,6 +38,14 @@ class TrackRunningViewModel(val context: Context) : ViewModel() {
         viewModelScope.launch {
             repository.delete(runId)
         }.invokeOnCompletion { fetchRuns() }
+    }
+
+    fun startLocationTrackingService() {
+        this.context.startForegroundService(Intent(this.context, TrackRunningService::class.java))
+    }
+
+    fun stopLocationTrackingService() {
+        this.context.stopService(Intent(this.context, TrackRunningService::class.java))
     }
 
     fun checkLocationState() {
