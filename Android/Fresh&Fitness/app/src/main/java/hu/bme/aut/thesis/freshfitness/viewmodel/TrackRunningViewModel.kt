@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 class TrackRunningViewModel(val context: Context) : ViewModel() {
 
     private val repository: RunningRepository =
-        RunningRepository(FreshFitnessApplication.runningDatabase.runningDao())
+        RunningRepository(FreshFitnessApplication.runningDatabase.freshFitnessDao())
 
     var allRuns: MutableLiveData<List<RunWithCheckpoints>> = MutableLiveData()
 

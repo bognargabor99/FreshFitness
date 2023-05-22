@@ -5,12 +5,13 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import hu.bme.aut.thesis.freshfitness.persistence.model.FavouritePlaceEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
 
 @Dao
-interface RunningDao {
+interface FreshFitnessDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertNewRun(run: RunEntity): Long
 
@@ -29,4 +30,7 @@ interface RunningDao {
 
     @Query("DELETE FROM runs WHERE id = :runId")
     fun deleteRun(runId: Long)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertNewFavouritePlace(place: FavouritePlaceEntity): Long
 }

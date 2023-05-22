@@ -41,7 +41,7 @@ class TrackRunningService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        repository = RunningRepository(FreshFitnessApplication.runningDatabase.runningDao())
+        repository = RunningRepository(FreshFitnessApplication.runningDatabase.freshFitnessDao())
         Log.d("trackRunningService", "Opened database, created repository")
     }
 

@@ -5,17 +5,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,10 +35,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.maps.model.PlacesSearchResult
 import hu.bme.aut.thesis.freshfitness.model.LocationEnabledState
+import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 import hu.bme.aut.thesis.freshfitness.ui.util.DistanceFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.ui.util.RequireLocationPermissions
@@ -71,7 +78,8 @@ fun NearbyGymsScreen(
                     radius = viewModel.radius,
                     onValueChange = { viewModel.changeRadius(it.toInt()) },
                     gyms = viewModel.gyms,
-                    onQuery = { viewModel.startLocationFlow() }
+                    onQuery = { viewModel.startLocationFlow() },
+                    onSaveItem = { viewModel.savePlace(it) }
                 )
             }
         }
@@ -102,7 +110,7 @@ fun LocationDisabled(
 }
 
 @Composable
-fun LocationSearchFinished(radius: Int, onValueChange: (Float) -> Unit, gyms: List<PlacesSearchResult>, onQuery: () -> Unit) {
+fun LocationSearchFinished(radius: Int, onValueChange: (Float) -> Unit, gyms: List<PlacesSearchResult>, onQuery: () -> Unit, onSaveItem: (PlacesSearchResult) -> Unit) {
     Column {
         DistanceFilter(
             radius = radius,
@@ -120,7 +128,10 @@ fun LocationSearchFinished(radius: Int, onValueChange: (Float) -> Unit, gyms: Li
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 items(gyms.size) { placeIndex ->
-                    NearByGymItem(place = gyms[placeIndex])
+                    NearByGymItem(
+                        place = gyms[placeIndex],
+                        onSaveItem = onSaveItem
+                    )
                 }
             }
     }
@@ -175,7 +186,7 @@ fun LocationEnabledSearching(radius: Int, onValueChange: (Float) -> Unit, onQuer
             Column(
                 modifier = Modifier.wrapContentSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 InfiniteCircularProgressBar()
                 Text(
@@ -190,54 +201,63 @@ fun LocationEnabledSearching(radius: Int, onValueChange: (Float) -> Unit, onQuer
 
 @Composable
 fun NearByGymItem(
-    place: PlacesSearchResult
+    place: PlacesSearchResult,
+    onSaveItem: (PlacesSearchResult) -> Unit
 ) {
     NearbyGymItem(
-        rating = place.rating,
         name = place.name ?: "Default name",
-        address = place.vicinity ?: "Default address"
+        address = place.vicinity ?: "Default address",
+        onSaveToFavourites = { onSaveItem(place) }
     )
 }
 
 @Composable
 fun NearbyGymItem(
-    rating: Float,
     name: String,
-    address: String
+    address: String,
+    onSaveToFavourites: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier.clickable { expanded = !expanded }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 70.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .border(
-                    width = 1.dp,
-                    color = Color.DarkGray.copy(alpha = 0.3f),
-                    RoundedCornerShape(16.dp)
-                )
-                .padding(6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceAround
-            ) {
-                Text(text = name, modifier = Modifier.padding(bottom = 6.dp), style = MaterialTheme.typography.titleLarge.copy(color = Color.Black.copy(alpha = 0.6f)), fontWeight = FontWeight.Bold)
-                Text(text = address, style = MaterialTheme.typography.labelLarge.copy(color = Color.Black.copy(alpha = 0.6f)))
-            }
-            Text(
-                text = "$rating",
-
-                modifier = Modifier
-                    .padding(start = 4.dp, top = 4.dp, bottom = 4.dp, end = 16.dp)
-                    .size(24.dp),
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Max)
+            .clip(RoundedCornerShape(8.dp))
+            .border(
+                width = 1.dp,
+                color = Color.DarkGray.copy(alpha = 0.3f),
+                RoundedCornerShape(8.dp)
             )
+            .padding(6.dp)
+            .clickable { expanded = !expanded },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(.8f),
+            verticalArrangement = Arrangement.SpaceAround
+        ) {
+            Text(text = name, modifier = Modifier.padding(bottom = 6.dp), style = MaterialTheme.typography.titleLarge.copy(color = Color.Black.copy(alpha = 0.6f)), fontWeight = FontWeight.Bold)
+            Text(text = address, style = MaterialTheme.typography.labelLarge.copy(color = Color.Black.copy(alpha = 0.6f)))
+        }
+        IconButton(
+            modifier = Modifier.weight(.2f),
+            onClick = onSaveToFavourites,
+        ) {
+            Icon(imageVector = Icons.Filled.Star, tint = MaterialTheme.colorScheme.onBackground, contentDescription = "Save to favourites")
+        }
+    }
+}
+
+@Preview
+@Composable
+fun NearbyGymItemPreview() {
+    FreshFitnessTheme {
+        NearbyGymItem(name = "Muscle Beach", address = "Siófok, Petőfi stny. 3-5, 8600") {
+
         }
     }
 }

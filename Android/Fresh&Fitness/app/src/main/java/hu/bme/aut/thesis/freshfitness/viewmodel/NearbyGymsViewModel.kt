@@ -21,16 +21,20 @@ import com.google.maps.model.PlaceType
 import com.google.maps.model.PlacesSearchResponse
 import com.google.maps.model.PlacesSearchResult
 import hu.bme.aut.thesis.freshfitness.BuildConfig
+import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
 import hu.bme.aut.thesis.freshfitness.model.LocationEnabledState
+import hu.bme.aut.thesis.freshfitness.repository.FavouritePlacesRepository
 
 class NearbyGymsViewModel(val context: Context) : ViewModel() {
     private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
-
     private var currentLocation = LatLng(47.0, 19.0)
+    private val repository = FavouritePlacesRepository(FreshFitnessApplication.runningDatabase.freshFitnessDao())
 
     var gyms by mutableStateOf(listOf<PlacesSearchResult>())
 
     var locationEnabled by mutableStateOf(LocationEnabledState.UNKNOWN)
+
+    var savingPlaceState by mutableStateOf(false)
 
     var radius by mutableStateOf(2500)
         private set
@@ -94,6 +98,10 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
 
     fun changeRadius(newRadius: Int) {
         this.radius = newRadius
+    }
+
+    fun savePlace(place: PlacesSearchResult) {
+        repository.savePlace(place)
     }
 
     companion object {
