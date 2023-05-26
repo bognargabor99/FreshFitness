@@ -33,4 +33,10 @@ interface FreshFitnessDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertNewFavouritePlace(place: FavouritePlaceEntity): Long
+
+    @Query("SELECT * FROM favourite_places")
+    fun getFavouritePlaces(): List<FavouritePlaceEntity>
+
+    @Query("DELETE FROM favourite_places WHERE id = :placeId")
+    fun deletePlace(placeId: String)
 }

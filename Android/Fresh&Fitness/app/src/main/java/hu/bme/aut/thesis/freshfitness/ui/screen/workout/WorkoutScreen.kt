@@ -24,12 +24,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 
@@ -92,24 +86,6 @@ fun ImageWithTextOverlay(
             fontSize = 48.sp,
             fontFamily = FontFamily.Monospace,
             color = White.copy(alpha = 0.85f)
-        )
-    }
-}
-
-@Composable
-fun ShowVac() {
-    val vac = LatLng(47.78703,19.1207415)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(vac, 10f)
-    }
-    GoogleMap(
-        modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState,
-        ) {
-        Marker(
-            state = MarkerState(position = vac),
-            title = "Singapore",
-            snippet = "Marker in Vac"
         )
     }
 }

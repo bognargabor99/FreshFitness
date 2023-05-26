@@ -2,11 +2,13 @@ package hu.bme.aut.thesis.freshfitness.viewmodel
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -23,21 +25,33 @@ import com.google.maps.model.PlacesSearchResult
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
 import hu.bme.aut.thesis.freshfitness.model.LocationEnabledState
+import hu.bme.aut.thesis.freshfitness.model.NearByGymShowLocationState
+import hu.bme.aut.thesis.freshfitness.persistence.model.FavouritePlaceEntity
 import hu.bme.aut.thesis.freshfitness.repository.FavouritePlacesRepository
+import kotlinx.coroutines.launch
 
 class NearbyGymsViewModel(val context: Context) : ViewModel() {
     private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
     private var currentLocation = LatLng(47.0, 19.0)
     private val repository = FavouritePlacesRepository(FreshFitnessApplication.runningDatabase.freshFitnessDao())
 
+    var showLocationState: NearByGymShowLocationState by mutableStateOf(NearByGymShowLocationState.NotShow)
+        private set
+
+    var shownLocation: com.google.android.gms.maps.model.LatLng by mutableStateOf(com.google.android.gms.maps.model.LatLng(47.0, 19.0))
+        private set
+
     var gyms by mutableStateOf(listOf<PlacesSearchResult>())
+    var favouritePlaces by mutableStateOf(listOf<FavouritePlaceEntity>())
 
     var locationEnabled by mutableStateOf(LocationEnabledState.UNKNOWN)
 
-    var savingPlaceState by mutableStateOf(false)
-
     var radius by mutableStateOf(2500)
         private set
+
+    init {
+        getPlaces()
+    }
 
     private fun findNearbyGyms() {
         val response: PlacesSearchResponse
@@ -49,10 +63,10 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
             response = PlacesApi.nearbySearchQuery(geoContext, currentLocation)
                 .radius(this.radius)
                 .type(PlaceType.GYM)
-                .language("en")
                 .await()
             locationEnabled = LocationEnabledState.ENABLED_SEARCHING_FINISHED
             gyms = response.results.toList()
+            gyms[0].geometry.location
         } catch (_: Exception) {
 
         }
@@ -100,8 +114,40 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
         this.radius = newRadius
     }
 
+    fun showPlaceOnMap(place: PlacesSearchResult) {
+        Log.d("fitness_places", "Showing map")
+        showLocationState = NearByGymShowLocationState.Show(
+            place = com.google.android.gms.maps.model.LatLng(place.geometry.location.lat, place.geometry.location.lng)
+        )
+        shownLocation = (showLocationState as NearByGymShowLocationState.Show).place
+    }
+
+    fun hideMap() {
+        Log.d("fitness_places", "Hiding map")
+        showLocationState = NearByGymShowLocationState.NotShow
+    }
+
+    private fun getPlaces() {
+        viewModelScope.launch {
+            favouritePlaces = repository.getPlaces()
+            Log.d("fitness_places", favouritePlaces.joinToString { it.name })
+        }
+    }
+
     fun savePlace(place: PlacesSearchResult) {
-        repository.savePlace(place)
+        viewModelScope.launch {
+            if (!favouritePlaces.any { it.id == place.placeId }) {
+                Log.d("fitness_places", "Saving new place: ${place.name}")
+                repository.savePlace(place)
+            }
+            else {
+                Log.d("fitness_places", "Deleting place: ${place.name}")
+                repository.deletePlace(place.placeId)
+            }
+        }.invokeOnCompletion {
+            getPlaces()
+        }
+
     }
 
     companion object {
