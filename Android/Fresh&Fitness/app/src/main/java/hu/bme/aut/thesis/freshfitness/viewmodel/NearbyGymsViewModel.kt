@@ -101,6 +101,7 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
 
     fun startLocationFlow() {
         locationEnabled = LocationEnabledState.UNKNOWN
+        showSavedList = false
         checkLocationSettings(
             onLocationEnabled = {
                 locationEnabled = LocationEnabledState.ENABLED_SEARCHING
