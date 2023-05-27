@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,11 +54,13 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.model.PlacesSearchResult
+import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.LocationEnabledState
 import hu.bme.aut.thesis.freshfitness.model.NearByGymShowLocationState
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 import hu.bme.aut.thesis.freshfitness.ui.util.DistanceFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
+import hu.bme.aut.thesis.freshfitness.ui.util.MapMarker
 import hu.bme.aut.thesis.freshfitness.ui.util.RequireLocationPermissions
 import hu.bme.aut.thesis.freshfitness.viewmodel.NearbyGymsViewModel
 import kotlinx.coroutines.launch
@@ -100,7 +103,8 @@ fun NearbyGymsScreen(
                     onGoToPlace = { viewModel.showPlaceOnMap(it) },
                     onHidePlace = { viewModel.hideMap() },
                     locationState = viewModel.showLocationState,
-                    shownLocation = viewModel.shownLocation
+                    shownLocation = viewModel.shownLocation,
+                    userLocation =  viewModel.currentLocation
                 )
             }
         }
@@ -142,7 +146,8 @@ fun LocationSearchFinished(
     onGoToPlace: (PlacesSearchResult) -> Unit,
     onHidePlace: () -> Unit,
     locationState: NearByGymShowLocationState,
-    shownLocation: LatLng
+    shownLocation: LatLng,
+    userLocation: LatLng
 ) {
     val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.Hidden, skipHiddenState = false, confirmValueChange = {
         if (it == SheetValue.Hidden) {
@@ -157,7 +162,10 @@ fun LocationSearchFinished(
         sheetPeekHeight = 0.dp,
         sheetContent = {
             if (locationState is NearByGymShowLocationState.Show)
-                GoogleMapSheetContent(shownLocation = shownLocation)
+                GoogleMapSheetContent(
+                    shownLocation = shownLocation,
+                    userLocation = userLocation
+                )
         }) {
         Column {
             DistanceFilter(
@@ -186,7 +194,6 @@ fun LocationSearchFinished(
                             onGo = {
                                 scope.launch {
                                     onGoToPlace(gyms[placeIndex])
-                                    sheetState.expand()
                                     sheetState.expand()
                                 }
                             }
@@ -261,9 +268,12 @@ fun LocationEnabledSearching(radius: Int, onValueChange: (Float) -> Unit, onQuer
 }
 
 @Composable
-fun GoogleMapSheetContent(shownLocation: LatLng) {
+fun GoogleMapSheetContent(
+    shownLocation: LatLng,
+    userLocation: LatLng
+) {
     val cameraState = rememberCameraPositionState() {
-        position = CameraPosition.fromLatLngZoom(shownLocation, 13f)
+        position = CameraPosition.fromLatLngZoom(shownLocation, 13.5f)
     }
     Box(
         modifier = Modifier
@@ -280,6 +290,11 @@ fun GoogleMapSheetContent(shownLocation: LatLng) {
                 state = MarkerState(position = shownLocation),
                 title = "Here"
             )
+            MapMarker(
+                context = LocalContext.current,
+                position = userLocation,
+                title = "You are here",
+                iconResourceId = R.drawable.ic_map_marker)
         }
     }
 }

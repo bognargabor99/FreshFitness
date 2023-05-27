@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 
 class NearbyGymsViewModel(val context: Context) : ViewModel() {
     private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
-    private var currentLocation = LatLng(47.0, 19.0)
+    var currentLocation by mutableStateOf(com.google.android.gms.maps.model.LatLng(47.0, 19.0))
     private val repository = FavouritePlacesRepository(FreshFitnessApplication.runningDatabase.freshFitnessDao())
 
     var showLocationState: NearByGymShowLocationState by mutableStateOf(NearByGymShowLocationState.NotShow)
@@ -60,13 +60,12 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
             .build()
 
         try {
-            response = PlacesApi.nearbySearchQuery(geoContext, currentLocation)
+            response = PlacesApi.nearbySearchQuery(geoContext, LatLng(currentLocation.latitude, currentLocation.longitude))
                 .radius(this.radius)
                 .type(PlaceType.GYM)
                 .await()
             locationEnabled = LocationEnabledState.ENABLED_SEARCHING_FINISHED
             gyms = response.results.toList()
-            gyms[0].geometry.location
         } catch (_: Exception) {
 
         }
@@ -92,7 +91,7 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
     fun queryLocation() {
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token)
             .addOnSuccessListener {
-                this.currentLocation = LatLng(it.latitude, it.longitude)
+                this.currentLocation = com.google.android.gms.maps.model.LatLng(it.latitude, it.longitude)
                 findNearbyGyms()
             }
     }
