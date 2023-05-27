@@ -41,6 +41,9 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
     var shownLocation: com.google.android.gms.maps.model.LatLng by mutableStateOf(com.google.android.gms.maps.model.LatLng(47.0, 19.0))
         private set
 
+    var showSavedList by mutableStateOf(false)
+        private set
+
     var gyms by mutableStateOf(listOf<PlacesSearchResult>())
     var favouritePlaces by mutableStateOf(listOf<FavouritePlaceEntity>())
 
@@ -124,6 +127,14 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
     fun hideMap() {
         Log.d("fitness_places", "Hiding map")
         showLocationState = NearByGymShowLocationState.NotShow
+    }
+
+    fun setShowSavedList() {
+        showSavedList = !showSavedList
+        if (!showSavedList)
+            startLocationFlow()
+        else
+            gyms = favouritePlaces.map { it.toPlacesSearchResult() }
     }
 
     private fun getPlaces() {

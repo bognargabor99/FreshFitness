@@ -81,7 +81,9 @@ dependencies {
     implementation 'com.google.maps:google-maps-services:0.11.0'
     implementation 'com.google.maps.android:android-maps-utils:3.4.0'
 
-
+    // Glance (Widget)
+    implementation "androidx.glance:glance:1.0.0-alpha05"
+    implementation "androidx.glance:glance-appwidget:1.0.0-alpha05"
 
     // Room
     def room_version = "2.5.1"

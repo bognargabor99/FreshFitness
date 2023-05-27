@@ -47,4 +47,8 @@
     <string name="delete_run">Delete run</string>
     <string name="meters">%1$.2f meters</string>
     <string name="end">End</string>
+    <string name="gyms_nearby">Gyms nearby</string>
+    <string name="track_running">Track running</string>
+    <string name="refresh">Refresh</string>
+    <string name="view_saved">View saved places</string>
 </resources>

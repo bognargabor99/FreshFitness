@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Grade
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.BottomSheetScaffold
@@ -27,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
@@ -40,7 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,34 +77,59 @@ fun NearbyGymsScreen(
     RequireLocationPermissions {
         LaunchedEffect(true) { viewModel.startLocationFlow() }
 
-        when (viewModel.locationEnabled) {
-            LocationEnabledState.UNKNOWN -> {
-                LocationEnabledUnknown(
-                    radius = viewModel.radius,
-                    onValueChange = { viewModel.changeRadius(it.toInt()) },
-                    onQuery = { viewModel.startLocationFlow() }
-                )
-            }
-            LocationEnabledState.DISABLED -> {
-                LocationDisabled {
-                    viewModel.startLocationFlow()
+        Column {
+            NearbyGymsTopAppBar(
+                onRefresh = { viewModel.startLocationFlow() },
+                onLoadList = { viewModel.setShowSavedList() }
+            )
+            Divider()
+            if (!viewModel.showSavedList) {
+                when (viewModel.locationEnabled) {
+                    LocationEnabledState.UNKNOWN -> {
+                        LocationEnabledUnknown(
+                            radius = viewModel.radius,
+                            onValueChange = { viewModel.changeRadius(it.toInt()) }
+                        )
+                    }
+
+                    LocationEnabledState.DISABLED -> {
+                        LocationDisabled {
+                            viewModel.startLocationFlow()
+                        }
+                    }
+
+                    LocationEnabledState.ENABLED_SEARCHING -> {
+                        LocationEnabledSearching(
+                            radius = viewModel.radius,
+                            onValueChange = { viewModel.changeRadius(it.toInt()) },
+                            onQuery = { viewModel.startLocationFlow() }
+                        )
+                    }
+
+                    LocationEnabledState.ENABLED_SEARCHING_FINISHED -> {
+                        GymListScreen(
+                            useDistanceFilter = true,
+                            radius = viewModel.radius,
+                            onRadiusChange = { viewModel.changeRadius(it.toInt()) },
+                            gyms = viewModel.gyms,
+                            onSaveItem = { viewModel.savePlace(it) },
+                            onCheckSaved = { place -> viewModel.favouritePlaces.any { it.id == place.placeId }},
+                            onGoToPlace = { viewModel.showPlaceOnMap(it) },
+                            onHidePlace = { viewModel.hideMap() },
+                            locationState = viewModel.showLocationState,
+                            shownLocation = viewModel.shownLocation,
+                            userLocation =  viewModel.currentLocation
+                        )
+                    }
                 }
-            }
-            LocationEnabledState.ENABLED_SEARCHING -> {
-                LocationEnabledSearching(
-                    radius = viewModel.radius,
-                    onValueChange = { viewModel.changeRadius(it.toInt()) },
-                    onQuery = { viewModel.startLocationFlow() }
-                )
-            }
-            LocationEnabledState.ENABLED_SEARCHING_FINISHED -> {
-                LocationSearchFinished(
-                    radius = viewModel.radius,
-                    onValueChange = { viewModel.changeRadius(it.toInt()) },
+            } else {
+                GymListScreen(
+                    useDistanceFilter = false,
+                    radius = 0,
+                    onRadiusChange = { },
                     gyms = viewModel.gyms,
-                    onQuery = { viewModel.startLocationFlow() },
                     onSaveItem = { viewModel.savePlace(it) },
-                    onCheckSaved = { place -> !viewModel.favouritePlaces.none{ it.id == place.placeId }},
+                    onCheckSaved = { place -> viewModel.favouritePlaces.any { it.id == place.placeId }},
                     onGoToPlace = { viewModel.showPlaceOnMap(it) },
                     onHidePlace = { viewModel.hideMap() },
                     locationState = viewModel.showLocationState,
@@ -109,6 +139,29 @@ fun NearbyGymsScreen(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NearbyGymsTopAppBar(
+    onRefresh: () -> Unit,
+    onLoadList: () -> Unit
+) {
+    TopAppBar(
+        title = { Text(stringResource(R.string.gyms_nearby)) },
+        actions = {
+            TopAppBarActionButton(
+                imageVector = Icons.Default.Refresh,
+                description = stringResource(id = R.string.refresh),
+                onClick = onRefresh
+            )
+            TopAppBarActionButton(
+                imageVector = Icons.Default.Grade,
+                description = stringResource(id = R.string.view_saved),
+                onClick = onLoadList
+            )
+        },
+    )
 }
 
 @Composable
@@ -134,13 +187,26 @@ fun LocationDisabled(
     }
 }
 
+@Composable
+fun TopAppBarActionButton(
+    imageVector: ImageVector,
+    description: String,
+    onClick: () -> Unit
+) {
+    IconButton(onClick = {
+        onClick()
+    }) {
+        Icon(imageVector = imageVector, contentDescription = description)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationSearchFinished(
+fun GymListScreen(
+    useDistanceFilter: Boolean,
     radius: Int,
-    onValueChange: (Float) -> Unit,
+    onRadiusChange: (Float) -> Unit,
     gyms: List<PlacesSearchResult>,
-    onQuery: () -> Unit,
     onSaveItem: (PlacesSearchResult) -> Unit,
     onCheckSaved: (PlacesSearchResult) -> Boolean,
     onGoToPlace: (PlacesSearchResult) -> Unit,
@@ -168,12 +234,14 @@ fun LocationSearchFinished(
                 )
         }) {
         Column {
-            DistanceFilter(
-                radius = radius,
-                onValueChange = onValueChange,
-                onQuery = onQuery
-            )
-            Divider()
+            if (useDistanceFilter) {
+                DistanceFilter(
+                    radius = radius,
+                    onValueChange = onRadiusChange,
+                    onQuery = { }
+                )
+                Divider()
+            }
             if (gyms.isEmpty())
                 Text(
                     modifier = Modifier
@@ -202,16 +270,15 @@ fun LocationSearchFinished(
                 }
         }
     }
-
 }
 
 @Composable
-fun LocationEnabledUnknown(radius: Int, onValueChange: (Float) -> Unit, onQuery: () -> Unit) {
+fun LocationEnabledUnknown(radius: Int, onValueChange: (Float) -> Unit) {
     Column {
         DistanceFilter(
             radius = radius,
             onValueChange = onValueChange,
-            onQuery = onQuery
+            onQuery = { }
         )
 
         Divider()

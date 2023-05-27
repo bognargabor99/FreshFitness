@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,7 +40,7 @@ fun WorkoutScreen(
             modifier = Modifier.fillMaxHeight(0.5f),
             painter = painterResource(R.drawable.workout_running),
             contentDescription = "Go running",
-            text = "Track running",
+            text = stringResource(R.string.track_running),
             onClick = {
                 Log.i("fresh_fitness_workout", "Clicked Start running")
                 onNavigateRunning()
@@ -48,8 +49,8 @@ fun WorkoutScreen(
         ImageWithTextOverlay(
             modifier = Modifier.fillMaxHeight(1f),
             painter = painterResource(R.drawable.workout_places),
-            contentDescription = "Go running",
-            text = "Gyms nearby",
+            contentDescription = "Find nearby gyms",
+            text = stringResource(R.string.gyms_nearby),
             onClick = {
                 Log.i("fresh_fitness_workout", "Clicked gyms near you")
                 onNavigateNearbyGyms()

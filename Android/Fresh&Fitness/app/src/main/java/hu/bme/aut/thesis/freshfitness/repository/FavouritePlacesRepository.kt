@@ -20,7 +20,11 @@ class FavouritePlacesRepository(private val dao: FreshFitnessDao) {
                 FavouritePlaceEntity(
                     id = place.placeId,
                     name = place.name,
-                    location = place.vicinity
+                    location = place.vicinity,
+                    latitude = place.geometry.location.lat,
+                    longitude = place.geometry.location.lng,
+                    rating = place.rating,
+                    totalRatings = place.userRatingsTotal
                 )
             )
         }
