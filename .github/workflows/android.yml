@@ -21,6 +21,6 @@ jobs:
         cache: gradle
 
     - name: Grant execute permission for gradlew
-      run: chmod +x gradle
+      run: chmod +x Android/Fresh&Fitness/gradle
     - name: Build with Gradle
-      run: gradle build
+      run: Android/Fresh&Fitness/gradle build
