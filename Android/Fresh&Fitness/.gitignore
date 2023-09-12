@@ -168,3 +168,5 @@ fabric.properties
 
 # Additionals
 apikey.properties
+amplifyconfiguration.json
+awsconfiguration.json

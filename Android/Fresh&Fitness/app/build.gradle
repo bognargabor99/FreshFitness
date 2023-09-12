@@ -38,6 +38,8 @@ android {
         }
     }
     compileOptions {
+        coreLibraryDesugaringEnabled true
+
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -55,6 +57,10 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+}
+
+configurations.configureEach {
+    resolutionStrategy.force "androidx.compose.animation:animation:$compose_version"
 }
 
 dependencies {
@@ -81,10 +87,6 @@ dependencies {
     implementation 'com.google.maps:google-maps-services:0.11.0'
     implementation 'com.google.maps.android:android-maps-utils:3.4.0'
 
-    // Glance (Widget)
-    implementation "androidx.glance:glance:1.0.0-alpha05"
-    implementation "androidx.glance:glance-appwidget:1.0.0-alpha05"
-
     // Room
     def room_version = "2.5.1"
     implementation "androidx.room:room-runtime:$room_version"
@@ -92,7 +94,15 @@ dependencies {
     annotationProcessor "androidx.room:room-compiler:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
 
-    // Amazon Web Services
+    // Amazon Web Services & Amplify
+    // Amplify core dependency
+    implementation("com.amplifyframework:core:2.13.0")
+    implementation("com.amplifyframework:aws-auth-cognito:2.13.0")
+    // Authenticator composable
+    implementation("com.amplifyframework.ui:authenticator:1.0.0")
+
+    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.3")
+
     implementation 'com.amazonaws:aws-android-sdk-cognitoauth:2.65.0'
     implementation 'com.amazonaws:aws-android-sdk-auth-userpools:2.65.0'
     implementation 'com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.65.0'
