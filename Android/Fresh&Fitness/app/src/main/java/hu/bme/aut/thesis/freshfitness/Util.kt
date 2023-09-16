@@ -11,6 +11,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.SphericalUtil
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
+import java.nio.charset.Charset
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 
 fun List<RunCheckpointEntity>.calculateDistanceInMeters() : Double {
@@ -49,8 +51,12 @@ fun setCustomMapIcon(message: String): BitmapDescriptor {
     canvas.drawPath(path, paintWhite)
     canvas.drawText(message, width/2, height * 2/3 * 2/3, paintTextWhite)
 
-
     return BitmapDescriptorFactory.fromBitmap(bm)
+}
+
+fun decodeJWT(accessToken: String): String {
+    val decodedBytes = Base64.getDecoder().decode(accessToken)
+    return String(decodedBytes, Charset.defaultCharset())
 }
 
 val paintBlackFill = Paint().apply {

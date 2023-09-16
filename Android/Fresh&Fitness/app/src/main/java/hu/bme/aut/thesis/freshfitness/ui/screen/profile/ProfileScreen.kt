@@ -23,16 +23,20 @@ fun ProfileScreen(
         headerContent = {
             Image(
                 modifier = Modifier.height(160.dp).fillMaxWidth(),
-                painter = painterResource(id = R.drawable.freshfitness_logo_foreground),
+                painter = painterResource(id = R.drawable.freshfitness_logo_big),
                 alignment = Alignment.Center,
                 contentScale = ContentScale.FillHeight,
                 contentDescription = null
             )
         }
     ) {
-        LoggedInScreen {
-            viewModel.signOut()
-        }
+        LoggedInScreen(
+            onLaunch = {
+                viewModel.setIsAdmin()
+                       },
+            isAdmin = viewModel.isAdmin,
+            onLogOut = { viewModel.signOut() }
+        )
     }
 }
 

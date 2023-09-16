@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,8 +33,13 @@ import hu.bme.aut.thesis.freshfitness.R
 
 @Composable
 fun LoggedInScreen(
+    onLaunch: () -> Unit,
+    isAdmin: Boolean,
     onLogOut: () -> Unit
 ) {
+    LaunchedEffect(key1 = false) {
+        onLaunch()
+    }
     Box {
         Column(
             modifier = Modifier
@@ -42,9 +48,8 @@ fun LoggedInScreen(
                 .wrapContentSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("You're logged in")
             ProfileImage()
-            ProfileInfo()
+            ProfileInfo(isAdmin)
         }
         IconButton(
             onClick = onLogOut,
@@ -81,7 +86,9 @@ private fun ProfileImage(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ProfileInfo() {
+private fun ProfileInfo(
+    isAdmin: Boolean
+) {
     Column(
         modifier = Modifier
             .padding(6.dp),
@@ -95,7 +102,7 @@ private fun ProfileInfo() {
         )
 
         Text(
-            text = "Fresh & Fitness Admin",
+            text = if (isAdmin) "Fresh & Fitness Admin" else "Fresh & Fitness User",
             modifier = Modifier.padding(4.dp)
         )
 
