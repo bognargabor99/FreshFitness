@@ -87,10 +87,15 @@ dependencies {
 
     // Amazon Web Services & Amplify
     // Amplify core dependency
-    implementation("com.amplifyframework:core:2.13.0")
+    implementation("com.amplifyframework:core:2.13.2")
+    // Cognito
     implementation("com.amplifyframework:aws-auth-cognito:2.13.0")
     // Authenticator composable
     implementation("com.amplifyframework.ui:authenticator:1.0.0")
+    // API Gateway
+    implementation 'com.amplifyframework:aws-api:2.13.2'
+    // S3 storage
+    implementation 'com.amplifyframework:aws-storage-s3:2.13.2'
 
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.3")
 
