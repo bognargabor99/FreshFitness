@@ -35,7 +35,7 @@ fun InfiniteCircularProgressBar() {
                 durationMillis = 1000
             },
             repeatMode = RepeatMode.Reverse
-        )
+        ), label = ""
     )
     val rotationDegrees by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -45,7 +45,7 @@ fun InfiniteCircularProgressBar() {
                 durationMillis = 1000
             },
             repeatMode = RepeatMode.Restart
-        )
+        ), label = ""
     )
     CircularProgressIndicator(
         modifier = Modifier.rotate(rotationDegrees),

@@ -51,4 +51,7 @@
     <string name="track_running">Track running</string>
     <string name="refresh">Refresh</string>
     <string name="view_saved">View saved places</string>
+    <string name="newest_posts">Newest posts</string>
+    <string name="loading_posts">Loading posts</string>
+    <string name="no_posts">There are no posts on the feed.\nCome back later or create a new post.</string>
 </resources>

@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -12,6 +13,9 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.SphericalUtil
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
 import java.nio.charset.Charset
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 
@@ -57,6 +61,23 @@ fun setCustomMapIcon(message: String): BitmapDescriptor {
 fun decodeJWT(accessToken: String): String {
     val decodedBytes = Base64.getDecoder().decode(accessToken)
     return String(decodedBytes, Charset.defaultCharset())
+}
+
+@SuppressLint("SimpleDateFormat")
+fun parseDateToString(dateStr: String): String {
+    val today = LocalDate.now()
+    val yesterday = LocalDate.now().minusDays(1)
+    val aWeekBefore = LocalDate.now().minusWeeks(1)
+    val date = LocalDate.parse(dateStr.take(10))
+
+    return if (date.equals(today))
+        "Today, " + LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("HH:mm"))
+    else if (date.equals(yesterday))
+        "Yesterday, " + LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("HH:mm"))
+    else if (date.isAfter(aWeekBefore))
+        LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("EEEE HH:mm"))
+    else
+        LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("MM-dd HH:mm"))
 }
 
 val paintBlackFill = Paint().apply {
