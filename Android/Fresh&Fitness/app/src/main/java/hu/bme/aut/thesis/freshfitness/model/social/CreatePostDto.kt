@@ -1,9 +1,11 @@
 package hu.bme.aut.thesis.freshfitness.model.social
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CreatePostDto(
     val details: String,
     val username: String,
-    @SerializedName(value = "image_location") val imageLocation: String
+    @SerialName(value = "image_location") val imageLocation: String
 )

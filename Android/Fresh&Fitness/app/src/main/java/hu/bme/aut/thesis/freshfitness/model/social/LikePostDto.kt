@@ -1,8 +1,10 @@
 package hu.bme.aut.thesis.freshfitness.model.social
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class LikePostDto(
-    @SerializedName(value = "post_id") val postId: Int,
+    @SerialName(value = "post_id") val postId: Int,
     val username: String
 )

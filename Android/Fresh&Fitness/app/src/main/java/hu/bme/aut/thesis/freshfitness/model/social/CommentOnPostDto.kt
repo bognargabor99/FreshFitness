@@ -1,9 +1,11 @@
 package hu.bme.aut.thesis.freshfitness.model.social
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CommentOnPostDto(
-    @SerializedName(value = "post_id") val postId: Int,
+    @SerialName(value = "post_id") val postId: Int,
     val text: String,
     val username: String
 )

@@ -14,8 +14,6 @@ import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.options.StorageUploadFileOptions
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import hu.bme.aut.thesis.freshfitness.decodeJWT
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.CommentOnPostDto
@@ -26,6 +24,8 @@ import hu.bme.aut.thesis.freshfitness.model.social.LikeDto
 import hu.bme.aut.thesis.freshfitness.model.social.LikePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.PagedPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import java.io.File
 
@@ -70,8 +70,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         Amplify.API.get(options,
             {
                 Log.i("social_feed_post", "GET succeeded: $it")
-                val type = object : TypeToken<List<LikeDto>>() {}.type
-                val likes = Gson().fromJson<List<LikeDto>>(it.data.asString(), type)
+                val likes = Json.decodeFromString<List<LikeDto>>(it.data.asString())
                 this.posts.singleOrNull { p -> p.id == postId }?.likes = likes.map { l -> l.username }.toMutableList()
             },
             {
@@ -83,7 +82,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     fun deleteComment(deleteCommentDto: DeleteCommentDto) {
         val options = RestOptions.builder()
             .addPath("/comments")
-            .addBody(Gson().toJson(deleteCommentDto).toByteArray())
+            .addBody(Json.encodeToString(deleteCommentDto).toByteArray())
             .build()
 
         Amplify.API.delete(options,
@@ -100,7 +99,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     fun deletePost(deletePostDto: DeletePostDto) {
         val options = RestOptions.builder()
             .addPath("/posts")
-            .addBody(Gson().toJson(deletePostDto).toByteArray())
+            .addBody(Json.encodeToString(deletePostDto).toByteArray())
             .build()
 
         Amplify.API.delete(options,
@@ -118,7 +117,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         val likePostDto = LikePostDto(post.id, this.userName)
         val options = RestOptions.builder()
             .addPath("/likes")
-            .addBody(Gson().toJson(likePostDto).toByteArray())
+            .addBody(Json.encodeToString(likePostDto).toByteArray())
             .build()
 
         val postToLike = this.posts.single { p -> p.id == post.id }.copy()
@@ -142,10 +141,10 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
             },
             {
                 Log.e("social_feed_post", "POST failed", it)
-                val _postToLike = this.posts.single { p -> p.id == post.id }
-                val _postToLikeIndex = this.posts.indexOfFirst { p -> p.id == post.id }
+                val likedPost = this.posts.single { p -> p.id == post.id }
+                val likedPostIndex = this.posts.indexOfFirst { p -> p.id == post.id }
 
-                _postToLike.also { p ->
+                likedPost.also { p ->
                     if (p.likes.contains(this.userName)) {
                         p.likeCount--
                         p.likes.remove(this.userName)
@@ -155,7 +154,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                     }
                 }
 
-                this.posts[_postToLikeIndex] = _postToLike
+                this.posts[likedPostIndex] = likedPost
             }
         )
     }
@@ -169,8 +168,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         Amplify.API.get(options,
             {
                 Log.i("social_feed_post", "GET succeeded: $it")
-                val type = object : TypeToken<MutableList<Comment>>() {}.type
-                val comments = Gson().fromJson<MutableList<Comment>>(it.data.asString(), type)
+                val comments = Json.decodeFromString<MutableList<Comment>>(it.data.asString())
                 this.posts.singleOrNull { p -> p.id == postId }?.comments = comments
             },
             {
@@ -182,7 +180,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     fun commentOnPost(commentDto: CommentOnPostDto) {
         val options = RestOptions.builder()
             .addPath("/comments")
-            .addBody(Gson().toJson(commentDto).toByteArray())
+            .addBody(Json.encodeToString(commentDto).toByteArray())
             .build()
 
         Amplify.API.post(options,
@@ -199,7 +197,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     fun createPost(postDto: CreatePostDto) {
         val options = RestOptions.builder()
             .addPath("/posts")
-            .addBody(Gson().toJson(postDto).toByteArray())
+            .addBody(Json.encodeToString(postDto).toByteArray())
             .build()
 
         Amplify.API.post(options,
@@ -248,8 +246,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         Amplify.API.get(options,
             {
                 val jsonPosts = it.data.asString()
-                val type = object : TypeToken<List<PagedPostDto>>() {}.type
-                val newPosts = Gson().fromJson<List<PagedPostDto>>(jsonPosts, type)
+                val newPosts = Json.decodeFromString<List<PagedPostDto>>(jsonPosts)
                 isLoading = false
                 val postsToAdd = mutableListOf<Post>()
                 newPosts.forEach { pagedPost ->
@@ -273,9 +270,6 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                     }
                 }
                 this.posts.addAll(postsToAdd)
-                /*newPosts.forEach {post ->
-                    getCommentsForPost(post.id)
-                }*/
                 nextPage++
                 Log.i("social_feed_init", "GET succeeded: ${it.data.asString()}")
             },

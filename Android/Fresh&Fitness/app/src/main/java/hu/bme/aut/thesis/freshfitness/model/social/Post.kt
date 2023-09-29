@@ -1,16 +1,18 @@
 package hu.bme.aut.thesis.freshfitness.model.social
 
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable
 data class Post(
     val id: Int,
     var details: String,
-    @SerializedName(value = "user_name") val username: String,
-    @SerializedName(value = "image_location") val imageLocation: String,
-    @SerializedName(value = "created_at") val createdAt: String,
-    @SerializedName(value = "likecount") var likeCount: Int,
-    @SerializedName(value = "commentcount") var commentCount: Int,
-    @Expose(serialize = false, deserialize = false) var comments: MutableList<Comment> = mutableListOf(),
-    @Expose(serialize = false, deserialize = true) var likes: MutableList<String> = mutableListOf()
+    @SerialName(value = "user_name") val username: String,
+    @SerialName(value = "image_location") val imageLocation: String,
+    @SerialName(value = "created_at") val createdAt: String,
+    @SerialName(value = "likecount") var likeCount: Int,
+    @SerialName(value = "commentcount") var commentCount: Int,
+    @Transient var comments: MutableList<Comment> = mutableListOf(),
+    @Transient var likes: MutableList<String> = mutableListOf()
 )
