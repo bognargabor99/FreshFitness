@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -16,8 +19,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -47,12 +53,7 @@ import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToString
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun SocialScreen(
     viewModel: SocialFeedViewModel = viewModel(factory = SocialFeedViewModel.factory)
@@ -68,12 +69,13 @@ fun SocialScreen(
             posts = viewModel.posts,
             userName = viewModel.userName,
             onCreatePost = viewModel::floatingButtonClick,
-            onLikePost = {
-                GlobalScope.launch(Dispatchers.IO) {
-                    viewModel.likePost(it)
-                }
-            }
+            onLikePost = { viewModel.likePost(it) },
+            editEnabled = viewModel.isLoggedIn,
+            onShowLikes = { viewModel.showLikes(it.id) }
         )
+    }
+    if (viewModel.showLikesDialog) {
+        ShowLikesDialog(viewModel.shownPost) { viewModel.showLikesDialog = false }
     }
 }
 
@@ -103,7 +105,9 @@ fun LoadedSocialFeed(
     posts: List<Post>,
     userName: String,
     onCreatePost: () -> Unit,
-    onLikePost: (Post) -> Unit
+    onLikePost: (Post) -> Unit,
+    editEnabled: Boolean,
+    onShowLikes: (Post) -> Unit
 ) {
     Scaffold(
         floatingActionButton = { NewPostFAB(onCreatePost) },
@@ -116,7 +120,12 @@ fun LoadedSocialFeed(
                 }
 
                 items(posts.size) {i ->
-                    PostCard(post = posts[i], userName, onLikePost)
+                    PostCard(
+                        post = posts[i],
+                        userName = userName,
+                        onLikePost = onLikePost,
+                        editEnabled = editEnabled,
+                        onShowLikes = onShowLikes)
                 }
             }
         } else {
@@ -162,7 +171,13 @@ fun Header(
 }
 
 @Composable
-fun PostCard(post: Post, userName: String, onLikePost: (Post) -> Unit) {
+fun PostCard(
+    post: Post,
+    userName: String,
+    onLikePost: (Post) -> Unit,
+    editEnabled: Boolean,
+    onShowLikes: (Post) -> Unit
+) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -200,14 +215,17 @@ fun PostCard(post: Post, userName: String, onLikePost: (Post) -> Unit) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { onLikePost(post) }) {
+                IconButton(enabled = editEnabled, onClick = { onLikePost(post) }) {
                     Icon(
                         imageVector = if (post.likes != null && post.likes.any { it != null && it == userName }) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
                         contentDescription = null
                     )
                 }
-                Text(text = if (post.likeCount == 1) "1 like" else "${post.likeCount} likes")
-                IconButton(onClick = { /*TODO*/ }) {
+                Text(
+                    modifier = Modifier.clickable(enabled = post.likeCount > 0) { onShowLikes(post) },
+                    text = if (post.likeCount == 1) "1 like" else "${post.likeCount} likes"
+                )
+                IconButton(enabled = editEnabled, onClick = { /*TODO*/ }) {
                     Icon(imageVector = Icons.Outlined.Chat, contentDescription = null)
                 }
                 Text(text = if (post.commentCount == 1) "1 comment" else "${post.commentCount} comments")
@@ -229,6 +247,37 @@ fun NewPostFAB(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowLikesDialog(post: Post, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "Likes", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+
+            LazyColumn {
+                items(post.likeCount) {index ->
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = post.likes[index], fontSize = 18.sp)
+                }
+            }
+        }
+    }
+
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PostPreview() {
@@ -242,6 +291,28 @@ fun PostPreview() {
             likeCount = 2,
             commentCount = 7),
         "",
-        onLikePost = {}
+        onLikePost = {},
+        editEnabled = false,
+        onShowLikes = {}
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ShowLikesDialogPreview() {
+    ShowLikesDialog(
+        post = Post(
+            id = 0,
+            details = "",
+            imageLocation = "",
+            createdAt = "",
+            username = "gaborbognar123",
+            likeCount = 5,
+            likes = mutableListOf("andrew_huberman", "jason_todd", "dick_grayson", "emily_monroe", "keanu_reeves"),
+            commentCount = 0,
+            comments = mutableListOf()
+        )
+    ) {
+
+    }
 }

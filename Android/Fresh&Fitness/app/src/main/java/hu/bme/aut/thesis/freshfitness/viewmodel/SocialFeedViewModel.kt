@@ -34,10 +34,13 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     var isLoading by mutableStateOf(true)
     private var nextPage: Int = 0
 
-    var isLoggedIn = false
+    // For enabling user input
+    var isLoggedIn by mutableStateOf(false)
     var userName by mutableStateOf("")
 
-
+    // Showing AlertDialog likes
+    var showLikesDialog by mutableStateOf(false)
+    lateinit var shownPost: Post
 
     fun initFeed() {
         Amplify.Auth.fetchAuthSession(
@@ -48,6 +51,9 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                     val jwt = decodeJWT(session.accessToken!!.split(".").getOrElse(1) { "" })
                     val jsonObject = JSONObject(jwt)
                     this.userName = jsonObject.getString("username")
+                } else {
+                    this.isLoggedIn = false
+                    this.userName = ""
                 }
                 resetFeed()
             },{
@@ -55,6 +61,11 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                 resetFeed()
             }
         )
+    }
+
+    fun showLikes(postId: Int) {
+        this.shownPost = this.posts.single { p -> p.id == postId }
+        this.showLikesDialog = true
     }
 
     fun floatingButtonClick() {
