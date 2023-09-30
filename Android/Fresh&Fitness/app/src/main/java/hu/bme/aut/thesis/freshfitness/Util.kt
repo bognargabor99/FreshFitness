@@ -71,7 +71,7 @@ fun parseDateToString(dateStr: String): String {
     val date = LocalDate.parse(dateStr.take(10))
 
     return if (date.equals(today))
-        "Today, " + LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("HH:mm"))
+        LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("HH:mm"))
     else if (date.equals(yesterday))
         "Yesterday, " + LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("HH:mm"))
     else if (date.isAfter(aWeekBefore))

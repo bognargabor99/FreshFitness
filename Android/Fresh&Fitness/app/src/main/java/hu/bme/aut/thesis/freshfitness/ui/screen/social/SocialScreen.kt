@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ThumbUp
@@ -34,11 +35,16 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -80,14 +86,18 @@ fun SocialScreen(
             onLikePost = { viewModel.likePost(it) },
             editEnabled = viewModel.isLoggedIn,
             onShowLikes = { viewModel.showLikes(it.id) },
-            onShowComments = { viewModel.showComments(it.id) }
+            onShowComments = { viewModel.showComments(it.id) },
+            onStartComment = { viewModel.startCommenting(it.id) }
         )
     }
     if (viewModel.showLikesDialog) {
-        ShowLikesDialog(viewModel.shownLikesPost) { viewModel.showLikesDialog = false }
+        LikesDialog(viewModel.shownLikesPost) { viewModel.showLikesDialog = false }
     }
     if (viewModel.showCommentsDialog) {
-        ShowCommentsDialog(viewModel.shownCommentsPost) { viewModel.showCommentsDialog = false }
+        CommentsDialog(viewModel.shownCommentsPost) { viewModel.showCommentsDialog = false }
+    }
+    if (viewModel.showAddCommentDialog) {
+        AddCommentDialog(onComment = viewModel::addComment) { viewModel.showAddCommentDialog = false }
     }
 }
 
@@ -120,7 +130,8 @@ fun LoadedSocialFeed(
     onLikePost: (Post) -> Unit,
     editEnabled: Boolean,
     onShowLikes: (Post) -> Unit,
-    onShowComments: (Post) -> Unit
+    onShowComments: (Post) -> Unit,
+    onStartComment: (Post) -> Unit
 ) {
     Scaffold(
         floatingActionButton = { NewPostFAB(onCreatePost) },
@@ -139,7 +150,8 @@ fun LoadedSocialFeed(
                         onLikePost = onLikePost,
                         editEnabled = editEnabled,
                         onShowLikes = onShowLikes,
-                        onShowComments = onShowComments)
+                        onShowComments = onShowComments,
+                        onStartComment = onStartComment)
                 }
             }
         } else {
@@ -188,10 +200,11 @@ fun Header(
 fun PostCard(
     post: Post,
     userName: String,
-    onLikePost: (Post) -> Unit,
-    editEnabled: Boolean,
-    onShowLikes: (Post) -> Unit,
-    onShowComments: (Post) -> Unit,
+    onLikePost: (Post) -> Unit = { },
+    editEnabled: Boolean = false,
+    onShowLikes: (Post) -> Unit = { },
+    onShowComments: (Post) -> Unit = { },
+    onStartComment: (Post) -> Unit = { }
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -237,7 +250,7 @@ fun PostCard(
                     modifier = Modifier.clickable(enabled = post.likeCount > 0) { onShowLikes(post) },
                     text = if (post.likeCount == 1) "1 like" else "${post.likeCount} likes"
                 )
-                IconButton(enabled = editEnabled, onClick = { /*TODO*/ }) {
+                IconButton(enabled = editEnabled, onClick = { onStartComment(post) }) {
                     Icon(imageVector = Icons.Outlined.Chat, contentDescription = null)
                 }
                 Text(
@@ -287,7 +300,6 @@ fun Comment(comment: Comment) {
                         fontWeight = FontWeight.Normal,
                         fontSize = 10.sp)
                 }
-
                 Text(
                     modifier = Modifier.padding(vertical = 8.dp),
                     text = comment.text,
@@ -314,7 +326,7 @@ fun NewPostFAB(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShowLikesDialog(post: Post, onDismiss: () -> Unit) {
+fun LikesDialog(post: Post, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss
     ) {
@@ -345,7 +357,7 @@ fun ShowLikesDialog(post: Post, onDismiss: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShowCommentsDialog(post: Post, onDismiss: () -> Unit) {
+fun CommentsDialog(post: Post, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss
     ) {
@@ -374,6 +386,44 @@ fun ShowCommentsDialog(post: Post, onDismiss: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddCommentDialog(onComment: (String) -> Unit = { }, onDismiss: () -> Unit = { }) {
+    var comment: String by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "Add comment", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier.weight(0.87f),
+                        maxLines = 3,
+                        value = comment,
+                        onValueChange = { comment = it }
+                    )
+                    IconButton(modifier = Modifier.weight(0.1f), enabled = comment.isNotBlank(), onClick = { onComment(comment) }) {
+                        Icon(imageVector = Icons.Filled.Send, contentDescription = null)
+                    }
+                }
+            }
+        }
+
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PostPreview() {
@@ -386,18 +436,14 @@ fun PostPreview() {
             createdAt = "2023-08-21T21:34",
             likeCount = 2,
             commentCount = 7),
-        "",
-        onLikePost = {},
-        editEnabled = false,
-        onShowLikes = {},
-        onShowComments = {}
+        ""
     )
 }
 
 @Preview(showBackground = true)
 @Composable
-fun ShowLikesDialogPreview() {
-    ShowLikesDialog(
+fun LikesDialogPreview() {
+    LikesDialog(
         post = Post(
             id = 0,
             details = "",
@@ -412,6 +458,12 @@ fun ShowLikesDialogPreview() {
     ) {
 
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddCommentDialogPreview() {
+    AddCommentDialog()
 }
 
 @Preview(showBackground = true)

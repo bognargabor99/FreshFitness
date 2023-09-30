@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
@@ -46,6 +47,10 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     var showCommentsDialog by mutableStateOf(false)
     lateinit var shownCommentsPost: Post
 
+    // Showing AddCommentDialog
+    var showAddCommentDialog by mutableStateOf(false)
+    lateinit var commentedPost: Post
+
     fun initFeed() {
         Amplify.Auth.fetchAuthSession(
             {
@@ -75,6 +80,20 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     fun showComments(postId: Int) {
         this.shownCommentsPost = this.posts.single { p -> p.id == postId }
         this.showCommentsDialog = true
+    }
+
+    fun startCommenting(postId: Int) {
+        this.commentedPost = this.posts.single { p -> p.id == postId }
+        this.showAddCommentDialog = true
+    }
+
+    fun addComment(text: String) {
+        val commentDto = CommentOnPostDto(
+            postId = this.commentedPost.id,
+            text = text.trim(),
+            username = this.userName
+        )
+        commentOnPost(commentDto)
     }
 
     fun floatingButtonClick() {
@@ -197,16 +216,30 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         )
     }
 
-    fun commentOnPost(commentDto: CommentOnPostDto) {
+    private fun commentOnPost(commentDto: CommentOnPostDto) {
         val options = RestOptions.builder()
             .addPath("/comments")
             .addBody(Json.encodeToString(commentDto).toByteArray())
             .build()
 
+        this.showAddCommentDialog = false
+
         Amplify.API.post(options,
             {
-                Log.i("social_feed_post", "POST succeeded: $it")
-                resetFeed()
+                Log.i("social_feed_post", "Commenting on post succeeded: $it")
+                val postToComment = this.posts.single { p -> p.id == commentDto.postId }.copy()
+                val postToCommentIndex = this.posts.indexOfFirst { p -> p.id == commentDto.postId }
+                val commentId = it.data.asJSONObject().getInt("commentId")
+                val newComment = Comment(
+                    id = commentId,
+                    postId = commentDto.postId,
+                    text = commentDto.text,
+                    username = commentDto.username,
+                    createdAt = Instant.now().toString()
+                )
+                postToComment.comments.add(newComment)
+                postToComment.commentCount++
+                this.posts[postToCommentIndex] = postToComment
             },
             {
                 Log.e("social_feed_post", "POST failed", it)
