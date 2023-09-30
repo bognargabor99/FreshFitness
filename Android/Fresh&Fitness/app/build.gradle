@@ -72,6 +72,7 @@ dependencies {
 
     // Permissions
     implementation 'com.google.accompanist:accompanist-permissions:0.31.1-alpha'
+    implementation "com.google.accompanist:accompanist-swiperefresh:0.31.1-alpha"
 
     // Images
     implementation 'io.coil-kt:coil-compose:2.3.0'

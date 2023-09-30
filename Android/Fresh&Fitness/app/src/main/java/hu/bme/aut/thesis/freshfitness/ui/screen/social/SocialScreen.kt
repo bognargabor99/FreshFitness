@@ -61,6 +61,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
@@ -75,29 +77,35 @@ fun SocialScreen(
     LaunchedEffect(key1 = false) {
         viewModel.initFeed()
     }
-    if (viewModel.isLoading) {
-        LoadingSocialFeed()
-    }
-    else {
-        LoadedSocialFeed(
-            posts = viewModel.posts,
-            userName = viewModel.userName,
-            onCreatePost = viewModel::floatingButtonClick,
-            onLikePost = { viewModel.likePost(it) },
-            editEnabled = viewModel.isLoggedIn,
-            onShowLikes = { viewModel.showLikes(it.id) },
-            onShowComments = { viewModel.showComments(it.id) },
-            onStartComment = { viewModel.startCommenting(it.id) }
-        )
-    }
-    if (viewModel.showLikesDialog) {
-        LikesDialog(viewModel.shownLikesPost) { viewModel.showLikesDialog = false }
-    }
-    if (viewModel.showCommentsDialog) {
-        CommentsDialog(viewModel.shownCommentsPost) { viewModel.showCommentsDialog = false }
-    }
-    if (viewModel.showAddCommentDialog) {
-        AddCommentDialog(onComment = viewModel::addComment) { viewModel.showAddCommentDialog = false }
+    @Suppress("DEPRECATION")
+    SwipeRefresh(
+        state = rememberSwipeRefreshState(isRefreshing = false),
+        onRefresh = { viewModel.initFeed() }
+    ) {
+        if (viewModel.isLoading) {
+            LoadingSocialFeed()
+        }
+        else {
+            LoadedSocialFeed(
+                posts = viewModel.posts,
+                userName = viewModel.userName,
+                onCreatePost = viewModel::floatingButtonClick,
+                onLikePost = { viewModel.likePost(it) },
+                editEnabled = viewModel.isLoggedIn,
+                onShowLikes = { viewModel.showLikes(it.id) },
+                onShowComments = { viewModel.showComments(it.id) },
+                onStartComment = { viewModel.startCommenting(it.id) }
+            )
+        }
+        if (viewModel.showLikesDialog) {
+            LikesDialog(viewModel.shownLikesPost) { viewModel.showLikesDialog = false }
+        }
+        if (viewModel.showCommentsDialog) {
+            CommentsDialog(viewModel.shownCommentsPost) { viewModel.showCommentsDialog = false }
+        }
+        if (viewModel.showAddCommentDialog) {
+            AddCommentDialog(onComment = viewModel::addComment) { viewModel.showAddCommentDialog = false }
+        }
     }
 }
 

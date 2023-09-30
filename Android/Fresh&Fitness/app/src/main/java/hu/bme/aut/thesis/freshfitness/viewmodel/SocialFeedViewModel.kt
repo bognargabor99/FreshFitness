@@ -49,7 +49,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
 
     // Showing AddCommentDialog
     var showAddCommentDialog by mutableStateOf(false)
-    lateinit var commentedPost: Post
+    private lateinit var commentedPost: Post
 
     fun initFeed() {
         Amplify.Auth.fetchAuthSession(
