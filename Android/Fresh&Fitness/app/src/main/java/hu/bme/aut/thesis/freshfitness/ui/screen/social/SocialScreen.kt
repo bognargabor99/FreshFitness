@@ -1,5 +1,7 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.social
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,7 +41,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -49,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.bme.aut.thesis.freshfitness.R
+import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToString
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
@@ -71,11 +79,15 @@ fun SocialScreen(
             onCreatePost = viewModel::floatingButtonClick,
             onLikePost = { viewModel.likePost(it) },
             editEnabled = viewModel.isLoggedIn,
-            onShowLikes = { viewModel.showLikes(it.id) }
+            onShowLikes = { viewModel.showLikes(it.id) },
+            onShowComments = { viewModel.showComments(it.id) }
         )
     }
     if (viewModel.showLikesDialog) {
-        ShowLikesDialog(viewModel.shownPost) { viewModel.showLikesDialog = false }
+        ShowLikesDialog(viewModel.shownLikesPost) { viewModel.showLikesDialog = false }
+    }
+    if (viewModel.showCommentsDialog) {
+        ShowCommentsDialog(viewModel.shownCommentsPost) { viewModel.showCommentsDialog = false }
     }
 }
 
@@ -107,7 +119,8 @@ fun LoadedSocialFeed(
     onCreatePost: () -> Unit,
     onLikePost: (Post) -> Unit,
     editEnabled: Boolean,
-    onShowLikes: (Post) -> Unit
+    onShowLikes: (Post) -> Unit,
+    onShowComments: (Post) -> Unit
 ) {
     Scaffold(
         floatingActionButton = { NewPostFAB(onCreatePost) },
@@ -125,7 +138,8 @@ fun LoadedSocialFeed(
                         userName = userName,
                         onLikePost = onLikePost,
                         editEnabled = editEnabled,
-                        onShowLikes = onShowLikes)
+                        onShowLikes = onShowLikes,
+                        onShowComments = onShowComments)
                 }
             }
         } else {
@@ -176,7 +190,8 @@ fun PostCard(
     userName: String,
     onLikePost: (Post) -> Unit,
     editEnabled: Boolean,
-    onShowLikes: (Post) -> Unit
+    onShowLikes: (Post) -> Unit,
+    onShowComments: (Post) -> Unit,
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -197,19 +212,16 @@ fun PostCard(
                 Text(
                     text = post.username,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 10.sp,
-                    textAlign = TextAlign.Center,
+                    fontSize = 10.sp
                 )
                 Text(text = parseDateToString(post.createdAt),
                     fontWeight = FontWeight.Normal,
-                    fontSize = 10.sp,
-                    textAlign = TextAlign.Center,)
+                    fontSize = 10.sp)
             }
             Text(
                 modifier = Modifier.padding(vertical = 8.dp),
                 text = post.details,
                 fontWeight = FontWeight.Normal,
-                textAlign = TextAlign.Center,
                 fontSize = 18.sp
             )
             Row(
@@ -217,7 +229,7 @@ fun PostCard(
             ) {
                 IconButton(enabled = editEnabled, onClick = { onLikePost(post) }) {
                     Icon(
-                        imageVector = if (post.likes != null && post.likes.any { it != null && it == userName }) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                        imageVector = if (post.likes.any { it == userName }) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
                         contentDescription = null
                     )
                 }
@@ -228,7 +240,60 @@ fun PostCard(
                 IconButton(enabled = editEnabled, onClick = { /*TODO*/ }) {
                     Icon(imageVector = Icons.Outlined.Chat, contentDescription = null)
                 }
-                Text(text = if (post.commentCount == 1) "1 comment" else "${post.commentCount} comments")
+                Text(
+                    modifier = Modifier.clickable(enabled = post.commentCount > 0) { onShowComments(post) },
+                    text = if (post.commentCount == 1) "1 comment" else "${post.commentCount} comments"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun Comment(comment: Comment) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 4.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp, horizontal = 8.dp),
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.default_profile),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = comment.username,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp)
+                    Text(text = parseDateToString(comment.createdAt),
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 10.sp)
+                }
+
+                Text(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    text = comment.text,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp
+                )
             }
         }
     }
@@ -263,7 +328,7 @@ fun ShowLikesDialog(post: Post, onDismiss: () -> Unit) {
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Likes", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+            Text(text = stringResource(R.string.likes), fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
             Spacer(modifier = Modifier.height(6.dp))
 
             LazyColumn {
@@ -274,6 +339,37 @@ fun ShowLikesDialog(post: Post, onDismiss: () -> Unit) {
             }
         }
     }
+
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowCommentsDialog(post: Post, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = stringResource(R.string.comments), fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+                Spacer(modifier = Modifier.height(6.dp))
+
+                LazyColumn {
+                    items(post.commentCount) {index ->
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Comment(post.comments[index])
+                    }
+                }
+            }
+        }
 
     }
 }
@@ -293,7 +389,8 @@ fun PostPreview() {
         "",
         onLikePost = {},
         editEnabled = false,
-        onShowLikes = {}
+        onShowLikes = {},
+        onShowComments = {}
     )
 }
 
@@ -315,4 +412,16 @@ fun ShowLikesDialogPreview() {
     ) {
 
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HeaderPreview() {
+    Header(text = stringResource(id = R.string.newest_posts))
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CommentPreview() {
+    Comment(comment = Comment(0, 0, "", "", ""))
 }

@@ -40,7 +40,11 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
 
     // Showing AlertDialog likes
     var showLikesDialog by mutableStateOf(false)
-    lateinit var shownPost: Post
+    lateinit var shownLikesPost: Post
+
+    // Showing AlertDialog comments
+    var showCommentsDialog by mutableStateOf(false)
+    lateinit var shownCommentsPost: Post
 
     fun initFeed() {
         Amplify.Auth.fetchAuthSession(
@@ -64,8 +68,13 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     }
 
     fun showLikes(postId: Int) {
-        this.shownPost = this.posts.single { p -> p.id == postId }
+        this.shownLikesPost = this.posts.single { p -> p.id == postId }
         this.showLikesDialog = true
+    }
+
+    fun showComments(postId: Int) {
+        this.shownCommentsPost = this.posts.single { p -> p.id == postId }
+        this.showCommentsDialog = true
     }
 
     fun floatingButtonClick() {
@@ -170,7 +179,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         )
     }
 
-    fun getCommentsForPost(postId: Int) {
+    private fun getCommentsForPost(postId: Int) {
         val options = RestOptions.builder()
             .addPath("/comments")
             .addQueryParameters(mapOf("post_id" to postId.toString()))
@@ -222,7 +231,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         )
     }
 
-    fun resetFeed() {
+    private fun resetFeed() {
         posts.clear()
         nextPage = 0
         getNextPosts()
@@ -282,6 +291,9 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                 }
                 this.posts.addAll(postsToAdd)
                 nextPage++
+                for (post in postsToAdd) {
+                    getCommentsForPost(post.id)
+                }
                 Log.i("social_feed_init", "GET succeeded: ${it.data.asString()}")
             },
             { Log.e("social_feed_init", "GET failed.", it) }
