@@ -1,6 +1,7 @@
 package hu.bme.aut.thesis.freshfitness.viewmodel
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -22,7 +23,10 @@ import hu.bme.aut.thesis.freshfitness.model.social.DeleteCommentDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeletePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.UUID
+
 
 class SocialFeedViewModel(val context: Context) : ViewModel() {
     val posts = mutableStateListOf<Post>()
@@ -241,16 +245,33 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         })
     }
 
-    fun createPost(text: String, imageLocation: String = "") {
-        val createPostDto = CreatePostDto(
-            details = text,
-            username = this.userName,
-            imageLocation = imageLocation
-        )
-        this.showCreatePostDialog = false
-        ApiService.createPost(createPostDto) { post ->
-            post.details
-            this.posts.add(0, post)
+    fun createPost(text: String, contentUri: Uri?) {
+        var buffer: ByteArrayOutputStream? = null
+        if (contentUri != null) {
+            val file = context.contentResolver.openInputStream(contentUri)
+            buffer = ByteArrayOutputStream()
+            var nRead: Int
+            val data = ByteArray(16384)
+            while (file!!.read(data, 0, data.size).also { nRead = it } != -1) {
+                buffer.write(data, 0, nRead)
+            }
+            file.close()
+        }
+        if (buffer != null) {
+            val f = File(context.filesDir, "tempFile.jpg")
+            f.writeBytes(buffer.toByteArray())
+            this.uploadFile(f, "images") { location ->
+                val createPostDto = CreatePostDto(
+                    details = text,
+                    username = this.userName,
+                    imageLocation = location
+                )
+                this.showCreatePostDialog = false
+                ApiService.createPost(createPostDto) { post ->
+                    post.details
+                    this.posts.add(0, post)
+                }
+            }
         }
     }
 
@@ -260,20 +281,20 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         getNextPosts()
     }
 
-    private fun uploadFile() {
-        val exampleFile = File(context.filesDir, "ExampleKey")
-        exampleFile.writeText("Example file contents")
+    private fun uploadFile(file: File, folder: String, onSuccess: (String) -> Unit) {
+        val randomUuid = UUID.randomUUID()
 
         val options = StorageUploadFileOptions.defaultInstance()
-        Amplify.Storage.uploadFile("ExampleKey", exampleFile, options,
+        Amplify.Storage.uploadFile("${folder}/${this.userName}/${randomUuid}.jpg", file, options,
             {
-                Log.i("MyAmplifyApp", "Fraction completed: ${it.fractionCompleted}")
+                Log.i("uploadFile", "Fraction completed: ${it.fractionCompleted}")
             },
             {
-                Log.i("MyAmplifyApp", "Successfully uploaded: ${it.key}")
+                Log.i("uploadFile", "Successfully uploaded: ${it.key}")
+                onSuccess(it.key)
             },
             {
-                Log.e("MyAmplifyApp", "Upload failed", it)
+                Log.e("uploadFile", "Upload failed", it)
             }
         )
     }

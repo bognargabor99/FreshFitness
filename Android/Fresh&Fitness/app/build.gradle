@@ -74,6 +74,9 @@ dependencies {
     implementation 'com.google.accompanist:accompanist-permissions:0.31.1-alpha'
     implementation "com.google.accompanist:accompanist-swiperefresh:0.31.1-alpha"
 
+    // PickVisualMedia contract
+    implementation "androidx.activity:activity-ktx:1.7.2"
+
     // Images
     implementation 'io.coil-kt:coil-compose:2.3.0'
 

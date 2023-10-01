@@ -1,9 +1,14 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.social
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -15,14 +20,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Send
@@ -56,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -67,6 +77,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import hu.bme.aut.thesis.freshfitness.R
@@ -120,7 +132,7 @@ fun SocialScreen(
         }
         if (viewModel.showCreatePostDialog) {
             CreatePostDialog(
-                onPost = { viewModel.createPost(it) },
+                onPost = { text, contentUri -> viewModel.createPost(text, contentUri) },
                 onDismiss = { viewModel.dismissCreatePostDialog() })
         }
         if (viewModel.showPostOptionsDialog) {
@@ -343,7 +355,7 @@ fun Comment(
             .padding(vertical = 4.dp, horizontal = 4.dp)
             .combinedClickable(enabled = deleteCommentEnabled(comment.username), onLongClick = {
                 onShowCommentOptions(comment)
-            }) {  },
+            }) { },
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
         )
@@ -389,27 +401,66 @@ fun Comment(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreatePostDialog(onPost: (String) -> Unit, onDismiss: () -> Unit) {
+fun CreatePostDialog(onPost: (String, Uri?) -> Unit, onDismiss: () -> Unit) {
     var text by remember { mutableStateOf("") }
-
+    var photoUri: Uri? by remember { mutableStateOf(null) }
+    val painter = rememberAsyncImagePainter(
+        ImageRequest
+            .Builder(LocalContext.current)
+            .data(data = photoUri)
+            .build()
+    )
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        photoUri = uri
+    }
     AlertDialog(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         onDismissRequest = { onDismiss() }
     ) {
         Surface(
-            modifier = Modifier
-                .wrapContentHeight(),
             shape = MaterialTheme.shapes.large,
             tonalElevation = AlertDialogDefaults.TonalElevation
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp, horizontal = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(vertical = 8.dp, horizontal = 8.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(text = "Create post", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+                Spacer(modifier = Modifier.height(6.dp))
+                Button(onClick = {
+                    launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
+                }) {
+                    Text(text = "Select photo")
+                }
+                if (photoUri != null) {
+                    Image(
+                        painter = painter,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .widthIn(min = 260.dp)
+                            .heightIn(min = 200.dp, max = 200.dp)
+                            .border(6.0.dp, Color.Gray),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.95f)
+                                .heightIn(min = 200.dp)
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(6.0.dp, Color.Gray)
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     minLines = 3,
@@ -421,12 +472,12 @@ fun CreatePostDialog(onPost: (String) -> Unit, onDismiss: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     Button(onClick = { onDismiss() }) {
                         Text(text = stringResource(R.string.cancel))
                     }
-                    Button(onClick = { onPost(text) }) {
+                    Button(onClick = { onPost(text, photoUri) }) {
                         Text(text = stringResource(R.string.post))
                     }
                 }
@@ -576,6 +627,7 @@ fun DeleteAlert(
                 Spacer(Modifier.height(6.dp))
                 Text("Do you really want to delete this $what?")
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End
                 ) {
