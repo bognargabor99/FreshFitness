@@ -10,23 +10,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import aws.smithy.kotlin.runtime.time.Instant
-import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.options.StorageUploadFileOptions
+import hu.bme.aut.thesis.freshfitness.amplify.ApiService
 import hu.bme.aut.thesis.freshfitness.decodeJWT
-import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.CommentOnPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.CreatePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeleteCommentDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeletePostDto
-import hu.bme.aut.thesis.freshfitness.model.social.LikeDto
-import hu.bme.aut.thesis.freshfitness.model.social.LikePostDto
-import hu.bme.aut.thesis.freshfitness.model.social.PagedPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import java.io.File
 
@@ -101,64 +94,28 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     }
 
     fun getLikesForPost(postId: Int) {
-        val options = RestOptions.builder()
-            .addPath("/likes")
-            .addQueryParameters(mapOf("post_id" to postId.toString()))
-            .build()
-
-        Amplify.API.get(options,
-            {
-                Log.i("social_feed_post", "GET succeeded: $it")
-                val likes = Json.decodeFromString<List<LikeDto>>(it.data.asString())
-                this.posts.singleOrNull { p -> p.id == postId }?.likes = likes.map { l -> l.username }.toMutableList()
-            },
-            {
-                Log.e("social_feed_post", "GET failed", it)
-            }
-        )
+        ApiService.getLikesForPost(postId) { likes ->
+            this.posts.singleOrNull { p -> p.id == postId }?.likes = likes.map { l -> l.username }.toMutableList()
+        }
     }
 
     fun deleteComment(deleteCommentDto: DeleteCommentDto) {
-        val options = RestOptions.builder()
-            .addPath("/comments")
-            .addBody(Json.encodeToString(deleteCommentDto).toByteArray())
-            .build()
-
-        Amplify.API.delete(options,
-            {
-                Log.i("social_feed_post", "DELETE succeeded: $it")
-                resetFeed()
-            },
-            {
-                Log.e("social_feed_post", "DELETE failed", it)
-            }
-        )
+        ApiService.deleteComment(deleteCommentDto) {
+            val post = this.posts.single { p -> p.comments.singleOrNull { c -> c.id == deleteCommentDto.id } != null }.copy()
+            post.commentCount--
+            post.comments.removeIf { c -> c.id == deleteCommentDto.id }
+            val indexOfPost = this.posts.indexOfFirst { p -> p.id == post.id }
+            this.posts[indexOfPost] = post
+        }
     }
 
     fun deletePost(deletePostDto: DeletePostDto) {
-        val options = RestOptions.builder()
-            .addPath("/posts")
-            .addBody(Json.encodeToString(deletePostDto).toByteArray())
-            .build()
-
-        Amplify.API.delete(options,
-            {
-                Log.i("social_feed_post", "DELETE succeeded: $it")
-                resetFeed()
-            },
-            {
-                Log.e("social_feed_post", "DELETE failed", it)
-            }
-        )
+        ApiService.deletePost(deletePostDto) {
+            this.posts.removeIf { p -> p.id == deletePostDto.postId }
+        }
     }
 
     fun likePost(post: Post) {
-        val likePostDto = LikePostDto(post.id, this.userName)
-        val options = RestOptions.builder()
-            .addPath("/likes")
-            .addBody(Json.encodeToString(likePostDto).toByteArray())
-            .build()
-
         val postToLike = this.posts.single { p -> p.id == post.id }.copy()
         val postToLikeIndex = this.posts.indexOfFirst { p -> p.id == post.id }
 
@@ -174,94 +131,45 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
 
         this.posts[postToLikeIndex] = postToLike
 
-        Amplify.API.post(options,
-            {
-                Log.i("social_feed_post", "POST succeeded: $it")
-            },
-            {
-                Log.e("social_feed_post", "POST failed", it)
-                val likedPost = this.posts.single { p -> p.id == post.id }
-                val likedPostIndex = this.posts.indexOfFirst { p -> p.id == post.id }
+        ApiService.likePost(post.id, this.userName, onError = {
+            val likedPost = this.posts.single { p -> p.id == post.id }
+            val likedPostIndex = this.posts.indexOfFirst { p -> p.id == post.id }
 
-                likedPost.also { p ->
-                    if (p.likes.contains(this.userName)) {
-                        p.likeCount--
-                        p.likes.remove(this.userName)
-                    } else {
-                        p.likeCount++
-                        p.likes.add(this.userName)
-                    }
+            likedPost.also { p ->
+                if (p.likes.contains(this.userName)) {
+                    p.likeCount--
+                    p.likes.remove(this.userName)
+                } else {
+                    p.likeCount++
+                    p.likes.add(this.userName)
                 }
-
-                this.posts[likedPostIndex] = likedPost
             }
-        )
+            this.posts[likedPostIndex] = likedPost
+        })
     }
 
     private fun getCommentsForPost(postId: Int) {
-        val options = RestOptions.builder()
-            .addPath("/comments")
-            .addQueryParameters(mapOf("post_id" to postId.toString()))
-            .build()
-
-        Amplify.API.get(options,
-            {
-                Log.i("social_feed_post", "GET succeeded: $it")
-                val comments = Json.decodeFromString<MutableList<Comment>>(it.data.asString())
-                this.posts.singleOrNull { p -> p.id == postId }?.comments = comments
-            },
-            {
-                Log.e("social_feed_post", "POST failed", it)
-            }
-        )
+        ApiService.getCommentsForPost(postId, onSuccess = { comments ->
+            this.posts.singleOrNull { p -> p.id == postId }?.comments = comments
+        })
     }
 
     private fun commentOnPost(commentDto: CommentOnPostDto) {
-        val options = RestOptions.builder()
-            .addPath("/comments")
-            .addBody(Json.encodeToString(commentDto).toByteArray())
-            .build()
-
         this.showAddCommentDialog = false
 
-        Amplify.API.post(options,
-            {
-                Log.i("social_feed_post", "Commenting on post succeeded: $it")
-                val postToComment = this.posts.single { p -> p.id == commentDto.postId }.copy()
-                val postToCommentIndex = this.posts.indexOfFirst { p -> p.id == commentDto.postId }
-                val commentId = it.data.asJSONObject().getInt("commentId")
-                val newComment = Comment(
-                    id = commentId,
-                    postId = commentDto.postId,
-                    text = commentDto.text,
-                    username = commentDto.username,
-                    createdAt = Instant.now().toString()
-                )
-                postToComment.comments.add(newComment)
-                postToComment.commentCount++
-                this.posts[postToCommentIndex] = postToComment
-            },
-            {
-                Log.e("social_feed_post", "POST failed", it)
-            }
-        )
+        ApiService.commentOnPost(commentDto, onSuccess = { newComment ->
+            val postToComment = this.posts.single { p -> p.id == commentDto.postId }.copy()
+            val postToCommentIndex = this.posts.indexOfFirst { p -> p.id == commentDto.postId }
+            postToComment.comments.add(newComment)
+            postToComment.commentCount++
+            this.posts[postToCommentIndex] = postToComment
+        })
     }
 
     fun createPost(postDto: CreatePostDto) {
-        val options = RestOptions.builder()
-            .addPath("/posts")
-            .addBody(Json.encodeToString(postDto).toByteArray())
-            .build()
-
-        Amplify.API.post(options,
-            {
-                Log.i("social_feed_post", "POST succeeded: $it")
-                resetFeed()
-            },
-            {
-                Log.e("social_feed_post", "POST failed", it)
-            }
-        )
+        ApiService.createPost(postDto) { post ->
+            this.posts.add(0, post)
+        }
     }
 
     private fun resetFeed() {
@@ -290,47 +198,36 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
 
     private fun getNextPosts() {
         isLoading = true
-        val options = RestOptions.builder()
-            .addPath("/posts")
-            .addQueryParameters(mapOf("page" to nextPage.toString()))
-            .addQueryParameters(mapOf("username" to this.userName))
-            .build()
 
-        Amplify.API.get(options,
-            {
-                val jsonPosts = it.data.asString()
-                val newPosts = Json.decodeFromString<List<PagedPostDto>>(jsonPosts)
-                isLoading = false
-                val postsToAdd = mutableListOf<Post>()
-                newPosts.forEach { pagedPost ->
-                    val index = postsToAdd.indexOfFirst { p -> p.id == pagedPost.id }
-                    if (index == -1) {
-                        val postToAdd = Post(
-                            id = pagedPost.id,
-                            details = pagedPost.details,
-                            createdAt = pagedPost.createdAt,
-                            likeCount = pagedPost.likeCount,
-                            commentCount = pagedPost.commentCount,
-                            username = pagedPost.owner,
-                            imageLocation = pagedPost.imageLocation
-                        )
-                        if (!pagedPost.liker.isNullOrBlank()) {
-                            postToAdd.likes.add(pagedPost.liker)
-                        }
-                        postsToAdd.add(postToAdd)
-                    } else {
-                        postsToAdd[index].likes.add(pagedPost.liker!!)
+        ApiService.getPosts(this.nextPage, this.userName, onSuccess = { newPosts ->
+            isLoading = false
+            val postsToAdd = mutableListOf<Post>()
+            newPosts.forEach { pagedPost ->
+                val index = postsToAdd.indexOfFirst { p -> p.id == pagedPost.id }
+                if (index == -1) {
+                    val postToAdd = Post(
+                        id = pagedPost.id,
+                        details = pagedPost.details,
+                        createdAt = pagedPost.createdAt,
+                        likeCount = pagedPost.likeCount,
+                        commentCount = pagedPost.commentCount,
+                        username = pagedPost.owner,
+                        imageLocation = pagedPost.imageLocation
+                    )
+                    if (!pagedPost.liker.isNullOrBlank()) {
+                        postToAdd.likes.add(pagedPost.liker)
                     }
+                    postsToAdd.add(postToAdd)
+                } else {
+                    postsToAdd[index].likes.add(pagedPost.liker!!)
                 }
-                this.posts.addAll(postsToAdd)
-                nextPage++
-                for (post in postsToAdd) {
-                    getCommentsForPost(post.id)
-                }
-                Log.i("social_feed_init", "GET succeeded: ${it.data.asString()}")
-            },
-            { Log.e("social_feed_init", "GET failed.", it) }
-        )
+            }
+            this.posts.addAll(postsToAdd)
+            nextPage++
+            for (post in postsToAdd) {
+                getCommentsForPost(post.id)
+            }
+        })
     }
 
     companion object {
