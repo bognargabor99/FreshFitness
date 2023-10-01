@@ -52,9 +52,16 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     // Deleting a post
     var showDeletePostAlert by mutableStateOf(false)
 
+    // Deleting a comment
+    var showDeleteCommentAlert by mutableStateOf(false)
+
     // Show options dialog for a post
     var showPostOptionsDialog by mutableStateOf(false)
-    var showPostOptionsFor: Int = -1
+    private var showPostOptionsFor: Int = -1
+
+    // Show options dialog for a comment
+    var showCommentOptionsDialog by mutableStateOf(false)
+    private var showCommentOptionsFor: Int = -1
 
     fun initFeed() {
         AuthService.fetchAuthSession(onSuccess = {
@@ -116,6 +123,26 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         this.showPostOptionsFor = -1
     }
 
+    fun showCommentOptions(commentId: Int) {
+        this.showCommentOptionsDialog = true
+        this.showCommentOptionsFor = commentId
+    }
+
+    fun dismissCommentOptions() {
+        this.showCommentOptionsDialog = false
+        this.showCommentOptionsFor = -1
+    }
+
+    fun showDeleteCommentAlert() {
+        this.showCommentOptionsDialog = false
+        this.showDeleteCommentAlert = true
+    }
+
+    fun dismissDeleteCommentAlert() {
+        this.showDeleteCommentAlert = false
+        this.showCommentOptionsFor = -1
+    }
+
     fun showDeletePostAlert() {
         this.showPostOptionsDialog = false
         this.showDeletePostAlert = true
@@ -132,7 +159,12 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         }
     }
 
-    fun deleteComment(deleteCommentDto: DeleteCommentDto) {
+    fun deleteComment() {
+        val deleteCommentDto = DeleteCommentDto(
+            id = showCommentOptionsFor,
+            username = this.userName
+        )
+        this.dismissDeleteCommentAlert()
         ApiService.deleteComment(deleteCommentDto) {
             val post = this.posts.single { p -> p.comments.singleOrNull { c -> c.id == deleteCommentDto.id } != null }.copy()
             post.commentCount--

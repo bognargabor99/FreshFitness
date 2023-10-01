@@ -108,7 +108,12 @@ fun SocialScreen(
             LikesDialog(viewModel.shownLikesPost) { viewModel.showLikesDialog = false }
         }
         if (viewModel.showCommentsDialog) {
-            CommentsDialog(viewModel.shownCommentsPost) { viewModel.showCommentsDialog = false }
+            CommentsDialog(
+                post = viewModel.shownCommentsPost,
+                deleteCommentEnabled = { viewModel.userName == it },
+                onDismiss =  { viewModel.showCommentsDialog = false },
+                onShowCommentOptions = { viewModel.showCommentOptions(it.id) }
+            )
         }
         if (viewModel.showAddCommentDialog) {
             AddCommentDialog(onComment = viewModel::addComment) { viewModel.showAddCommentDialog = false }
@@ -119,15 +124,30 @@ fun SocialScreen(
                 onDismiss = { viewModel.dismissCreatePostDialog() })
         }
         if (viewModel.showPostOptionsDialog) {
-            PostOptionsDialog(
+            OptionsDialog(
                 onDelete = { viewModel.showDeletePostAlert() },
                 onDismiss = { viewModel.dismissPostOptions()}
                 )
         }
+        if (viewModel.showCommentOptionsDialog) {
+            OptionsDialog(
+                onDelete = {
+                    viewModel.showCommentsDialog = false
+                    viewModel.showDeleteCommentAlert() },
+                onDismiss = { viewModel.dismissCommentOptions()}
+            )
+        }
         if (viewModel.showDeletePostAlert) {
-            DeletePostAlert(
+            DeleteAlert(
+                what = "post",
                 onDelete = { viewModel.deletePost() },
                 onDismiss = { viewModel.dismissDeletePostAlert() })
+        }
+        if (viewModel.showDeleteCommentAlert) {
+            DeleteAlert(
+                what = "comment",
+                onDelete = { viewModel.deleteComment() },
+                onDismiss = { viewModel.dismissDeleteCommentAlert() })
         }
     }
 }
@@ -310,12 +330,20 @@ fun PostCard(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Comment(comment: Comment) {
+fun Comment(
+    comment: Comment,
+    deleteCommentEnabled: (String) -> Boolean,
+    onShowCommentOptions: (Comment) -> Unit = { }
+) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 4.dp),
+            .padding(vertical = 4.dp, horizontal = 4.dp)
+            .combinedClickable(enabled = deleteCommentEnabled(comment.username), onLongClick = {
+                onShowCommentOptions(comment)
+            }) {  },
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
         )
@@ -452,7 +480,12 @@ fun LikesDialog(post: Post, onDismiss: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CommentsDialog(post: Post, onDismiss: () -> Unit) {
+fun CommentsDialog(
+    post: Post,
+    deleteCommentEnabled: (String) -> Boolean,
+    onDismiss: () -> Unit,
+    onShowCommentOptions: (Comment) -> Unit
+) {
     AlertDialog(
         onDismissRequest = onDismiss
     ) {
@@ -472,7 +505,7 @@ fun CommentsDialog(post: Post, onDismiss: () -> Unit) {
                 LazyColumn {
                     items(post.commentCount) {index ->
                         Spacer(modifier = Modifier.height(2.dp))
-                        Comment(post.comments[index])
+                        Comment(post.comments[index], deleteCommentEnabled, onShowCommentOptions)
                     }
                 }
             }
@@ -521,7 +554,8 @@ fun AddCommentDialog(onComment: (String) -> Unit = { }, onDismiss: () -> Unit = 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeletePostAlert(
+fun DeleteAlert(
+    what: String,
     onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -538,9 +572,9 @@ fun DeletePostAlert(
                 modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Delete post", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+                Text("Delete $what", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
                 Spacer(Modifier.height(6.dp))
-                Text("Do you really want to delete this post")
+                Text("Do you really want to delete this $what?")
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End
@@ -560,7 +594,7 @@ fun DeletePostAlert(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PostOptionsDialog(
+fun OptionsDialog(
     onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -642,5 +676,5 @@ fun HeaderPreview() {
 @Preview(showBackground = true)
 @Composable
 fun CommentPreview() {
-    Comment(comment = Comment(0, 0, "", "", ""))
+    Comment(comment = Comment(0, 0, "", "", ""), { false }) { }
 }

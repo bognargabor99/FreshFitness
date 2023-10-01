@@ -94,7 +94,7 @@ object ApiService {
             {
                 Log.i("social_feed_post", "POST succeeded: $it")
                 val post = Json.decodeFromString<Post>(it.data.asString())
-                post.details = URLDecoder.decode(post.details, "UTF-8")
+                post.details = URLDecoder.decode(post.details, "UTF-8").replace("???", "?")
                 onSuccess(post)
             },
             {
