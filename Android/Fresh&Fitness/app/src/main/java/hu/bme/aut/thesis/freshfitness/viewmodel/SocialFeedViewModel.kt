@@ -14,6 +14,7 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
+import hu.bme.aut.thesis.freshfitness.amplify.AuthService
 import hu.bme.aut.thesis.freshfitness.decodeJWT
 import hu.bme.aut.thesis.freshfitness.model.social.CommentOnPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.CreatePostDto
@@ -45,24 +46,21 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     private lateinit var commentedPost: Post
 
     fun initFeed() {
-        Amplify.Auth.fetchAuthSession(
-            {
-                if (it.isSignedIn) {
-                    this.isLoggedIn = true
-                    val session = (it as AWSCognitoAuthSession)
-                    val jwt = decodeJWT(session.accessToken!!.split(".").getOrElse(1) { "" })
-                    val jsonObject = JSONObject(jwt)
-                    this.userName = jsonObject.getString("username")
-                } else {
-                    this.isLoggedIn = false
-                    this.userName = ""
-                }
-                resetFeed()
-            },{
-                Log.e("social_feed_fetch_auth_session", "Failed to fetch auth session", it)
-                resetFeed()
+        AuthService.fetchAuthSession(onSuccess = {
+            if (it.isSignedIn) {
+                this.isLoggedIn = true
+                val session = (it as AWSCognitoAuthSession)
+                val jwt = decodeJWT(session.accessToken!!.split(".").getOrElse(1) { "" })
+                val jsonObject = JSONObject(jwt)
+                this.userName = jsonObject.getString("username")
+            } else {
+                this.isLoggedIn = false
+                this.userName = ""
             }
-        )
+            resetFeed()
+        }, onError = {
+            resetFeed()
+        })
     }
 
     fun showLikes(postId: Int) {

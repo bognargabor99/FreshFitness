@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
-import com.amplifyframework.core.Amplify
+import hu.bme.aut.thesis.freshfitness.amplify.AuthService
 import hu.bme.aut.thesis.freshfitness.decodeJWT
 import org.json.JSONObject
 
@@ -18,7 +18,7 @@ class AuthViewModel : ViewModel() {
         private set
 
     fun setIsAdmin(): Boolean {
-        Amplify.Auth.fetchAuthSession(
+        AuthService.fetchAuthSession(
             {
                 val session = (it as AWSCognitoAuthSession)
                 if (session.accessToken == null)
@@ -35,13 +35,13 @@ class AuthViewModel : ViewModel() {
                     Log.i("AmplifyQuickstart", "Auth session = $it")
                 }
             },
-            { error -> Log.e("AmplifyQuickstart", "Failed to fetch auth session", error) }
+            { Log.e("AmplifyQuickstart", "Failed to fetch auth session") }
         )
         return true
     }
 
     fun signOut() {
-        Amplify.Auth.signOut {  }
+        AuthService.signOut()
     }
 
     companion object {
