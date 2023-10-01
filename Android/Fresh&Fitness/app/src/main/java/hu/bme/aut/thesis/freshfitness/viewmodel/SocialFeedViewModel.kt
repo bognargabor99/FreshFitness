@@ -45,6 +45,17 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     var showAddCommentDialog by mutableStateOf(false)
     private lateinit var commentedPost: Post
 
+    // Creating a Post
+    var showCreatePostDialog by mutableStateOf(false)
+    var uploadingPost by mutableStateOf(false)
+
+    // Deleting a post
+    var showDeletePostAlert by mutableStateOf(false)
+
+    // Show options dialog for a post
+    var showPostOptionsDialog by mutableStateOf(false)
+    var showPostOptionsFor: Int = -1
+
     fun initFeed() {
         AuthService.fetchAuthSession(onSuccess = {
             if (it.isSignedIn) {
@@ -88,7 +99,31 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     }
 
     fun floatingButtonClick() {
-        Log.d("", "")
+        this.showCreatePostDialog = true
+    }
+
+    fun dismissCreatePostDialog() {
+        this.showCreatePostDialog = false
+    }
+
+    fun showPostOptions(postId: Int) {
+        this.showPostOptionsDialog = true
+        this.showPostOptionsFor = postId
+    }
+
+    fun dismissPostOptions() {
+        this.showPostOptionsDialog = false
+        this.showPostOptionsFor = -1
+    }
+
+    fun showDeletePostAlert() {
+        this.showPostOptionsDialog = false
+        this.showDeletePostAlert = true
+    }
+
+    fun dismissDeletePostAlert() {
+        this.showDeletePostAlert = false
+        this.showPostOptionsFor = -1
     }
 
     fun getLikesForPost(postId: Int) {
@@ -107,9 +142,19 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         }
     }
 
-    fun deletePost(deletePostDto: DeletePostDto) {
+    fun deletePost() {
+        val deletePostDto = DeletePostDto(
+            postId = this.showPostOptionsFor,
+            username = userName
+        )
+        this.dismissDeletePostAlert()
         ApiService.deletePost(deletePostDto) {
-            this.posts.removeIf { p -> p.id == deletePostDto.postId }
+            val tempPosts = this.posts.map { it.copy() }.toMutableList()
+            tempPosts.removeIf { p -> p.id == deletePostDto.postId }
+            this.posts.run {
+                clear()
+                addAll(tempPosts)
+            }
         }
     }
 
@@ -164,8 +209,15 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         })
     }
 
-    fun createPost(postDto: CreatePostDto) {
-        ApiService.createPost(postDto) { post ->
+    fun createPost(text: String, imageLocation: String = "") {
+        val createPostDto = CreatePostDto(
+            details = text,
+            username = this.userName,
+            imageLocation = imageLocation
+        )
+        this.showCreatePostDialog = false
+        ApiService.createPost(createPostDto) { post ->
+            post.details
             this.posts.add(0, post)
         }
     }
@@ -196,9 +248,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
 
     private fun getNextPosts() {
         isLoading = true
-
         ApiService.getPosts(this.nextPage, this.userName, onSuccess = { newPosts ->
-            isLoading = false
             val postsToAdd = mutableListOf<Post>()
             newPosts.forEach { pagedPost ->
                 val index = postsToAdd.indexOfFirst { p -> p.id == pagedPost.id }
@@ -220,7 +270,10 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                     postsToAdd[index].likes.add(pagedPost.liker!!)
                 }
             }
+            this.posts.removeIf { p -> postsToAdd.any { it.id == p.id } }
             this.posts.addAll(postsToAdd)
+            this.posts.sortByDescending { it.id }
+            isLoading = false
             nextPage++
             for (post in postsToAdd) {
                 getCommentsForPost(post.id)

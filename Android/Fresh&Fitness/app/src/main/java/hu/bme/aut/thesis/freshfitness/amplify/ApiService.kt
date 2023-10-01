@@ -15,6 +15,7 @@ import hu.bme.aut.thesis.freshfitness.model.social.PagedPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.net.URLDecoder
 
 object ApiService {
     /**
@@ -93,6 +94,7 @@ object ApiService {
             {
                 Log.i("social_feed_post", "POST succeeded: $it")
                 val post = Json.decodeFromString<Post>(it.data.asString())
+                post.details = URLDecoder.decode(post.details, "UTF-8")
                 onSuccess(post)
             },
             {

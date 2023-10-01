@@ -1,8 +1,10 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.social
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +28,7 @@ import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -89,12 +92,13 @@ fun SocialScreen(
             LoadedSocialFeed(
                 posts = viewModel.posts,
                 userName = viewModel.userName,
-                onCreatePost = viewModel::floatingButtonClick,
+                onCreatePost = { viewModel.floatingButtonClick() },
                 onLikePost = { viewModel.likePost(it) },
                 editEnabled = viewModel.isLoggedIn,
                 onShowLikes = { viewModel.showLikes(it.id) },
                 onShowComments = { viewModel.showComments(it.id) },
-                onStartComment = { viewModel.startCommenting(it.id) }
+                onStartComment = { viewModel.startCommenting(it.id) },
+                onShowPostOptions = { viewModel.showPostOptions(it.id) }
             )
         }
         if (viewModel.showLikesDialog) {
@@ -105,6 +109,22 @@ fun SocialScreen(
         }
         if (viewModel.showAddCommentDialog) {
             AddCommentDialog(onComment = viewModel::addComment) { viewModel.showAddCommentDialog = false }
+        }
+        if (viewModel.showCreatePostDialog) {
+            CreatePostDialog(
+                onPost = { viewModel.createPost(it) },
+                onDismiss = { viewModel.dismissCreatePostDialog() })
+        }
+        if (viewModel.showPostOptionsDialog) {
+            PostOptionsDialog(
+                onDelete = { viewModel.showDeletePostAlert() },
+                onDismiss = { viewModel.dismissPostOptions()}
+                )
+        }
+        if (viewModel.showDeletePostAlert) {
+            DeletePostAlert(
+                onDelete = { viewModel.deletePost() },
+                onDismiss = { viewModel.dismissDeletePostAlert() })
         }
     }
 }
@@ -139,7 +159,8 @@ fun LoadedSocialFeed(
     editEnabled: Boolean,
     onShowLikes: (Post) -> Unit,
     onShowComments: (Post) -> Unit,
-    onStartComment: (Post) -> Unit
+    onStartComment: (Post) -> Unit,
+    onShowPostOptions: (Post) -> Unit
 ) {
     Scaffold(
         floatingActionButton = { NewPostFAB(onCreatePost) },
@@ -159,7 +180,8 @@ fun LoadedSocialFeed(
                         editEnabled = editEnabled,
                         onShowLikes = onShowLikes,
                         onShowComments = onShowComments,
-                        onStartComment = onStartComment)
+                        onStartComment = onStartComment,
+                        onShowPostOptions = onShowPostOptions)
                 }
             }
         } else {
@@ -204,6 +226,7 @@ fun Header(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PostCard(
     post: Post,
@@ -212,13 +235,16 @@ fun PostCard(
     editEnabled: Boolean = false,
     onShowLikes: (Post) -> Unit = { },
     onShowComments: (Post) -> Unit = { },
-    onStartComment: (Post) -> Unit = { }
+    onStartComment: (Post) -> Unit = { },
+    onShowPostOptions: (Post) -> Unit = { }
 ) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 10.dp, horizontal = 16.dp)
-            .clickable { },
+            .combinedClickable(onLongClick = {
+                onShowPostOptions(post)
+            }) { },
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
         )
@@ -319,6 +345,54 @@ fun Comment(comment: Comment) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreatePostDialog(onPost: (String) -> Unit, onDismiss: () -> Unit) {
+    var text by remember { mutableStateOf("") }
+
+    AlertDialog(
+        modifier = Modifier
+            .fillMaxWidth(),
+        onDismissRequest = { onDismiss() }
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp, horizontal = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "Create post", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+                Spacer(modifier = Modifier.height(6.dp))
+                OutlinedTextField(
+                    minLines = 3,
+                    maxLines = 5,
+                    value = text,
+                    onValueChange = { text = it }
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(onClick = { onDismiss() }) {
+                        Text(text = stringResource(R.string.cancel))
+                    }
+                    Button(onClick = { onPost(text) }) {
+                        Text(text = stringResource(R.string.post))
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun NewPostFAB(
     onClick: () -> Unit
@@ -343,23 +417,22 @@ fun LikesDialog(post: Post, onDismiss: () -> Unit) {
                 .wrapContentHeight(),
             shape = MaterialTheme.shapes.large,
             tonalElevation = AlertDialogDefaults.TonalElevation
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = stringResource(R.string.likes), fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-            Spacer(modifier = Modifier.height(6.dp))
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = stringResource(R.string.likes), fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+                Spacer(modifier = Modifier.height(6.dp))
 
-            LazyColumn {
-                items(post.likeCount) {index ->
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = post.likes[index], fontSize = 18.sp)
+                LazyColumn {
+                    items(post.likeCount) {index ->
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = post.likes[index], fontSize = 18.sp)
+                    }
                 }
             }
         }
-    }
-
     }
 }
 
@@ -429,6 +502,78 @@ fun AddCommentDialog(onComment: (String) -> Unit = { }, onDismiss: () -> Unit = 
             }
         }
 
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeletePostAlert(
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Delete post", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+                Spacer(Modifier.height(6.dp))
+                Text("Do you really want to delete this post")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(onClick = { onDismiss() }) {
+                        Text(text = stringResource(id = R.string.cancel))
+                    }
+                    Button(onClick = { onDelete() }) {
+                        Text(text = stringResource(id = R.string.ok))
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PostOptionsDialog(
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp, horizontal = 16.dp)
+                        .clickable { onDelete() },
+                    text = stringResource(R.string.delete),
+                    fontSize = 18.sp
+                )
+            }
+        }
     }
 }
 

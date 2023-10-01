@@ -56,4 +56,7 @@
     <string name="no_posts">There are no posts on the feed.\nCome back later or create a new post.</string>
     <string name="comments">Comments</string>
     <string name="likes">Likes</string>
+    <string name="cancel">Cancel</string>
+    <string name="post">Post</string>
+    <string name="delete">Delete</string>
 </resources>
