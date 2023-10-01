@@ -1,5 +1,7 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.social
 
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -150,6 +153,7 @@ fun LoadingSocialFeed() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LoadedSocialFeed(
     posts: List<Post>,
@@ -167,14 +171,23 @@ fun LoadedSocialFeed(
         floatingActionButtonPosition = FabPosition.End
     ) {
         if (posts.isNotEmpty()) {
-            LazyColumn(modifier = Modifier.padding(it)) {
+            LazyColumn(
+                modifier = Modifier.padding(it)
+            ) {
                 item {
                     Header(stringResource(R.string.newest_posts))
                 }
 
-                items(posts.size) {i ->
+                itemsIndexed(items = posts, key = { _, p -> p.id }) {_, p ->
                     PostCard(
-                        post = posts[i],
+                        modifier = Modifier
+                            .animateItemPlacement(
+                                animationSpec = tween(
+                                    durationMillis = 500,
+                                    easing = LinearOutSlowInEasing,
+                                )
+                            ),
+                        post = p,
                         userName = userName,
                         onLikePost = onLikePost,
                         editEnabled = editEnabled,
@@ -229,6 +242,7 @@ fun Header(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PostCard(
+    modifier: Modifier = Modifier,
     post: Post,
     userName: String,
     onLikePost: (Post) -> Unit = { },
@@ -239,7 +253,7 @@ fun PostCard(
     onShowPostOptions: (Post) -> Unit = { }
 ) {
     ElevatedCard(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 10.dp, horizontal = 16.dp)
             .combinedClickable(onLongClick = {
@@ -581,7 +595,7 @@ fun PostOptionsDialog(
 @Composable
 fun PostPreview() {
     PostCard(
-        Post(
+        post = Post(
             id = 1,
             details = "My new personal best on the squat machine",
             username = "gaborbognar123",
@@ -589,7 +603,7 @@ fun PostPreview() {
             createdAt = "2023-08-21T21:34",
             likeCount = 2,
             commentCount = 7),
-        ""
+        userName = ""
     )
 }
 
