@@ -12,10 +12,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.storage.options.StorageUploadFileOptions
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
+import hu.bme.aut.thesis.freshfitness.amplify.StorageService
 import hu.bme.aut.thesis.freshfitness.decodeJWT
 import hu.bme.aut.thesis.freshfitness.model.social.CommentOnPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.CreatePostDto
@@ -189,7 +188,11 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
             postId = this.showPostOptionsFor,
             username = userName
         )
+        val imageToDelete = this.posts.single { p -> p.id == deletePostDto.postId }.imageLocation
         this.dismissDeletePostAlert()
+        if (imageToDelete.isNotBlank())
+            StorageService.deleteFile(imageToDelete.substring(7))
+
         ApiService.deletePost(deletePostDto) {
             val tempPosts = this.posts.map { it.copy() }.toMutableList()
             tempPosts.removeIf { p -> p.id == deletePostDto.postId }
@@ -317,20 +320,11 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
 
     private fun uploadFile(file: File, extension: String, onFractionCompleted: (Double) -> Unit, onSuccess: (String) -> Unit) {
         val randomUuid = UUID.randomUUID()
-
-        val options = StorageUploadFileOptions.defaultInstance()
-        Amplify.Storage.uploadFile("images/${this.userName}/$randomUuid.$extension", file, options,
-            {
-                Log.i("uploadFile", "Fraction completed: ${it.fractionCompleted}")
-                onFractionCompleted(it.fractionCompleted)
-            },
-            {
-                Log.i("uploadFile", "Successfully uploaded: ${it.key}")
-                onSuccess(it.key)
-            },
-            {
-                Log.e("uploadFile", "Upload failed", it)
-            }
+        StorageService.uploadFile(
+            key = "images/${this.userName}/$randomUuid.$extension",
+            file = file,
+            onFractionCompleted = onFractionCompleted,
+            onSuccess = onSuccess
         )
     }
 
