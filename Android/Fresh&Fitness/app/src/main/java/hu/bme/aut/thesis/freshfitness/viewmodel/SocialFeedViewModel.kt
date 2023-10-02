@@ -162,12 +162,6 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         this.showPostOptionsFor = -1
     }
 
-    fun getLikesForPost(postId: Int) {
-        ApiService.getLikesForPost(postId) { likes ->
-            this.posts.singleOrNull { p -> p.id == postId }?.likes = likes.map { l -> l.username }.toMutableList()
-        }
-    }
-
     fun deleteComment() {
         val deleteCommentDto = DeleteCommentDto(
             id = showCommentOptionsFor,
