@@ -327,6 +327,21 @@ fun PostCard(
                 fontWeight = FontWeight.Normal,
                 fontSize = 18.sp
             )
+            if (post.imageLocation.isNotBlank()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter("https://freshfitness-social-media-bucket100821-dev.s3.eu-north-1.amazonaws.com/${post.imageLocation}"),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .widthIn(min = 140.dp)
+                            .heightIn(min = 100.dp, max = 200.dp)
+                            .border(6.dp, Color.Gray)
+                    )
+                }
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -455,7 +470,7 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
                             .widthIn(min = 260.dp)
                             .heightIn(min = 200.dp, max = 200.dp)
                             .border(6.0.dp, Color.Gray),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Fit
                     )
                 } else {
                     Row(
