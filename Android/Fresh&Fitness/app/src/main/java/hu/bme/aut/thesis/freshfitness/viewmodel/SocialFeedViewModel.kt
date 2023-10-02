@@ -23,10 +23,11 @@ import hu.bme.aut.thesis.freshfitness.model.social.DeleteCommentDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeletePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import org.json.JSONObject
+import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.net.URLConnection
 import java.util.UUID
-
 
 class SocialFeedViewModel(val context: Context) : ViewModel() {
     val posts = mutableStateListOf<Post>()
@@ -51,7 +52,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
 
     // Creating a Post
     var showCreatePostDialog by mutableStateOf(false)
-    var uploadingPost by mutableStateOf(false)
+    var postCreationButtonsEnabled by mutableStateOf(true)
 
     // Deleting a post
     var showDeletePostAlert by mutableStateOf(false)
@@ -66,6 +67,11 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     // Show options dialog for a comment
     var showCommentOptionsDialog by mutableStateOf(false)
     private var showCommentOptionsFor: Int = -1
+
+    // Show uploaded percentage of file
+    var showUploadState by mutableStateOf(false)
+    var uploadState: Double by mutableStateOf(0.0)
+    var uploadText by mutableStateOf("")
 
     fun initFeed() {
         AuthService.fetchAuthSession(onSuccess = {
@@ -246,6 +252,10 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     }
 
     fun createPost(text: String, contentUri: Uri?) {
+        this.postCreationButtonsEnabled = false
+        this.showUploadState = true
+        this.uploadText = "Processing file..."
+        var mimeType: String? = ""
         var buffer: ByteArrayOutputStream? = null
         if (contentUri != null) {
             val file = context.contentResolver.openInputStream(contentUri)
@@ -256,22 +266,46 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                 buffer.write(data, 0, nRead)
             }
             file.close()
+
+            val bufferedStream = BufferedInputStream(context.contentResolver.openInputStream(contentUri))
+            try {
+                mimeType = URLConnection.guessContentTypeFromStream(bufferedStream)
+                Log.i("mime_type_detection", "MimeType detected: $mimeType")
+            } catch (e: Exception) {
+                Log.e("mime_type_detection", "MimeType could not be determined", e)
+            }
+        }
+        this.uploadText = "Uploading file..."
+        if (mimeType.isNullOrBlank() || !mimeType.startsWith("image/")) {
+            this.showUploadState = false
+            this.uploadState = 0.0
+            this.uploadText = ""
+            this.showCreatePostDialog = false
+            this.postCreationButtonsEnabled = true
+            return
         }
         if (buffer != null) {
-            val f = File(context.filesDir, "tempFile.jpg")
+            val f = File(context.filesDir, "tempFile.png")
             f.writeBytes(buffer.toByteArray())
-            this.uploadFile(f, "images") { location ->
-                val createPostDto = CreatePostDto(
-                    details = text,
-                    username = this.userName,
-                    imageLocation = location
-                )
-                this.showCreatePostDialog = false
-                ApiService.createPost(createPostDto) { post ->
-                    post.details
-                    this.posts.add(0, post)
-                }
-            }
+            this.uploadFile(f, extension = mimeType.substring(6),
+                onFractionCompleted = { this.uploadState = it },
+                onSuccess = { location ->
+                    val createPostDto = CreatePostDto(
+                        details = text,
+                        username = this.userName,
+                        imageLocation = location
+                    )
+                    this.showUploadState = false
+                    this.uploadState = 0.0
+                    this.uploadText = ""
+                    this.showCreatePostDialog = false
+                    ApiService.createPost(createPostDto) { post ->
+                        post.details
+                        this.posts.add(0, post)
+                    }
+                    f.delete()
+                    this.postCreationButtonsEnabled = true
+                })
         }
     }
 
@@ -281,13 +315,14 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         getNextPosts()
     }
 
-    private fun uploadFile(file: File, folder: String, onSuccess: (String) -> Unit) {
+    private fun uploadFile(file: File, extension: String, onFractionCompleted: (Double) -> Unit, onSuccess: (String) -> Unit) {
         val randomUuid = UUID.randomUUID()
 
         val options = StorageUploadFileOptions.defaultInstance()
-        Amplify.Storage.uploadFile("${folder}/${this.userName}/${randomUuid}.jpg", file, options,
+        Amplify.Storage.uploadFile("images/${this.userName}/$randomUuid.$extension", file, options,
             {
                 Log.i("uploadFile", "Fraction completed: ${it.fractionCompleted}")
+                onFractionCompleted(it.fractionCompleted)
             },
             {
                 Log.i("uploadFile", "Successfully uploaded: ${it.key}")

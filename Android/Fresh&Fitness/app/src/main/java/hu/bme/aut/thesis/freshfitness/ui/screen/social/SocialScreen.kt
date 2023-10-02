@@ -41,6 +41,7 @@ import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,6 +50,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -64,6 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -87,6 +90,7 @@ import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToString
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
+import kotlin.math.round
 
 @Composable
 fun SocialScreen(
@@ -107,6 +111,7 @@ fun SocialScreen(
             LoadedSocialFeed(
                 posts = viewModel.posts,
                 userName = viewModel.userName,
+                createPostEnabled = viewModel.userName.isNotBlank(),
                 onCreatePost = { viewModel.floatingButtonClick() },
                 onLikePost = { viewModel.likePost(it) },
                 editEnabled = viewModel.isLoggedIn,
@@ -132,8 +137,12 @@ fun SocialScreen(
         }
         if (viewModel.showCreatePostDialog) {
             CreatePostDialog(
+                postCreationButtonsEnabled = viewModel.postCreationButtonsEnabled,
                 onPost = { text, contentUri -> viewModel.createPost(text, contentUri) },
                 onDismiss = { viewModel.dismissCreatePostDialog() })
+        }
+        if (viewModel.showUploadState) {
+            UploadStateAlert(text = viewModel.uploadText, fractionCompleted = viewModel.uploadState) { }
         }
         if (viewModel.showPostOptionsDialog) {
             OptionsDialog(
@@ -190,6 +199,7 @@ fun LoadingSocialFeed() {
 fun LoadedSocialFeed(
     posts: List<Post>,
     userName: String,
+    createPostEnabled: Boolean,
     onCreatePost: () -> Unit,
     onLikePost: (Post) -> Unit,
     editEnabled: Boolean,
@@ -199,7 +209,7 @@ fun LoadedSocialFeed(
     onShowPostOptions: (Post) -> Unit
 ) {
     Scaffold(
-        floatingActionButton = { NewPostFAB(onCreatePost) },
+        floatingActionButton = { if (createPostEnabled) { NewPostFAB(onCreatePost) } },
         floatingActionButtonPosition = FabPosition.End
     ) {
         if (posts.isNotEmpty()) {
@@ -401,7 +411,7 @@ fun Comment(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreatePostDialog(onPost: (String, Uri?) -> Unit, onDismiss: () -> Unit) {
+fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?) -> Unit, onDismiss: () -> Unit) {
     var text by remember { mutableStateOf("") }
     var photoUri: Uri? by remember { mutableStateOf(null) }
     val painter = rememberAsyncImagePainter(
@@ -431,8 +441,8 @@ fun CreatePostDialog(onPost: (String, Uri?) -> Unit, onDismiss: () -> Unit) {
             ) {
                 Text(text = "Create post", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
                 Spacer(modifier = Modifier.height(6.dp))
-                Button(onClick = {
-                    launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
+                Button(enabled = postCreationButtonsEnabled, onClick = {
+                    launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }) {
                     Text(text = "Select photo")
                 }
@@ -463,6 +473,7 @@ fun CreatePostDialog(onPost: (String, Uri?) -> Unit, onDismiss: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
+                    enabled = postCreationButtonsEnabled,
                     minLines = 3,
                     maxLines = 5,
                     value = text,
@@ -474,10 +485,10 @@ fun CreatePostDialog(onPost: (String, Uri?) -> Unit, onDismiss: () -> Unit) {
                         .padding(6.dp),
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    Button(onClick = { onDismiss() }) {
+                    Button(onClick = { onDismiss() }, enabled = postCreationButtonsEnabled) {
                         Text(text = stringResource(R.string.cancel))
                     }
-                    Button(onClick = { onPost(text, photoUri) }) {
+                    Button(onClick = { onPost(text, photoUri) }, enabled = postCreationButtonsEnabled) {
                         Text(text = stringResource(R.string.post))
                     }
                 }
@@ -631,16 +642,15 @@ fun DeleteAlert(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Button(onClick = { onDismiss() }) {
+                    Button(onClick = { onDismiss() }, colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent)) {
                         Text(text = stringResource(id = R.string.cancel))
                     }
-                    Button(onClick = { onDelete() }) {
+                    Button(onClick = { onDelete() }, colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent)) {
                         Text(text = stringResource(id = R.string.ok))
                     }
                 }
             }
         }
-
     }
 }
 
@@ -672,6 +682,41 @@ fun OptionsDialog(
                     text = stringResource(R.string.delete),
                     fontSize = 18.sp
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UploadStateAlert(text: String, fractionCompleted: Double, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                LinearProgressIndicator(
+                    progress = fractionCompleted.toFloat(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(10.dp),
+                    strokeCap = StrokeCap.Round,
+                    trackColor = Color.LightGray
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("${round(fractionCompleted*100.0).toInt()}% completed", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
             }
         }
     }
@@ -729,4 +774,18 @@ fun HeaderPreview() {
 @Composable
 fun CommentPreview() {
     Comment(comment = Comment(0, 0, "", "", ""), { false }) { }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DeleteAlertPreview() {
+    DeleteAlert(what = "post", onDelete = { }, onDismiss = { })
+}
+
+@Preview(showBackground = true)
+@Composable
+fun UploadStateAlertPreview() {
+    UploadStateAlert(text = "Processing file...", fractionCompleted = 0.5) {
+
+    }
 }
