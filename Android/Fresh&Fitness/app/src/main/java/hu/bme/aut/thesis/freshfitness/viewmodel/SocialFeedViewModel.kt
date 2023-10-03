@@ -72,6 +72,10 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     var uploadState: Double by mutableStateOf(0.0)
     var uploadText by mutableStateOf("")
 
+    // Show fullscreen of image
+    var showImageFullScreen by mutableStateOf(false)
+    var fullScreenImageLocation: String = ""
+
     fun initFeed() {
         AuthService.fetchAuthSession(onSuccess = {
             if (it.isSignedIn) {
@@ -160,6 +164,16 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     fun dismissDeletePostAlert() {
         this.showDeletePostAlert = false
         this.showPostOptionsFor = -1
+    }
+
+    fun showFullScreenImage(location: String) {
+        fullScreenImageLocation = "$IMAGES_BASE_URL$location"
+        showImageFullScreen = true
+    }
+
+    fun hideFullScreenImage() {
+        showImageFullScreen = false
+        fullScreenImageLocation = ""
     }
 
     fun deleteComment() {
@@ -363,5 +377,6 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                 SocialFeedViewModel (context = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Context)
             }
         }
+        const val IMAGES_BASE_URL: String = "https://freshfitness-social-media-bucket100821-dev.s3.eu-north-1.amazonaws.com/"
     }
 }

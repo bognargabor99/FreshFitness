@@ -95,6 +95,7 @@ import hu.bme.aut.thesis.freshfitness.createImageFile
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToString
+import hu.bme.aut.thesis.freshfitness.ui.util.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
 import java.util.Objects
@@ -126,7 +127,8 @@ fun SocialScreen(
                 onShowLikes = { viewModel.showLikes(it.id) },
                 onShowComments = { viewModel.showComments(it.id) },
                 onStartComment = { viewModel.startCommenting(it.id) },
-                onShowPostOptions = { viewModel.showPostOptions(it.id) }
+                onShowPostOptions = { viewModel.showPostOptions(it.id) },
+                onImageClick = { viewModel.showFullScreenImage(it) }
             )
         }
         if (viewModel.showLikesDialog) {
@@ -178,6 +180,11 @@ fun SocialScreen(
                 onDelete = { viewModel.deleteComment() },
                 onDismiss = { viewModel.dismissDeleteCommentAlert() })
         }
+        if (viewModel.showImageFullScreen) {
+            FullScreenImage(
+                imageUrl = viewModel.fullScreenImageLocation,
+                onDismiss = { viewModel.hideFullScreenImage() })
+        }
     }
 }
 
@@ -214,7 +221,8 @@ fun LoadedSocialFeed(
     onShowLikes: (Post) -> Unit,
     onShowComments: (Post) -> Unit,
     onStartComment: (Post) -> Unit,
-    onShowPostOptions: (Post) -> Unit
+    onShowPostOptions: (Post) -> Unit,
+    onImageClick: (String) -> Unit
 ) {
     Scaffold(
         floatingActionButton = { if (createPostEnabled) { NewPostFAB(onCreatePost) } },
@@ -230,13 +238,7 @@ fun LoadedSocialFeed(
 
                 itemsIndexed(items = posts, key = { _, p -> p.id }) {_, p ->
                     PostCard(
-                        modifier = Modifier
-                            .animateItemPlacement(
-                                animationSpec = tween(
-                                    durationMillis = 500,
-                                    easing = LinearOutSlowInEasing,
-                                )
-                            ),
+                        modifier = Modifier.animateItemPlacement(animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)),
                         post = p,
                         userName = userName,
                         onLikePost = onLikePost,
@@ -244,7 +246,8 @@ fun LoadedSocialFeed(
                         onShowLikes = onShowLikes,
                         onShowComments = onShowComments,
                         onStartComment = onStartComment,
-                        onShowPostOptions = onShowPostOptions)
+                        onShowPostOptions = onShowPostOptions,
+                        onImageClick = onImageClick)
                 }
             }
         } else {
@@ -300,7 +303,8 @@ fun PostCard(
     onShowLikes: (Post) -> Unit = { },
     onShowComments: (Post) -> Unit = { },
     onStartComment: (Post) -> Unit = { },
-    onShowPostOptions: (Post) -> Unit = { }
+    onShowPostOptions: (Post) -> Unit = { },
+    onImageClick: (String) -> Unit = { }
 ) {
     ElevatedCard(
         modifier = modifier
@@ -347,6 +351,7 @@ fun PostCard(
                             .widthIn(min = 140.dp)
                             .heightIn(min = 100.dp, max = 200.dp)
                             .border(6.dp, Color.Gray)
+                            .clickable { onImageClick(post.imageLocation) }
                     )
                 }
             }
@@ -647,7 +652,6 @@ fun CommentsDialog(
                 }
             }
         }
-
     }
 }
 
