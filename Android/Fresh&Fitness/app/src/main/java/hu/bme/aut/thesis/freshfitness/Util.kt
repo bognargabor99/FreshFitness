@@ -1,6 +1,7 @@
 package hu.bme.aut.thesis.freshfitness
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -12,11 +13,14 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.SphericalUtil
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
+import java.io.File
 import java.nio.charset.Charset
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Base64
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 fun List<RunCheckpointEntity>.calculateDistanceInMeters() : Double {
@@ -78,6 +82,18 @@ fun parseDateToString(dateStr: String): String {
         LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("EEEE HH:mm"))
     else
         LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("MM-dd HH:mm"))
+}
+
+@SuppressLint("SimpleDateFormat")
+fun Context.createImageFile(): File {
+    // Create an image file name
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+    val imageFileName = "JPEG_" + timeStamp + "_"
+    return File.createTempFile(
+        imageFileName, /* prefix */
+        ".jpg", /* suffix */
+        externalCacheDir      /* directory */
+    )
 }
 
 val paintBlackFill = Paint().apply {
