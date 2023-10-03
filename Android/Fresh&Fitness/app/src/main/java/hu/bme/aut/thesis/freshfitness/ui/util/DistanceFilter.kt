@@ -43,7 +43,7 @@ fun DistanceFilter(
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
-        )
+        ), label = ""
     )
 
     Column(

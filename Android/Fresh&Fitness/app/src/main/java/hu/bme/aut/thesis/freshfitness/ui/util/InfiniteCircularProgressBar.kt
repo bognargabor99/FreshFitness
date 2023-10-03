@@ -26,7 +26,7 @@ import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 
 @Composable
 fun InfiniteCircularProgressBar() {
-    val infiniteTransition = rememberInfiniteTransition()
+    val infiniteTransition = rememberInfiniteTransition(label = "")
     val progress by infiniteTransition.animateFloat(
         initialValue = 0.1f,
         targetValue = 0.9f,
