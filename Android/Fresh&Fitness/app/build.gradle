@@ -6,6 +6,10 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
+def apikeyPropertiesFile = rootProject.file("key.properties")
+def apikeyProperties = new Properties()
+apikeyProperties.load(new FileInputStream(apikeyPropertiesFile))
+
 android {
     namespace 'hu.bme.aut.thesis.freshfitness'
     compileSdk 33
@@ -21,6 +25,8 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        buildConfigField("String", "S3_IMAGES_BASE_URL", apikeyProperties['S3_IMAGES_BASE_URL'])
     }
 
     buildTypes {

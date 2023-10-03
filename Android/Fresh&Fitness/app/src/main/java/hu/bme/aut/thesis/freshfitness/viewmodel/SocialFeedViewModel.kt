@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
+import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
 import hu.bme.aut.thesis.freshfitness.amplify.StorageService
@@ -167,7 +168,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     }
 
     fun showFullScreenImage(location: String) {
-        fullScreenImageLocation = "$IMAGES_BASE_URL$location"
+        fullScreenImageLocation = "${BuildConfig.S3_IMAGES_BASE_URL}$location"
         showImageFullScreen = true
     }
 
@@ -377,6 +378,5 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                 SocialFeedViewModel (context = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Context)
             }
         }
-        const val IMAGES_BASE_URL: String = "https://freshfitness-social-media-bucket100821-dev.s3.eu-north-1.amazonaws.com/"
     }
 }

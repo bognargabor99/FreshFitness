@@ -4,7 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
@@ -30,7 +31,10 @@ fun FullScreenImage(imageUrl: String, onDismiss: () -> Unit) {
         properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = true, dismissOnClickOutside = true),
         onDismissRequest = { onDismiss() }
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center
+        ) {
             ZoomableImage(imageUrl)
         }
     }
@@ -54,9 +58,7 @@ fun ZoomableImage(imageUrl: String) {
         contentScale = ContentScale.Fit,
         modifier = Modifier
             .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
-            .graphicsLayer(
-                scaleX = zoom, scaleY = zoom
-            )
+            .graphicsLayer(scaleX = zoom, scaleY = zoom)
             .pointerInput(Unit) {
                 detectTransformGestures(
                     onGesture = { _, pan, gestureZoom, _ ->

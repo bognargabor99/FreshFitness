@@ -27,13 +27,13 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -87,6 +87,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import coil.size.Size
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import hu.bme.aut.thesis.freshfitness.BuildConfig
@@ -306,6 +307,13 @@ fun PostCard(
     onShowPostOptions: (Post) -> Unit = { },
     onImageClick: (String) -> Unit = { }
 ) {
+    val model = ImageRequest.Builder(LocalContext.current)
+        .data("${BuildConfig.S3_IMAGES_BASE_URL}${post.imageLocation}")
+        .size(Size.ORIGINAL)
+        .crossfade(true)
+        .build()
+    val painter = rememberAsyncImagePainter(model)
+
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
@@ -345,13 +353,15 @@ fun PostCard(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        painter = rememberAsyncImagePainter("https://freshfitness-social-media-bucket100821-dev.s3.eu-north-1.amazonaws.com/${post.imageLocation}"),
+                        painter = painter,
                         contentDescription = null,
                         modifier = Modifier
-                            .widthIn(min = 140.dp)
-                            .heightIn(min = 100.dp, max = 200.dp)
-                            .border(6.dp, Color.Gray)
+                            .heightIn(max = 300.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .border(6.dp, Color.Gray, RoundedCornerShape(16.dp))
                             .clickable { onImageClick(post.imageLocation) }
+                            .fillMaxWidth(0.9f),
+                        contentScale = ContentScale.FillWidth
                     )
                 }
             }
@@ -442,12 +452,13 @@ fun Comment(
 fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?) -> Unit, onDismiss: () -> Unit) {
     var text by remember { mutableStateOf("") }
     var photoUri: Uri? by remember { mutableStateOf(null) }
-    val painter = rememberAsyncImagePainter(
-        ImageRequest
-            .Builder(LocalContext.current)
-            .data(data = photoUri)
-            .build()
-    )
+    val model = ImageRequest.Builder(LocalContext.current)
+        .data(data = photoUri)
+        .size(Size.ORIGINAL)
+        .crossfade(true)
+        .build()
+    val painter = rememberAsyncImagePainter(model)
+
     AlertDialog(
         modifier = Modifier.fillMaxWidth(),
         onDismissRequest = { onDismiss() }
@@ -468,7 +479,7 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     PhotoPicker(enabled = postCreationButtonsEnabled, onPhotoPicked = {
                         photoUri = it
@@ -482,11 +493,11 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
                         painter = painter,
                         contentDescription = null,
                         modifier = Modifier
-                            .padding(8.dp)
-                            .widthIn(min = 260.dp)
-                            .heightIn(min = 200.dp, max = 200.dp)
-                            .border(6.0.dp, Color.Gray),
-                        contentScale = ContentScale.Fit
+                            .heightIn(max = 300.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .border(6.dp, Color.Gray, RoundedCornerShape(16.dp))
+                            .fillMaxWidth(0.9f),
+                        contentScale = ContentScale.FillWidth
                     )
                 } else {
                     Row(
@@ -495,10 +506,11 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(0.95f)
+                                .fillMaxWidth(0.9f)
                                 .heightIn(min = 200.dp)
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(6.0.dp, Color.Gray)
+                                .clip(RoundedCornerShape(16.dp))
+                                .border(6.0.dp, Color.Gray, RoundedCornerShape(16.dp))
+                                .background(Color.LightGray)
                         )
                     }
                 }

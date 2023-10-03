@@ -177,7 +177,6 @@ amplify/mock-data
 amplify/mock-api-resources
 amplify/backend/amplify-meta.json
 amplify/backend/.temp
-build/
 dist/
 node_modules/
 aws-exports.js
@@ -190,3 +189,4 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+/key.properties
