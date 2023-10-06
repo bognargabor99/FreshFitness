@@ -3,6 +3,7 @@ package hu.bme.aut.thesis.freshfitness.ui.screen.social
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build.VERSION.SDK_INT
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -85,7 +86,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import coil.size.Size
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -312,7 +316,17 @@ fun PostCard(
         .size(Size.ORIGINAL)
         .crossfade(true)
         .build()
-    val painter = rememberAsyncImagePainter(model)
+    val imageLoader = ImageLoader.Builder(LocalContext.current)
+        .components {
+            if (SDK_INT >= 28) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
+            }
+        }
+        .build()
+
+    val painter = rememberAsyncImagePainter(model, imageLoader = imageLoader)
 
     ElevatedCard(
         modifier = modifier
@@ -457,7 +471,16 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
         .size(Size.ORIGINAL)
         .crossfade(true)
         .build()
-    val painter = rememberAsyncImagePainter(model)
+    val imageLoader = ImageLoader.Builder(LocalContext.current)
+        .components {
+            if (SDK_INT >= 28) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
+            }
+        }
+        .build()
+    val painter = rememberAsyncImagePainter(model, imageLoader = imageLoader)
 
     AlertDialog(
         modifier = Modifier.fillMaxWidth(),
@@ -481,7 +504,7 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    PhotoPicker(enabled = postCreationButtonsEnabled, onPhotoPicked = {
+                    MediaPicker(enabled = postCreationButtonsEnabled, onPhotoPicked = {
                         photoUri = it
                     })
                     CameraImageCapture(enabled = postCreationButtonsEnabled, onCapturedImage = {
@@ -554,7 +577,7 @@ fun NewPostFAB(
 }
 
 @Composable
-fun PhotoPicker(enabled: Boolean, onPhotoPicked: (Uri?) -> Unit) {
+fun MediaPicker(enabled: Boolean, onPhotoPicked: (Uri?) -> Unit) {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         onPhotoPicked(uri)
     }

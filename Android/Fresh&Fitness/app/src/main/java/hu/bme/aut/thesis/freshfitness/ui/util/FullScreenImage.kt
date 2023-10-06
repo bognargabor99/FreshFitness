@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.util
 
+import android.os.Build
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
@@ -18,11 +19,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 import kotlin.math.roundToInt
 
 @Composable
@@ -51,7 +56,17 @@ fun ZoomableImage(imageUrl: String) {
     val screenWidth = configuration.screenWidthDp.dp.value
     val screenHeight = configuration.screenHeightDp.dp.value
 
-    val painter = rememberAsyncImagePainter(model = imageUrl)
+    val imageLoader = ImageLoader.Builder(LocalContext.current)
+        .components {
+            if (Build.VERSION.SDK_INT >= 28) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
+            }
+        }
+        .build()
+
+    val painter = rememberAsyncImagePainter(model = imageUrl, imageLoader = imageLoader)
     Image(
         painter = painter,
         contentDescription = null,
