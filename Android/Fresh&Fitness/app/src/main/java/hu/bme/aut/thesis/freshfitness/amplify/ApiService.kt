@@ -13,12 +13,17 @@ import hu.bme.aut.thesis.freshfitness.model.social.LikeDto
 import hu.bme.aut.thesis.freshfitness.model.social.LikePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.PagedPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
+import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
+import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
+import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
+import hu.bme.aut.thesis.freshfitness.model.workout.UnitOfMeasure
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.net.URLDecoder
 
 object ApiService {
     /**
+     * Social feed
      * GET operations
      */
     fun getPosts(nextPage: Int, userName: String, onSuccess: (List<PagedPostDto>) -> Unit, onError: () -> Unit = {}) {
@@ -79,8 +84,8 @@ object ApiService {
         )
     }
 
-
     /**
+     * Social feed
      * POST operations
      */
 
@@ -148,6 +153,7 @@ object ApiService {
     }
 
     /**
+     * Social feed
      * DELETE operations
      */
 
@@ -181,6 +187,87 @@ object ApiService {
             },
             {
                 Log.e("social_feed_post", "DELETE failed", it)
+            }
+        )
+    }
+
+    /**
+     * Workout exercises
+     * GET operations
+     */
+
+    fun getExercises(onSuccess: (List<Exercise>) -> Unit, onError: () -> Unit = {}) {
+        val options = RestOptions.builder()
+            .addPath("/workout/exercises")
+            .build()
+
+        Amplify.API.get(options,
+            {
+                Log.i("workout_exercise_get", "GET succeeded: ${it.data.asString()}")
+                val jsonExercises = it.data.asString()
+                val exercises = Json.decodeFromString<List<Exercise>>(jsonExercises)
+                onSuccess(exercises)
+            },
+            {
+                Log.e("workout_exercise_get", "GET failed.", it)
+                onError()
+            }
+        )
+    }
+
+    fun getEquipments(onSuccess: (List<Equipment>) -> Unit, onError: () -> Unit = {}) {
+        val options = RestOptions.builder()
+            .addPath("/workout/exercises")
+            .build()
+
+        Amplify.API.get(options,
+            {
+                Log.i("workout_equipments_get", "GET succeeded: ${it.data.asString()}")
+                val jsonEquipments = it.data.asString()
+                val equipments = Json.decodeFromString<List<Equipment>>(jsonEquipments)
+                onSuccess(equipments)
+            },
+            {
+                Log.e("workout_equipments_get", "GET failed.", it)
+                onError()
+            }
+        )
+    }
+
+    fun getUnits(onSuccess: (List<UnitOfMeasure>) -> Unit, onError: () -> Unit = {}) {
+        val options = RestOptions.builder()
+            .addPath("/workout/exercises")
+            .build()
+
+        Amplify.API.get(options,
+            {
+                Log.i("workout_units_get", "GET succeeded: ${it.data.asString()}")
+                val jsonUnits = it.data.asString()
+                val units = Json.decodeFromString<List<UnitOfMeasure>>(jsonUnits)
+                onSuccess(units)
+            },
+            {
+                Log.e("workout_units_get", "GET failed.", it)
+                onError()
+            }
+        )
+    }
+
+    fun getMuscleGroups(onSuccess: (List<MuscleGroup>) -> Unit, onError: () -> Unit = {}) {
+        val options = RestOptions.builder()
+            .addPath("/workout/exercises")
+            .build()
+
+        Amplify.API.get(options,
+            {
+                Log.i("workout_muscles_get", "GET succeeded: ${it.data.asString()}")
+                val jsonMuscleGroups = it.data.asString()
+                val muscleGroups = Json.decodeFromString<List<MuscleGroup>>(jsonMuscleGroups)
+                onSuccess(muscleGroups)
+            },
+            {
+                Log.e("workout_muscles_get", "GET failed.", it)
+                onError()
             }
         )
     }
