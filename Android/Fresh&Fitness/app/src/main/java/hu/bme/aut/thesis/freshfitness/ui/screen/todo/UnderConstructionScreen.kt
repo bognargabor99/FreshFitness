@@ -1,7 +1,16 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.todo
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -22,13 +31,13 @@ import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 fun UnderConstructionScreen(
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition()
+    val infiniteTransition = rememberInfiniteTransition(label = "")
     val angle by infiniteTransition.animateFloat(
         initialValue = 0F,
         targetValue = 360F,
         animationSpec = infiniteRepeatable(
             animation = tween(5000, easing = LinearEasing)
-        )
+        ), label = ""
     )
 
     Box(
