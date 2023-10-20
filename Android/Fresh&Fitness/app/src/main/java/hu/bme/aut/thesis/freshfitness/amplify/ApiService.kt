@@ -217,7 +217,7 @@ object ApiService {
 
     fun getEquipments(onSuccess: (List<Equipment>) -> Unit, onError: () -> Unit = {}) {
         val options = RestOptions.builder()
-            .addPath("/workout/exercises")
+            .addPath("/workout/equipments")
             .build()
 
         Amplify.API.get(options,
@@ -236,7 +236,7 @@ object ApiService {
 
     fun getUnits(onSuccess: (List<UnitOfMeasure>) -> Unit, onError: () -> Unit = {}) {
         val options = RestOptions.builder()
-            .addPath("/workout/exercises")
+            .addPath("/workout/units")
             .build()
 
         Amplify.API.get(options,
@@ -255,7 +255,7 @@ object ApiService {
 
     fun getMuscleGroups(onSuccess: (List<MuscleGroup>) -> Unit, onError: () -> Unit = {}) {
         val options = RestOptions.builder()
-            .addPath("/workout/exercises")
+            .addPath("/workout/musclegroups")
             .build()
 
         Amplify.API.get(options,
