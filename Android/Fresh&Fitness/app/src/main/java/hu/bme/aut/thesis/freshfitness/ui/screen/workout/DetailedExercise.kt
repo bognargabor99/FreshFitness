@@ -53,18 +53,28 @@ fun DetailedExercise(
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             ExerciseMedia(exercise.media)
-            DetailedExerciseTitle(title = exercise.name)
-            DetailedExerciseBadges(exercise)
-            DetailedExerciseDetails(details = exercise.details)
-            exercise.equipment?.let {
-                FilterTitle(title = stringResource(id = R.string.equipments))
-                if (it.imgKey.isNotBlank()) DetailedExerciseEquipment(it)
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                DetailedExerciseTitle(title = exercise.name)
+                DetailedExerciseBadges(exercise)
+                DetailedExerciseDetails(details = exercise.details)
+                exercise.equipment?.let {
+                    if (it.imgKey.isNotBlank()) {
+                        FilterTitle(title = stringResource(id = R.string.equipments))
+                        DetailedExerciseEquipment(it)
+                    }
+                }
+                exercise.alternateEquipment?.let {
+                    if (it.imgKey.isNotBlank()) {
+                        FilterTitle(title = stringResource(id = R.string.alternative_equipment))
+                        DetailedExerciseEquipment(it)
+                    }
+                }
             }
-            exercise.alternateEquipment?.let { if (it.imgKey.isNotBlank()) DetailedExerciseEquipment(it) }
         }
     }
 }

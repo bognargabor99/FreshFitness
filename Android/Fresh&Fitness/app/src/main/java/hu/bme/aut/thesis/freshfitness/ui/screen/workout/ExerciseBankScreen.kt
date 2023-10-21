@@ -21,11 +21,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -92,10 +94,13 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
             else {
                 ExerciseListLoaded(
                     exercises = viewModel.filteredExercises,
+                    nameFilter = viewModel.nameFilter,
                     muscleFilter = viewModel.muscleFilter,
                     equipmentFilter = viewModel.equipmentFilter,
                     allMuscles = viewModel.muscleGroups,
                     allEquipments = viewModel.equipments,
+                    onNameFilter = { viewModel.saveNameFilter(it) },
+                    clearNameFilter = { viewModel.clearNameFilter() },
                     onApplyNewFilters = { muscle, equipment -> viewModel.saveOtherFilters(muscle, equipment) }
                 )
             }
@@ -105,10 +110,13 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
             else
                 ExerciseListLoaded(
                     exercises = viewModel.filteredExercises,
+                    nameFilter = viewModel.nameFilter,
                     muscleFilter = viewModel.muscleFilter,
                     equipmentFilter = viewModel.equipmentFilter,
                     allMuscles = viewModel.muscleGroups,
                     allEquipments = viewModel.equipments,
+                    onNameFilter = { viewModel.saveNameFilter(it) },
+                    clearNameFilter = { viewModel.clearNameFilter() },
                     onApplyNewFilters = { muscle, equipment -> viewModel.saveOtherFilters(muscle, equipment) }
                 )
         }
@@ -139,16 +147,20 @@ fun ExerciseListLoading() {
 @Composable
 fun ExerciseListLoaded(
     exercises: List<Exercise>,
+    nameFilter: String,
     muscleFilter: String,
     equipmentFilter: String,
     allMuscles: List<MuscleGroup>,
     allEquipments: List<Equipment>,
+    onNameFilter: (String) -> Unit,
+    clearNameFilter: () -> Unit,
     onApplyNewFilters: (muscle: String, equipment: String) -> Unit
 ) {
     var showDetailsOfExercise by remember { mutableStateOf(false) }
     var showFilterBottomSheet by remember { mutableStateOf(false) }
     var detailedExercise: Exercise? by remember { mutableStateOf(null) }
     ExerciseListHeader(onFilterIconClick = { showFilterBottomSheet = true })
+    ExerciseNameFilter(nameFilter, onNameFilter, clearNameFilter)
     ExerciseList(
         exercises = exercises,
         onChooseExercise = {
@@ -183,11 +195,32 @@ fun ExerciseListHeader(
             .wrapContentHeight(),
         contentAlignment = Alignment.CenterEnd
     ) {
-        Text(modifier = Modifier.fillMaxWidth(), text = stringResource(R.string.exercises), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold)
+        Text(modifier = Modifier.fillMaxWidth(), text = stringResource(R.string.exercises), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 20.sp)
         IconButton(onClick = onFilterIconClick) {
             Icon(imageVector = Icons.Filled.FilterAlt, contentDescription = null)
         }
     }
+}
+
+@Composable
+fun ExerciseNameFilter(nameFilter: String, onNameFilter: (String) -> Unit, clearNameFilter: () -> Unit) {
+    OutlinedTextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        value = nameFilter,
+        onValueChange = onNameFilter,
+        singleLine = true,
+        placeholder = { Text("Name...") },
+        shape = RoundedCornerShape(20.dp),
+        trailingIcon = {
+            Icon(
+                modifier = Modifier.clickable { clearNameFilter() },
+                imageVector = Icons.Filled.Cancel,
+                contentDescription = null
+            )
+        }
+    )
 }
 
 @Composable

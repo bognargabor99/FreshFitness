@@ -23,9 +23,9 @@ class ExerciseBankViewModel : ViewModel() {
     var muscleGroups = mutableListOf<MuscleGroup>()
 
     var filteredExercises = mutableStateListOf<Exercise>()
-    var nameFilter: String = ""
-    var muscleFilter: String = ""
-    var equipmentFilter: String = ""
+    var nameFilter: String by mutableStateOf("")
+    var muscleFilter: String by mutableStateOf("")
+    var equipmentFilter: String by mutableStateOf("")
 
     // Determining which kind of screen to show
     var isLoading by mutableStateOf(true)
@@ -65,6 +65,11 @@ class ExerciseBankViewModel : ViewModel() {
     fun saveOtherFilters(newMuscleFilter: String, newEquipmentFilter: String) {
         this.muscleFilter = newMuscleFilter
         this.equipmentFilter = newEquipmentFilter
+        applyFilters()
+    }
+
+    fun clearNameFilter() {
+        this.nameFilter = ""
         applyFilters()
     }
 
