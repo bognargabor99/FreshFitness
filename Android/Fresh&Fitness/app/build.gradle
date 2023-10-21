@@ -87,6 +87,15 @@ dependencies {
     implementation 'io.coil-kt:coil-compose:2.4.0'
     implementation 'io.coil-kt:coil-gif:2.4.0'
 
+    // Regular videos
+    implementation("androidx.media3:media3-exoplayer:1.1.1")
+    implementation("androidx.media3:media3-exoplayer-dash:1.1.1")
+    implementation("androidx.media3:media3-ui:1.1.1")
+
+    // YouTube videos
+    implementation "com.pierfrancescosoffritti.androidyoutubeplayer:chromecast-sender:0.29"
+    implementation "com.pierfrancescosoffritti.androidyoutubeplayer:custom-ui:12.1.0"
+
     // Maps & Places
     implementation 'com.google.maps.android:maps-compose:2.11.4'
     implementation 'com.google.android.gms:play-services-maps:18.1.0'

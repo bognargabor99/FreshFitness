@@ -1,4 +1,4 @@
-package hu.bme.aut.thesis.freshfitness.ui.util
+package hu.bme.aut.thesis.freshfitness.ui.util.media
 
 import android.os.Build
 import androidx.compose.foundation.ExperimentalFoundationApi

@@ -59,4 +59,17 @@
     <string name="cancel">Cancel</string>
     <string name="post">Post</string>
     <string name="delete">Delete</string>
+    <string name="go_for_a_run">Go for a run</string>
+    <string name="workout_planning">Workout planning</string>
+    <string name="exercise_bank">Exercise bank</string>
+    <string name="fetching_exercises">Fetching exercises</string>
+    <string name="network_unavailable">Network unavailable</string>
+    <string name="check_connection">Please check your connection</string>
+    <string name="no_connection">No connection</string>
+    <string name="back_online">Back online!</string>
+    <string name="muscle_group">Muscle group</string>
+    <string name="equipment">Equipment</string>
+    <string name="exercises">Exercises</string>
+    <string name="apply">Apply</string>
+    <string name="equipments">Equipments</string>
 </resources>
