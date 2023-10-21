@@ -100,8 +100,8 @@ import hu.bme.aut.thesis.freshfitness.createImageFile
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToString
-import hu.bme.aut.thesis.freshfitness.ui.util.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
+import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
 import java.util.Objects
 import kotlin.math.round
@@ -111,7 +111,8 @@ fun SocialScreen(
     viewModel: SocialFeedViewModel = viewModel(factory = SocialFeedViewModel.factory)
 ) {
     LaunchedEffect(key1 = false) {
-        viewModel.initFeed()
+        if (viewModel.posts.isEmpty())
+            viewModel.initFeed()
     }
     @Suppress("DEPRECATION")
     SwipeRefresh(

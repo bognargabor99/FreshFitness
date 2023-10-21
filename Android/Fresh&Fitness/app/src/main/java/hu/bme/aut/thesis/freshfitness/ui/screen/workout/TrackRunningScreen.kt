@@ -137,7 +137,7 @@ fun RunListItem(
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
-        )
+        ), label = ""
     )
     Column(
         modifier = Modifier
