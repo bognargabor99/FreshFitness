@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 class NearbyGymsViewModel(val context: Context) : ViewModel() {
     private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
     var currentLocation by mutableStateOf(com.google.android.gms.maps.model.LatLng(47.0, 19.0))
-    private val repository = FavouritePlacesRepository(FreshFitnessApplication.runningDatabase.freshFitnessDao())
+    private val repository = FavouritePlacesRepository(FreshFitnessApplication.runningDatabase.runningDao())
 
     var showLocationState: NearByGymShowLocationState by mutableStateOf(NearByGymShowLocationState.NotShow)
         private set

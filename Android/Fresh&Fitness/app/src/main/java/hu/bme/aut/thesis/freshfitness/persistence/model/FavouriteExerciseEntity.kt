@@ -36,7 +36,7 @@ data class FavouriteExerciseEntity(
     val difficulty: String,
     var unitId: Int? = null,
     var equipmentId: Int? = null,
-    var alternateEquipment: Int? = null,
+    var alternateEquipmentId: Int? = null,
     val intermediateLimit: Int,
     val advancedLimit: Int
 )

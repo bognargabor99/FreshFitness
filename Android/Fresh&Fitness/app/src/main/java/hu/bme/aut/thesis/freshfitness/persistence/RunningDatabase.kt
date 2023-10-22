@@ -18,9 +18,10 @@ import hu.bme.aut.thesis.freshfitness.persistence.model.UnitOfMeasureEntity
         FavouriteExerciseEntity::class,
         MuscleEntity::class,
         UnitOfMeasureEntity::class,
-        EquipmentEntity::class,
+        EquipmentEntity::class
                ],
-    version = 1)
+    version = 2)
 abstract class RunningDatabase : RoomDatabase() {
-    abstract fun freshFitnessDao(): FreshFitnessDao
+    abstract fun runningDao(): RunningDao
+    abstract fun exercisesDao(): FavouriteExercisesDao
 }

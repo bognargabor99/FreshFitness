@@ -1,6 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.repository
 
-import hu.bme.aut.thesis.freshfitness.persistence.FreshFitnessDao
+import hu.bme.aut.thesis.freshfitness.persistence.RunningDao
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.concurrent.thread
 
-class RunningRepository(private val dao: FreshFitnessDao) {
+class RunningRepository(private val dao: RunningDao) {
 
     fun getRunning(runId: Long): RunWithCheckpoints {
         var ret: RunWithCheckpoints? = null

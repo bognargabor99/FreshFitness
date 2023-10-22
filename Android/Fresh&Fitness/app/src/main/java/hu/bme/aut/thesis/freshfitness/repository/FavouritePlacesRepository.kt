@@ -1,12 +1,12 @@
 package hu.bme.aut.thesis.freshfitness.repository
 
 import com.google.maps.model.PlacesSearchResult
-import hu.bme.aut.thesis.freshfitness.persistence.FreshFitnessDao
+import hu.bme.aut.thesis.freshfitness.persistence.RunningDao
 import hu.bme.aut.thesis.freshfitness.persistence.model.FavouritePlaceEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class FavouritePlacesRepository(private val dao: FreshFitnessDao) {
+class FavouritePlacesRepository(private val dao: RunningDao) {
 
     suspend fun getPlaces() =
         withContext(Dispatchers.IO) {

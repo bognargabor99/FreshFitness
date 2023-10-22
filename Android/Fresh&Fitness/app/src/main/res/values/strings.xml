@@ -73,4 +73,5 @@
     <string name="apply">Apply</string>
     <string name="equipments">Equipments</string>
     <string name="alternative_equipment">Alternative equipment</string>
+    <string name="name_with_dots">Name…</string>
 </resources>

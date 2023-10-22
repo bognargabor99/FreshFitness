@@ -11,7 +11,7 @@ import hu.bme.aut.thesis.freshfitness.persistence.model.RunEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
 
 @Dao
-interface FreshFitnessDao {
+interface RunningDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertNewRun(run: RunEntity): Long
 

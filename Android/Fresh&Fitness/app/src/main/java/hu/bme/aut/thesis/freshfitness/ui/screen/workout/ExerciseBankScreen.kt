@@ -24,6 +24,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -102,7 +104,9 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
                     allEquipments = viewModel.equipments,
                     onNameFilter = { viewModel.saveNameFilter(it) },
                     clearNameFilter = { viewModel.clearNameFilter() },
-                    onApplyNewFilters = { muscle, equipment -> viewModel.saveOtherFilters(muscle, equipment) }
+                    onApplyNewFilters = { muscle, equipment -> viewModel.saveOtherFilters(muscle, equipment) },
+                    favourites = viewModel.favouriteExercises.map { it.id },
+                    onClickHeart = { viewModel.heartExercise(it) }
                 )
             }
         } else {
@@ -118,7 +122,9 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
                     allEquipments = viewModel.equipments,
                     onNameFilter = { viewModel.saveNameFilter(it) },
                     clearNameFilter = { viewModel.clearNameFilter() },
-                    onApplyNewFilters = { muscle, equipment -> viewModel.saveOtherFilters(muscle, equipment) }
+                    onApplyNewFilters = { muscle, equipment -> viewModel.saveOtherFilters(muscle, equipment) },
+                    favourites = viewModel.favouriteExercises.map { it.id },
+                    onClickHeart = { viewModel.heartExercise(it) }
                 )
         }
     }
@@ -155,7 +161,9 @@ fun ExerciseListLoaded(
     allEquipments: List<Equipment>,
     onNameFilter: (String) -> Unit,
     clearNameFilter: () -> Unit,
-    onApplyNewFilters: (muscle: String, equipment: String) -> Unit
+    onApplyNewFilters: (muscle: String, equipment: String) -> Unit,
+    favourites: List<Int>,
+    onClickHeart: (Exercise) -> Unit
 ) {
     var showDetailsOfExercise by remember { mutableStateOf(false) }
     var showFilterBottomSheet by remember { mutableStateOf(false) }
@@ -167,7 +175,9 @@ fun ExerciseListLoaded(
         onChooseExercise = {
             detailedExercise = it
             showDetailsOfExercise = true
-        }
+        },
+        favourites = favourites,
+        onClickHeart = onClickHeart
     )
     if (showDetailsOfExercise)
         detailedExercise?.let { DetailedExercise(exercise = it, onDismiss = { showDetailsOfExercise = false }) }
@@ -212,7 +222,7 @@ fun ExerciseNameFilter(nameFilter: String, onNameFilter: (String) -> Unit, clear
         value = nameFilter,
         onValueChange = onNameFilter,
         singleLine = true,
-        placeholder = { Text("Name...") },
+        placeholder = { Text(stringResource(R.string.name_with_dots)) },
         shape = RoundedCornerShape(20.dp),
         trailingIcon = {
             Icon(
@@ -227,7 +237,9 @@ fun ExerciseNameFilter(nameFilter: String, onNameFilter: (String) -> Unit, clear
 @Composable
 fun ExerciseList(
     exercises: List<Exercise>,
-    onChooseExercise: (Exercise) -> Unit
+    onChooseExercise: (Exercise) -> Unit,
+    favourites: List<Int>,
+    onClickHeart: (Exercise) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -236,7 +248,11 @@ fun ExerciseList(
             .border(1.dp, Color.Gray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
     ) {
         itemsIndexed(exercises) {index, it ->
-            Exercise(exercise = it, onClick = onChooseExercise)
+            ExerciseRow(
+                exercise = it,
+                onClick = onChooseExercise,
+                isFavourite = favourites.contains(it.id),
+                onClickHeart = onClickHeart)
             if (exercises.size != index + 1)
                 Divider(
                     modifier = Modifier
@@ -250,9 +266,11 @@ fun ExerciseList(
 }
 
 @Composable
-fun Exercise(
+fun ExerciseRow(
     exercise: Exercise,
-    onClick: (Exercise) -> Unit
+    onClick: (Exercise) -> Unit,
+    isFavourite: Boolean,
+    onClickHeart: (Exercise) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -268,8 +286,8 @@ fun Exercise(
                     .padding(start = 8.dp)
                     .heightIn(min = 60.dp, max = 60.dp)
                     .widthIn(min = 60.dp, max = 60.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .border(2.dp, Color.Gray, RoundedCornerShape(4.dp)),
+                    .clip(RoundedCornerShape(6.dp))
+                    .border(2.dp, Color.Gray, RoundedCornerShape(6.dp)),
                 imageUri = "${BuildConfig.S3_IMAGES_BASE_URL}${exercise.muscleGroup!!.imgKey}"
             )
         }
@@ -277,6 +295,14 @@ fun Exercise(
             text = exercise.name,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = { onClickHeart(exercise) }) {
+                Icon(imageVector = if (isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = null)
+            }
+        }
     }
 }
 
