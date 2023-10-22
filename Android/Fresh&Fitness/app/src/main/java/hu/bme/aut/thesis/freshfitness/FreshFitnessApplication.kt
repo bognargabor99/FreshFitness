@@ -32,7 +32,7 @@ class FreshFitnessApplication : Application() {
         runningDatabase = Room.databaseBuilder(
             applicationContext,
             RunningDatabase::class.java,
-            "runningDatabase"
+            "fresh_fitness_database"
         ).fallbackToDestructiveMigration().build()
     }
 }
