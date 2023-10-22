@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,7 +28,6 @@ import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,10 +44,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
@@ -55,8 +56,8 @@ import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
+import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.viewmodel.ExerciseBankViewModel
-import java.util.Locale
 
 @Composable
 fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
@@ -258,9 +259,20 @@ fun Exercise(
             .fillMaxWidth()
             .height(80.dp)
             .clickable { onClick(exercise) },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        if (exercise.muscleGroup != null) {
+            S3Image(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .heightIn(min = 60.dp, max = 60.dp)
+                    .widthIn(min = 60.dp, max = 60.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .border(2.dp, Color.Gray, RoundedCornerShape(4.dp)),
+                imageUri = "${BuildConfig.S3_IMAGES_BASE_URL}${exercise.muscleGroup!!.imgKey}"
+            )
+        }
         Text(
             text = exercise.name,
             fontSize = 16.sp,
@@ -296,30 +308,4 @@ fun BackOnlineNotification() {
             color = Color.White
         )
     }
-}
-
-@Composable
-fun ExerciseBadge(text: String) {
-    Box(
-        modifier = Modifier
-            .padding(4.dp)
-            .wrapContentSize()
-            .background(MaterialTheme.colorScheme.inversePrimary, shape = RoundedCornerShape(8.dp))
-            .clip(RoundedCornerShape(8.dp))
-    ) {
-        Text(
-            modifier = Modifier
-                .padding(8.dp)
-                .clip(RoundedCornerShape(8.dp)),
-            text = text.uppercase(Locale.ROOT),
-            color = MaterialTheme.colorScheme.primary,
-            fontSize = 14.sp
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ExerciseBadgePreview() {
-    ExerciseBadge(text = "demo")
 }

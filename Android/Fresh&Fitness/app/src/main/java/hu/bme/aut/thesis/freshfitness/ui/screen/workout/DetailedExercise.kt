@@ -1,6 +1,8 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
@@ -27,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import hu.bme.aut.thesis.freshfitness.BuildConfig
@@ -36,6 +41,7 @@ import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.ui.util.FilterTitle
 import hu.bme.aut.thesis.freshfitness.ui.util.media.ExerciseMedia
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,4 +144,30 @@ fun DetailedExerciseEquipment(equipment: Equipment) {
             .fillMaxWidth()
             .padding(bottom = 4.dp), text = equipment.type, textAlign = TextAlign.Center, fontStyle = FontStyle.Italic, color = Color.Gray)
     }
+}
+
+@Composable
+fun ExerciseBadge(text: String) {
+    Box(
+        modifier = Modifier
+            .padding(4.dp)
+            .wrapContentSize()
+            .background(MaterialTheme.colorScheme.inversePrimary, shape = RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp))
+    ) {
+        Text(
+            modifier = Modifier
+                .padding(8.dp)
+                .clip(RoundedCornerShape(8.dp)),
+            text = text.uppercase(Locale.ROOT),
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = 14.sp
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExerciseBadgePreview() {
+    ExerciseBadge(text = "demo")
 }
