@@ -17,6 +17,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.DefaultPlayerUiController
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
@@ -75,8 +76,18 @@ fun YoutubeVideo(videoId: String) {
                 this.enableAutomaticInitialization = false
                 initialize(object : AbstractYouTubePlayerListener() {
                     override fun onReady(youTubePlayer: YouTubePlayer) {
+                        val controller = DefaultPlayerUiController(this@apply, youTubePlayer)
+                        controller.run {
+                            showPlayPauseButton(true)
+                            showYouTubeButton(false)
+                            showSeekBar(false)
+                            showCurrentTime(false)
+                            showFullscreenButton(false)
+                            showVideoTitle(false)
+                            enableLiveVideoUi(false)
+                        }
+                        setCustomPlayerUi(controller.rootView)
                         youTubePlayer.cueVideo(videoId, 0f)
-                        youTubePlayer.play()
                     }
 
                     override fun onStateChange(
@@ -87,14 +98,18 @@ fun YoutubeVideo(videoId: String) {
                         if (state == PlayerConstants.PlayerState.ENDED)
                             youTubePlayer.seekTo(0f)
                     }
-                }, IFramePlayerOptions.Builder()
+                }, handleNetworkEvents = false, IFramePlayerOptions.Builder()
                     .controls(0)
                     .mute(1)
-                    .modestBranding(1)
                     .build())
                 lifecycleOwner.lifecycle.addObserver(this)
             }
-        })
+        },
+        onRelease = {
+            lifecycleOwner.lifecycle.removeObserver(it)
+            it.release()
+        }
+    )
 }
 
 @Composable
