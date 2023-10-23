@@ -3,7 +3,6 @@ package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,9 +54,11 @@ import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
+import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
+import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.viewmodel.ExerciseBankViewModel
 
@@ -303,35 +304,5 @@ fun ExerciseRow(
                 Icon(imageVector = if (isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = null)
             }
         }
-    }
-}
-
-@Composable
-fun NoConnectionNotification() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Red.copy(red = 0.5f)),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(R.string.no_connection),
-            color = Color.White
-        )
-    }
-}
-
-@Composable
-fun BackOnlineNotification() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Green.copy(green = 0.5f)),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = stringResource(R.string.back_online),
-            color = Color.White
-        )
     }
 }
