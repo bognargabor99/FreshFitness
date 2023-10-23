@@ -33,6 +33,8 @@ class ExerciseBankViewModel : ViewModel() {
 
     var favouriteExercises = mutableStateListOf<Exercise>()
     var filteredExercises = mutableStateListOf<Exercise>()
+    private var difficulties = mutableStateListOf<String>()
+    var difficultyFilter: String by mutableStateOf("")
     var nameFilter: String by mutableStateOf("")
     var muscleFilter: String by mutableStateOf("")
     var equipmentFilter: String by mutableStateOf("")
@@ -56,6 +58,7 @@ class ExerciseBankViewModel : ViewModel() {
 
     private fun applyFilters() {
         val tempFilteredExercises = exercises.filter {
+            it.difficulty.lowercase().contains(this.difficultyFilter.lowercase()) &&
             it.name.lowercase().contains(this.nameFilter.lowercase()) &&
             (
                     (if (it.equipment != null) it.equipment!!.name.lowercase().contains(this.equipmentFilter.lowercase()) else false) ||
@@ -73,7 +76,8 @@ class ExerciseBankViewModel : ViewModel() {
         applyFilters()
     }
 
-    fun saveOtherFilters(newMuscleFilter: String, newEquipmentFilter: String) {
+    fun saveOtherFilters(newDifficultyFilter: String, newMuscleFilter: String, newEquipmentFilter: String) {
+        this.difficultyFilter = newDifficultyFilter
         this.muscleFilter = newMuscleFilter
         this.equipmentFilter = newEquipmentFilter
         applyFilters()
@@ -172,9 +176,10 @@ class ExerciseBankViewModel : ViewModel() {
             ex.unit = this.units.firstOrNull { eq -> eq.id == ex.unitId }
             ex.muscleGroup = this.muscleGroups.firstOrNull { eq -> eq.id == ex.muscleGroupId }
         }
-
         this.exercises.forEach { connectData(it) }
         this.favouriteExercises.forEach { connectData(it) }
+        this.difficulties.clear()
+        this.difficulties.addAll(this.exercises.map { it.difficulty }.distinct())
         applyFilters()
     }
 

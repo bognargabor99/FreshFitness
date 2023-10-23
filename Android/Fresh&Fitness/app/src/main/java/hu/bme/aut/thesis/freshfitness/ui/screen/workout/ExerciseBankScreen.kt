@@ -98,6 +98,7 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
             else {
                 ExerciseListLoaded(
                     exercises = viewModel.filteredExercises,
+                    difficultyFilter = viewModel.difficultyFilter,
                     nameFilter = viewModel.nameFilter,
                     muscleFilter = viewModel.muscleFilter,
                     equipmentFilter = viewModel.equipmentFilter,
@@ -105,7 +106,7 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
                     allEquipments = viewModel.equipments,
                     onNameFilter = { viewModel.saveNameFilter(it) },
                     clearNameFilter = { viewModel.clearNameFilter() },
-                    onApplyNewFilters = { muscle, equipment -> viewModel.saveOtherFilters(muscle, equipment) },
+                    onApplyNewFilters = { difficulty, muscle, equipment -> viewModel.saveOtherFilters(difficulty, muscle, equipment) },
                     favourites = viewModel.favouriteExercises.map { it.id },
                     onClickHeart = { viewModel.heartExercise(it) }
                 )
@@ -116,6 +117,7 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
             else
                 ExerciseListLoaded(
                     exercises = viewModel.filteredExercises,
+                    difficultyFilter = viewModel.difficultyFilter,
                     nameFilter = viewModel.nameFilter,
                     muscleFilter = viewModel.muscleFilter,
                     equipmentFilter = viewModel.equipmentFilter,
@@ -123,7 +125,7 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
                     allEquipments = viewModel.equipments,
                     onNameFilter = { viewModel.saveNameFilter(it) },
                     clearNameFilter = { viewModel.clearNameFilter() },
-                    onApplyNewFilters = { muscle, equipment -> viewModel.saveOtherFilters(muscle, equipment) },
+                    onApplyNewFilters = { difficulty, muscle, equipment -> viewModel.saveOtherFilters(difficulty, muscle, equipment) },
                     favourites = viewModel.favouriteExercises.map { it.id },
                     onClickHeart = { viewModel.heartExercise(it) }
                 )
@@ -155,6 +157,7 @@ fun ExerciseListLoading() {
 @Composable
 fun ExerciseListLoaded(
     exercises: List<Exercise>,
+    difficultyFilter: String,
     nameFilter: String,
     muscleFilter: String,
     equipmentFilter: String,
@@ -162,7 +165,7 @@ fun ExerciseListLoaded(
     allEquipments: List<Equipment>,
     onNameFilter: (String) -> Unit,
     clearNameFilter: () -> Unit,
-    onApplyNewFilters: (muscle: String, equipment: String) -> Unit,
+    onApplyNewFilters: (difficulty: String, muscle: String, equipment: String) -> Unit,
     favourites: List<Int>,
     onClickHeart: (Exercise) -> Unit
 ) {
@@ -184,12 +187,13 @@ fun ExerciseListLoaded(
         detailedExercise?.let { DetailedExercise(exercise = it, onDismiss = { showDetailsOfExercise = false }) }
     if (showFilterBottomSheet) {
         ExerciseFilter(
+            difficultyFilter = difficultyFilter,
             muscleFilter = muscleFilter,
             equipmentFilter = equipmentFilter,
             allMuscles = allMuscles,
             allEquipments = allEquipments,
-            onApplyFilters = { muscle, equipment ->
-                onApplyNewFilters(muscle, equipment)
+            onApplyFilters = { difficulty, muscle, equipment ->
+                onApplyNewFilters(difficulty, muscle, equipment)
                 showFilterBottomSheet = false },
             onDismiss = { showFilterBottomSheet = false }
         )

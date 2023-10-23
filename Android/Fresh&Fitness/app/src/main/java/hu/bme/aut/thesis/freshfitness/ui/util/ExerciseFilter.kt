@@ -54,13 +54,15 @@ import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseFilter(
+    difficultyFilter: String,
     muscleFilter: String,
     equipmentFilter: String,
     allMuscles: List<MuscleGroup>,
     allEquipments: List<Equipment>,
-    onApplyFilters: (muscle: String, equipment: String) -> Unit,
+    onApplyFilters: (difficulty: String, muscle: String, equipment: String) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var localDifficultyFilter: String by remember { mutableStateOf(difficultyFilter) }
     var localMuscleFilter: String by remember { mutableStateOf(muscleFilter) }
     var localEquipmentFilter: String by remember { mutableStateOf(equipmentFilter) }
     ModalBottomSheet(
@@ -73,17 +75,15 @@ fun ExerciseFilter(
     ) {
         ExerciseFilterHeader(onDismiss = onDismiss)
         ExerciseFilterBody(
+            difficultyFilter = localDifficultyFilter,
             muscleFilter = localMuscleFilter,
             equipmentFilter = localEquipmentFilter,
-            onMuscleFilterChange = { muscle ->
-                localMuscleFilter = if (localMuscleFilter != muscle) muscle else ""
-            },
-            onEquipmentFilterChange = { equipment ->
-                localEquipmentFilter = if (localEquipmentFilter != equipment) equipment else ""
-            },
+            onMuscleFilterChange = { muscle -> localMuscleFilter = if (localMuscleFilter != muscle) muscle else "" },
+            onEquipmentFilterChange = { equipment -> localEquipmentFilter = if (localEquipmentFilter != equipment) equipment else "" },
             allMuscles = allMuscles,
             allEquipments = allEquipments,
-            onApplyFilters = { onApplyFilters(localMuscleFilter, localEquipmentFilter) }
+            onApplyFilters = { onApplyFilters(localDifficultyFilter, localMuscleFilter, localEquipmentFilter) },
+            onDifficultyFilterChange = { localDifficultyFilter = if (localDifficultyFilter != it) it else "" }
         )
     }
 }
@@ -109,20 +109,34 @@ fun ExerciseFilterHeader(onDismiss: () -> Unit) {
 
 @Composable
 fun ExerciseFilterBody(
+    difficultyFilter: String,
     muscleFilter: String,
     equipmentFilter: String,
     onMuscleFilterChange: (String) -> Unit,
     onEquipmentFilterChange: (String) -> Unit,
     allMuscles: List<MuscleGroup>,
     allEquipments: List<Equipment>,
-    onApplyFilters: () -> Unit
+    onApplyFilters: () -> Unit,
+    onDifficultyFilterChange: (String) -> Unit
 ) {
     Column(
         modifier = Modifier.verticalScroll(rememberScrollState())
     ) {
+        DifficultyFilter(difficultyFilter, listOf("Beginner", "Intermediate", "Advanced"), onDifficultyFilterChange)
         MuscleFilter(muscleFilter = muscleFilter, onMuscleFilterChange = onMuscleFilterChange, allMuscles = allMuscles)
         EquipmentFilter(equipmentFilter = equipmentFilter, onEquipmentFilterChange = onEquipmentFilterChange, allEquipments = allEquipments)
         ExerciseFilterSubmit(onApplyFilters = onApplyFilters)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun DifficultyFilter(currentDifficulty: String, difficulties: List<String>, onDifficultyFilterChange: (String) -> Unit) {
+    FilterTitle(title = stringResource(id = R.string.difficulty))
+    FlowRow {
+        difficulties.forEach {
+            Badge(it, isSelected = currentDifficulty == it, onClick = onDifficultyFilterChange)
+        }
     }
 }
 
@@ -133,7 +147,7 @@ fun MuscleFilter(
     onMuscleFilterChange: (String) -> Unit,
     allMuscles: List<MuscleGroup>
 ) {
-    FilterTitle(title = stringResource(id = R.string.muscle_group))
+    FilterTitle(title = stringResource(R.string.muscle_group))
     FlowRow {
         allMuscles.forEach {
             MuscleGroupCard(muscleGroup = it, isSelected = muscleFilter == it.name, onClick = onMuscleFilterChange)
@@ -192,16 +206,16 @@ fun EquipmentFilter(
         modifier = Modifier.padding(8.dp)
     ) {
         allEquipments.forEach {
-            EquipmentBadge(equipment = it, isSelected = it.name == equipmentFilter, onClick = onEquipmentFilterChange)
+            Badge(text = it.name, isSelected = it.name == equipmentFilter, onClick = onEquipmentFilterChange)
         }
     }
 }
 
 @Composable
-fun EquipmentBadge(equipment: Equipment, isSelected: Boolean, onClick: (String) -> Unit) {
+fun Badge(text: String, isSelected: Boolean, onClick: (String) -> Unit) {
     Box(
         modifier = Modifier
-            .clickable { onClick(equipment.name) }
+            .clickable { onClick(text) }
             .padding(2.dp)
             .clip(RoundedCornerShape(4.dp))
             .border(
@@ -211,7 +225,7 @@ fun EquipmentBadge(equipment: Equipment, isSelected: Boolean, onClick: (String) 
             )
             .padding(12.dp)
     ) {
-        Text(text = equipment.name)
+        Text(text = text)
     }
 }
 
