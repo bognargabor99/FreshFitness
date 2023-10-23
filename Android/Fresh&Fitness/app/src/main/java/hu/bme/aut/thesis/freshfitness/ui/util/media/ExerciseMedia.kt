@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.util.media
 
+import android.view.LayoutInflater
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,7 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.Abs
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 import hu.bme.aut.thesis.freshfitness.BuildConfig
+import hu.bme.aut.thesis.freshfitness.R
 
 @Composable
 fun ExerciseMedia(mediaLink: String) {
@@ -68,42 +70,38 @@ fun VideoPlayer(videoUri: String) {
 fun YoutubeVideo(videoId: String) {
     val lifecycleOwner = LocalLifecycleOwner.current
     AndroidView(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp)),
         factory = { context ->
-            YouTubePlayerView(context = context).apply {
-                this.enableAutomaticInitialization = false
-                initialize(object : AbstractYouTubePlayerListener() {
-                    override fun onReady(youTubePlayer: YouTubePlayer) {
-                        val controller = DefaultPlayerUiController(this@apply, youTubePlayer)
-                        controller.run {
-                            showPlayPauseButton(true)
-                            showYouTubeButton(false)
-                            showSeekBar(false)
-                            showCurrentTime(false)
-                            showFullscreenButton(false)
-                            showVideoTitle(false)
-                            enableLiveVideoUi(false)
-                        }
-                        setCustomPlayerUi(controller.rootView)
-                        youTubePlayer.cueVideo(videoId, 0f)
+            /// GitHub issue: https://github.com/PierfrancescoSoffritti/android-youtube-player/issues/1024
+            val inflatedView = LayoutInflater.from(context).inflate(R.layout.youtube_player_xml, null, false)
+            val ytPlayer: YouTubePlayerView = inflatedView as YouTubePlayerView
+            ytPlayer.initialize(object : AbstractYouTubePlayerListener() {
+                override fun onReady(youTubePlayer: YouTubePlayer) {
+                    val controller = DefaultPlayerUiController(ytPlayer, youTubePlayer)
+                    controller.run {
+                        showPlayPauseButton(true)
+                        showYouTubeButton(false)
+                        showSeekBar(false)
+                        showCurrentTime(false)
+                        showFullscreenButton(false)
+                        showVideoTitle(false)
+                        enableLiveVideoUi(false)
                     }
+                    ytPlayer.setCustomPlayerUi(controller.rootView)
+                    youTubePlayer.cueVideo(videoId, 0f)
+                }
 
-                    override fun onStateChange(
-                        youTubePlayer: YouTubePlayer,
-                        state: PlayerConstants.PlayerState
-                    ) {
-                        super.onStateChange(youTubePlayer, state)
-                        if (state == PlayerConstants.PlayerState.ENDED)
-                            youTubePlayer.seekTo(0f)
-                    }
-                }, handleNetworkEvents = false, IFramePlayerOptions.Builder()
-                    .controls(0)
-                    .mute(1)
-                    .build())
-                lifecycleOwner.lifecycle.addObserver(this)
-            }
+                override fun onStateChange(
+                    youTubePlayer: YouTubePlayer,
+                    state: PlayerConstants.PlayerState
+                ) {
+                    if (state == PlayerConstants.PlayerState.ENDED)
+                        youTubePlayer.seekTo(0f)
+                }
+            }, handleNetworkEvents = false, IFramePlayerOptions.Builder()
+                .controls(0)
+                .mute(1)
+                .build())
+            ytPlayer
         },
         onRelease = {
             lifecycleOwner.lifecycle.removeObserver(it)

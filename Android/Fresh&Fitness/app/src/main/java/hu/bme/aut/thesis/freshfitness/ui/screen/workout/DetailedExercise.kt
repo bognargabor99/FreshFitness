@@ -130,9 +130,8 @@ fun DetailedExerciseEquipment(equipment: Equipment) {
                 shape = RoundedCornerShape(12.dp)
             ),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(12.dp),
-
-        ) {
+        shape = RoundedCornerShape(12.dp)
+    ) {
         S3Image(
             modifier = Modifier.fillMaxWidth(),
             imageUri = "${BuildConfig.S3_IMAGES_BASE_URL}${equipment.imgKey}"
