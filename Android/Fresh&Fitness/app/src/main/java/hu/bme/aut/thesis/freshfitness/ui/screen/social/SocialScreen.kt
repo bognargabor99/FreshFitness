@@ -77,7 +77,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -100,7 +99,7 @@ import hu.bme.aut.thesis.freshfitness.createImageFile
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToString
-import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
+import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
 import java.util.Objects
@@ -196,23 +195,7 @@ fun SocialScreen(
 
 @Composable
 fun LoadingSocialFeed() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier.wrapContentSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            InfiniteCircularProgressBar()
-            Text(
-                text = stringResource(R.string.loading_posts),
-                fontStyle = FontStyle.Italic,
-                color = Color.Black.copy(alpha = 0.5f)
-            )
-        }
-    }
+    ScreenLoading(loadingText = stringResource(R.string.loading_posts))
 }
 
 @OptIn(ExperimentalFoundationApi::class)
