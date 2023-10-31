@@ -43,9 +43,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -256,13 +258,13 @@ fun WorkoutRow(
                     .heightIn(min = 80.dp, max = 80.dp)
                     .widthIn(min = 80.dp, max = 80.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .border(2.dp, Color.Gray, RoundedCornerShape(6.dp)),
+                    .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp)),
                 imageUri = "${BuildConfig.S3_IMAGES_BASE_URL}${workout.targetMuscle!!.imgKey}",
                 colorFilter = ColorFilter.colorMatrix(colorMatrix = ColorMatrix().apply { setToSaturation(0f) })
             )
             Column(
                 modifier = Modifier.padding(bottom = 8.dp).fillMaxHeight(),
-                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom)
+                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
             ) {
                 Box(
                     modifier = Modifier.wrapContentSize()
@@ -272,21 +274,11 @@ fun WorkoutRow(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
-                        style = TextStyle.Default.copy(drawStyle = Fill)
-                    )
-                    /*Text(
-                        text = workout.targetMuscle!!.name,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
                         style = TextStyle.Default.copy(
-                            drawStyle = Stroke(
-                                miter = 10f,
-                                width = 2f,
-                                join = StrokeJoin.Round
-                            )
+                            drawStyle = Fill,
+                            shadow = Shadow(Color.Black, Offset(4f, 4f), blurRadius = 3f)
                         )
-                    )*/
+                    )
                 }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -315,7 +307,11 @@ fun WorkoutRow(
                 fontSize = 16.sp,
                 textAlign = TextAlign.End,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.background
+                color = MaterialTheme.colorScheme.background,
+                style = TextStyle.Default.copy(
+                    drawStyle = Fill,
+                    shadow = Shadow(Color.Black, Offset(4f, 4f), blurRadius = 3f)
+                )
             )
         }
     }
