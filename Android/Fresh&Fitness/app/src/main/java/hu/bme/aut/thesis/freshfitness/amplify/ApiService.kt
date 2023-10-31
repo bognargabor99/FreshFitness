@@ -17,6 +17,8 @@ import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.model.workout.UnitOfMeasure
+import hu.bme.aut.thesis.freshfitness.model.workout.Workout
+import hu.bme.aut.thesis.freshfitness.model.workout.WorkoutExercise
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.net.URLDecoder
@@ -189,6 +191,99 @@ object ApiService {
                 Log.e("social_feed_post", "DELETE failed", it)
             }
         )
+    }
+
+    /**
+     * Workouts
+     * GET operations
+     */
+
+    fun getWorkouts(owner: String, onSuccess: (List<Workout>) -> Unit, onError: () -> Unit = {}) {
+        val options = RestOptions.builder()
+            .addPath("/workout/workouts")
+            .addQueryParameters(mapOf("owner" to owner))
+            .build()
+
+        Amplify.API.get(options,
+            {
+                val jsonWorkouts = it.data.asString()
+                val workouts = Json.decodeFromString<List<Workout>>(jsonWorkouts)
+                onSuccess(workouts)
+            },
+            {
+                onError()
+            }
+        )
+    }
+
+    fun getExercisesForWorkout(owner: String, onSuccess: (List<WorkoutExercise>) -> Unit, onError: () -> Unit = {}) {
+        val options = RestOptions.builder()
+            .addPath("/workout/workout_exercises")
+            .addQueryParameters(mapOf("owner" to owner))
+            .build()
+
+        Amplify.API.get(options,
+            {
+                val jsonExercises = it.data.asString()
+                val workoutExercises = Json.decodeFromString<List<WorkoutExercise>>(jsonExercises)
+                onSuccess(workoutExercises)
+            },
+            {
+                onError()
+            }
+        )
+    }
+
+    /**
+     * Workouts
+     * POST operations
+     */
+
+    fun postWorkout(workout: Workout, onSuccess: (Workout) -> Unit, onError: () -> Unit = {}) {
+        val options = RestOptions.builder()
+            .addPath("/workout/workouts")
+            .addBody(Json.encodeToString(workout).toByteArray())
+            .build()
+
+        Amplify.API.post(options,
+            {
+                Log.i("workout_post", "POST succeeded: ${it.data.asString()}")
+                val w = Json.decodeFromString<Workout>(it.data.asString())
+                onSuccess(w)
+            },
+            {
+                Log.e("workout_post", "POST failed", it)
+                onError()
+            }
+        )
+    }
+
+    fun postWorkoutExercises(exercises: List<WorkoutExercise>, onSuccess: (List<WorkoutExercise>) -> Unit, onError: () -> Unit = {}) {
+        val options = RestOptions.builder()
+            .addPath("/workout/workout_exercises")
+            .addBody(Json.encodeToString(exercises).toByteArray())
+            .build()
+
+        Amplify.API.post(options,
+            {
+                Log.i("workout_post", "POST succeeded: ${it.data.asString()}")
+                val receivedExercises = Json.decodeFromString<List<WorkoutExercise>>(it.data.asString())
+                onSuccess(receivedExercises)
+            },
+            {
+                Log.e("workout_post", "POST failed", it)
+                onError()
+            }
+        )
+    }
+
+    /**
+     * Workouts
+     * DELETE operations
+     */
+
+    fun deleteWorkout(workoutId: Int, onSuccess: () -> Unit, onError: () -> Unit = {}) {
+
     }
 
     /**
