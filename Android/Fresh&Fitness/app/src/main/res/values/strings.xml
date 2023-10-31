@@ -75,4 +75,9 @@
     <string name="alternative_equipment">Alternative equipment</string>
     <string name="name_with_dots">Name…</string>
     <string name="difficulty">Difficulty</string>
+    <string name="fetching_workouts">Fetching workouts…</string>
+    <string name="your_workouts">Your workouts</string>
+    <string name="daily_workouts">Daily workouts</string>
+    <string name="no_workouts_found">No workouts found</string>
+    <string name="workouts">Workouts</string>
 </resources>
