@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -60,7 +59,7 @@ fun ExerciseFilter(
     allMuscles: List<MuscleGroup>,
     allEquipments: List<Equipment>,
     onApplyFilters: (difficulty: String, muscle: String, equipment: String) -> Unit,
-    onDismiss: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     var localDifficultyFilter: String by remember { mutableStateOf(difficultyFilter) }
     var localMuscleFilter: String by remember { mutableStateOf(muscleFilter) }
@@ -161,7 +160,6 @@ fun MuscleGroupCard(muscleGroup: MuscleGroup, isSelected: Boolean, onClick: (Str
         modifier = Modifier
             .padding(12.dp)
             .widthIn(min = 50.dp, max = 90.dp)
-            .aspectRatio(4f / 6f)
             .border(
                 width = if (isSelected) 3.dp else 1.dp,
                 color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray,

@@ -112,7 +112,7 @@ fun ImageWithTextOverlay(
 @Preview
 @Composable
 fun WorkoutScreenPreview() {
-    FreshFitnessTheme() {
+    FreshFitnessTheme {
         WorkoutScreen(
             onNavigateNearbyGyms = {},
             onNavigateRunning = {}

@@ -98,7 +98,7 @@ import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.createImageFile
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
-import hu.bme.aut.thesis.freshfitness.parseDateToString
+import hu.bme.aut.thesis.freshfitness.parseDateToTimeSince
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
@@ -335,7 +335,7 @@ fun PostCard(
                     fontWeight = FontWeight.Bold,
                     fontSize = 10.sp
                 )
-                Text(text = parseDateToString(post.createdAt),
+                Text(text = parseDateToTimeSince(post.createdAt),
                     fontWeight = FontWeight.Normal,
                     fontSize = 10.sp)
             }
@@ -430,7 +430,7 @@ fun Comment(
                         text = comment.username,
                         fontWeight = FontWeight.Bold,
                         fontSize = 10.sp)
-                    Text(text = parseDateToString(comment.createdAt),
+                    Text(text = parseDateToTimeSince(comment.createdAt),
                         fontWeight = FontWeight.Normal,
                         fontSize = 10.sp)
                 }
