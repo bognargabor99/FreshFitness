@@ -31,7 +31,7 @@ fun BackOnlineNotification() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Green.copy(green = 0.5f)),
+            .background(Color(0xff88acff)),
         horizontalArrangement = Arrangement.Center
     ) {
         Text(

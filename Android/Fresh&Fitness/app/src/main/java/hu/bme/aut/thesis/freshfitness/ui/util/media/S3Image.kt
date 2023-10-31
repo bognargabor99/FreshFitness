@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil.ImageLoader
@@ -17,6 +18,7 @@ import coil.size.Size
 fun S3Image(
     modifier: Modifier = Modifier,
     imageUri: String,
+    colorFilter: ColorFilter? = null,
     contentDescription: String? = null
 ) {
     val model = ImageRequest.Builder(LocalContext.current)
@@ -39,6 +41,7 @@ fun S3Image(
         painter = painter,
         contentDescription = contentDescription,
         modifier = modifier,
-        contentScale = ContentScale.FillWidth
+        contentScale = ContentScale.FillWidth,
+        colorFilter = colorFilter
     )
 }

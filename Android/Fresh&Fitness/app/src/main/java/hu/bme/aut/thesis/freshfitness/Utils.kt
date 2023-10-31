@@ -68,7 +68,7 @@ fun decodeJWT(accessToken: String): String {
 }
 
 @SuppressLint("SimpleDateFormat")
-fun parseDateToString(dateStr: String): String {
+fun parseDateToTimeSince(dateStr: String): String {
     val today = LocalDate.now()
     val yesterday = LocalDate.now().minusDays(1)
     val aWeekBefore = LocalDate.now().minusWeeks(1)
@@ -82,6 +82,11 @@ fun parseDateToString(dateStr: String): String {
         LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("EEEE HH:mm"))
     else
         LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("MM-dd HH:mm"))
+}
+
+@SuppressLint("SimpleDateFormat")
+fun parseDateToString(dateStr: String): String {
+    return LocalDateTime.parse(dateStr).format(DateTimeFormatter.ofPattern("MMM dd"))
 }
 
 @SuppressLint("SimpleDateFormat")
