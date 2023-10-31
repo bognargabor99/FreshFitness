@@ -59,6 +59,11 @@ object TrackRunning : FitnessDestination {
     override val route = "track_running"
 }
 
+object WorkoutPlanning : FitnessDestination {
+    override val icon = Icons.Default.FitnessCenter
+    override val route = "workout_plan"
+}
+
 object ExerciseBank : FitnessDestination {
     override val icon = Icons.Default.FitnessCenter
     override val route = "exercise_bank"

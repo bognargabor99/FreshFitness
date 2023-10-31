@@ -26,6 +26,7 @@ import hu.bme.aut.thesis.freshfitness.navigation.Progress
 import hu.bme.aut.thesis.freshfitness.navigation.Social
 import hu.bme.aut.thesis.freshfitness.navigation.TrackRunning
 import hu.bme.aut.thesis.freshfitness.navigation.Workout
+import hu.bme.aut.thesis.freshfitness.navigation.WorkoutPlanning
 import hu.bme.aut.thesis.freshfitness.navigation.freshFitnessBottomTabs
 import hu.bme.aut.thesis.freshfitness.ui.screen.home.HomeScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.profile.ProfileScreen
@@ -34,6 +35,7 @@ import hu.bme.aut.thesis.freshfitness.ui.screen.social.SocialScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.ExerciseBankScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.NearbyGymsScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.TrackRunningScreen
+import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutPlanScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutScreen
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 
@@ -58,6 +60,7 @@ fun FreshFitnessApp() {
         showBottomBar = when (currentDestination?.route) {
             TrackRunning.route -> false
             NearbyGyms.route -> false
+            WorkoutPlanning.route -> false
             ExerciseBank.route -> false
             else -> true
         }
@@ -85,6 +88,7 @@ fun FreshFitnessApp() {
                     WorkoutScreen(
                         onNavigateNearbyGyms = { navController.navigate(NearbyGyms.route) },
                         onNavigateRunning = { navController.navigate(TrackRunning.route) },
+                        onNavigateWorkoutPlanning = { navController.navigate(WorkoutPlanning.route) },
                         onNavigateExerciseBank = { navController.navigate(ExerciseBank.route) }
                     )
                 }
@@ -102,6 +106,9 @@ fun FreshFitnessApp() {
                 }
                 composable(route = TrackRunning.route) {
                     TrackRunningScreen()
+                }
+                composable(route = WorkoutPlanning.route) {
+                    WorkoutPlanScreen()
                 }
                 composable(route = ExerciseBank.route) {
                     ExerciseBankScreen()
