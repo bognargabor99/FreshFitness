@@ -38,5 +38,8 @@ data class FavouriteExerciseEntity(
     var equipmentId: Int? = null,
     var alternateEquipmentId: Int? = null,
     val intermediateLimit: Int,
-    val advancedLimit: Int
-)
+    val advancedLimit: Int,
+    val forWarmup: Int
+) {
+    fun isForWarmup(): Boolean = forWarmup == 1
+}

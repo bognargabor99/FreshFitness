@@ -20,7 +20,8 @@ class Exercise(
     @SerialName(value = "alternate_eq_id") val alternateEquipmentId: Int,
     @kotlinx.serialization.Transient var alternateEquipment: Equipment? = null,
     @SerialName(value = "intermediate_limit") val intermediateLimit: Int,
-    @SerialName(value = "advanced_limit") val advancedLimit: Int
+    @SerialName(value = "advanced_limit") val advancedLimit: Int,
+    @SerialName(value = "for_warmup") val forWarmup: Int
 ) {
     fun toFavouriteExerciseEntity(): FavouriteExerciseEntity {
         return FavouriteExerciseEntity(
@@ -34,9 +35,12 @@ class Exercise(
             muscleGroupId = this.muscleGroupId,
             equipmentId = this.equipmentId,
             alternateEquipmentId = this.alternateEquipmentId,
-            unitId = this.unitId
+            unitId = this.unitId,
+            forWarmup = this.forWarmup
         )
     }
+
+    fun isForWarmup(): Boolean = forWarmup == 1
 
     companion object {
         fun fromFavouriteExerciseEntity(entity: FavouriteExerciseEntity): Exercise {
@@ -51,7 +55,8 @@ class Exercise(
                 muscleGroupId = if (entity.muscleGroupId != null) entity.muscleGroupId!! else -1,
                 equipmentId = if (entity.equipmentId != null) entity.equipmentId!! else -1,
                 alternateEquipmentId = if (entity.alternateEquipmentId != null) entity.alternateEquipmentId!! else -1,
-                unitId = if (entity.unitId != null) entity.unitId!! else -1
+                unitId = if (entity.unitId != null) entity.unitId!! else -1,
+                forWarmup = entity.forWarmup
             )
         }
     }
