@@ -25,7 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.ArrowLeft
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterAlt
@@ -104,23 +104,40 @@ fun WorkoutPlanScreen(viewModel: WorkoutPlanViewModel = viewModel()) {
         BackOnlineNotification()
     }
 
-    Column(
-        modifier = Modifier.padding(horizontal = 4.dp)
-    ) {
-        if (!viewModel.networkAvailable) {
-            if (!viewModel.hasDataToShow) {
-                NetworkUnavailable()
+    var showDetailsOfWorkout by remember { mutableStateOf(false) }
+    var detailedWorkout: Workout? by remember { mutableStateOf(null) }
+    val onWorkoutClick: (Workout) -> Unit = {
+        detailedWorkout = it
+        showDetailsOfWorkout = true
+    }
+    if (showDetailsOfWorkout) {
+        DetailedWorkout(
+            workout = detailedWorkout!!,
+            onDisMiss = {
+                showDetailsOfWorkout = false
+                detailedWorkout = null
+            }
+        )
+    }
+    else {
+        Column(
+            modifier = Modifier.padding(horizontal = 4.dp)
+        ) {
+            if (!viewModel.networkAvailable) {
+                if (!viewModel.hasDataToShow) {
+                    NetworkUnavailable()
+                }
+                else {
+                    WorkoutsLoaded(communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick)
+                }
             }
             else {
-                WorkoutsLoaded(communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = {})
-            }
-        }
-        else {
-            if (viewModel.isLoading) {
-                WorkoutPlansLoading()
-            }
-            else {
-                WorkoutsLoaded(communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = {})
+                if (viewModel.isLoading) {
+                    WorkoutPlansLoading()
+                }
+                else {
+                    WorkoutsLoaded(communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick)
+                }
             }
         }
     }
@@ -171,10 +188,10 @@ fun PlanWorkoutDialog() {
 
 }
 
-@Composable
-fun WorkoutFilter() {
-
-}
+//@Composable
+//fun WorkoutFilter() {
+//
+//}
 
 @Composable
 fun WorkoutList(
@@ -220,7 +237,7 @@ fun WorkoutTitle(title: String, listShown: Boolean, onShowClick: () -> Unit) {
             fontWeight = FontWeight.Bold
         )
         IconButton(onClick = onShowClick) {
-            Icon(imageVector = if (listShown) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowDropUp, tint = Color(0xff666666), contentDescription = null)
+            Icon(imageVector = if (listShown) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowLeft, tint = Color(0xff666666), contentDescription = null)
         }
     }
 }
@@ -263,7 +280,9 @@ fun WorkoutRow(
                 colorFilter = ColorFilter.colorMatrix(colorMatrix = ColorMatrix().apply { setToSaturation(0f) })
             )
             Column(
-                modifier = Modifier.padding(bottom = 8.dp).fillMaxHeight(),
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
             ) {
                 Box(
@@ -345,21 +364,20 @@ fun NoWorkoutsBanner() {
 }
 
 @Composable
-fun WorkoutDetails() {
-
-}
-
-@Composable
 fun WorkoutBadge(
+    modifier: Modifier = Modifier,
     text: String,
+    backGroundColor: Color = MaterialTheme.colorScheme.inversePrimary,
+    fontColor: Color = MaterialTheme.colorScheme.primary,
     leadingIcon: @Composable () -> Unit = { }
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .wrapContentSize()
-            .background(MaterialTheme.colorScheme.inversePrimary, shape = RoundedCornerShape(4.dp))
+            .background(backGroundColor, shape = RoundedCornerShape(4.dp))
             .padding(4.dp)
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(4.dp)),
+        contentAlignment = Alignment.Center
     ) {
         Row(
             horizontalArrangement = Arrangement.Start,
@@ -370,7 +388,7 @@ fun WorkoutBadge(
                 modifier = Modifier
                     .clip(RoundedCornerShape(4.dp)),
                 text = text.uppercase(Locale.ROOT),
-                color = MaterialTheme.colorScheme.primary,
+                color = fontColor,
                 fontSize = 10.sp
             )
         }
