@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -111,13 +112,15 @@ fun WorkoutPlanScreen(viewModel: WorkoutPlanViewModel = viewModel()) {
         showDetailsOfWorkout = true
     }
     if (showDetailsOfWorkout) {
+        val onDismiss: () -> Unit = {
+            showDetailsOfWorkout = false
+            detailedWorkout = null
+        }
         DetailedWorkout(
             workout = detailedWorkout!!,
-            onDisMiss = {
-                showDetailsOfWorkout = false
-                detailedWorkout = null
-            }
+            onDisMiss = onDismiss
         )
+        BackHandler { onDismiss() }
     }
     else {
         Column(
