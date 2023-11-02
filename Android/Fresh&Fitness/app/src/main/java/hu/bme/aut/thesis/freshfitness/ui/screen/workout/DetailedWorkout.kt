@@ -218,12 +218,10 @@ fun WorkoutExerciseRow(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
-            Row {
-                WorkoutBadge(
-                    text = "${workoutExercise.amount} ${workoutExercise.exercise!!.unit!!.unit}",
-                    backGroundColor = MaterialTheme.colorScheme.background,
-                    fontColor = MaterialTheme.colorScheme.onBackground
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                WorkoutBadge(text = "${workoutExercise.amount} ${workoutExercise.exercise!!.unit!!.unit}")
+                if (workoutExercise.exercise!!.unit!!.type == "weight")
+                    WorkoutBadge(text = "8-12 reps")
             }
         }
     }

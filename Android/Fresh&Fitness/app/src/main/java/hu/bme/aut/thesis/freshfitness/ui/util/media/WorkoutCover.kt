@@ -60,12 +60,12 @@ fun WorkoutCover(
                             0F to Color.Transparent,
                             0.3F to Color.Black.copy(alpha = 0.5F),
                             1F to Color.Black.copy(alpha = 1F)))
-                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp, top = 48.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 40.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = name,
-                    fontSize = 26.sp,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.background,
                     style = TextStyle.Default.copy(

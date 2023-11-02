@@ -59,6 +59,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -305,10 +306,11 @@ fun WorkoutRow(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    WorkoutBadge(text = workout.difficulty)
-                    WorkoutBadge(text = "${workout.sets} sets")
+                    WorkoutBadge(text = workout.difficulty, fontSize = 10.sp)
+                    WorkoutBadge(text = "${workout.sets} sets", fontSize = 10.sp)
                     WorkoutBadge(
                         text = "warmup",
+                        fontSize = 10.sp,
                         leadingIcon = {
                             Icon(
                                 modifier = Modifier.heightIn(min = 14.dp, max = 14.dp),
@@ -370,6 +372,7 @@ fun NoWorkoutsBanner() {
 fun WorkoutBadge(
     modifier: Modifier = Modifier,
     text: String,
+    fontSize: TextUnit = 12.sp,
     backGroundColor: Color = MaterialTheme.colorScheme.inversePrimary,
     fontColor: Color = MaterialTheme.colorScheme.primary,
     leadingIcon: @Composable () -> Unit = { }
@@ -377,9 +380,9 @@ fun WorkoutBadge(
     Box(
         modifier = modifier
             .wrapContentSize()
-            .background(backGroundColor, shape = RoundedCornerShape(4.dp))
+            .background(backGroundColor, shape = RoundedCornerShape(8.dp))
             .padding(4.dp)
-            .clip(RoundedCornerShape(4.dp)),
+            .clip(RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -392,7 +395,7 @@ fun WorkoutBadge(
                     .clip(RoundedCornerShape(4.dp)),
                 text = text.uppercase(Locale.ROOT),
                 color = fontColor,
-                fontSize = 10.sp
+                fontSize = fontSize
             )
         }
     }
