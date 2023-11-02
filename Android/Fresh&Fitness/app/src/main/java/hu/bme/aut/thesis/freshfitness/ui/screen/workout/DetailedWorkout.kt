@@ -136,7 +136,7 @@ fun WorkoutOverview(
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Accessibility, title = "Warmup") {
             Switch(
-                checked = showWarmup,
+                checked = showWarmup && workout.warmupExercises.any(),
                 enabled = workout.warmupExercises.any(),
                 onCheckedChange = { onSwitchWarmup(it) },
                 colors = SwitchDefaults.colors(
