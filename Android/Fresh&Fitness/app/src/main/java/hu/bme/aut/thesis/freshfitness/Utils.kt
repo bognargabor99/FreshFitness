@@ -12,6 +12,8 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.SphericalUtil
+import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
+import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
 import java.io.File
 import java.nio.charset.Charset
@@ -99,6 +101,19 @@ fun Context.createImageFile(): File {
         ".jpg", /* suffix */
         externalCacheDir      /* directory */
     )
+}
+
+fun getEquipmentsOfWorkout(workout: Workout): MutableList<Equipment> {
+    return workout.exercises
+        .filter { it.exercise != null && it.exercise!!.equipment != null && it.exercise!!.equipment!!.type != "none" }
+        .map {
+            val list = mutableListOf<Equipment>()
+            list.add(it.exercise!!.equipment!!)
+            if (it.exercise!!.alternateEquipment != null)
+                list.add(it.exercise!!.alternateEquipment!!)
+            return list
+        }
+        .toMutableList()
 }
 
 val paintBlackFill = Paint().apply {

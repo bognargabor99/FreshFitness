@@ -43,16 +43,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
+import hu.bme.aut.thesis.freshfitness.getEquipmentsOfWorkout
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.model.workout.WorkoutExercise
+import hu.bme.aut.thesis.freshfitness.ui.util.NeededEquipmentsModal
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.ui.util.media.WorkoutCover
 import java.util.Locale
@@ -64,7 +68,7 @@ fun DetailedWorkout(
 ) {
     var showEquipmentModal by remember { mutableStateOf(false) }
     var showWarmup by remember { mutableStateOf(true) }
-    val equipments = workout.exercises.filter { it.exercise != null && it.exercise!!.equipment != null }.map { it.exercise!!.equipment!! }
+    val equipments = getEquipmentsOfWorkout(workout)
 
     var showDetailsOfExercise by remember { mutableStateOf(false) }
     var detailedExercise: Exercise? by remember { mutableStateOf(null) }
@@ -84,6 +88,7 @@ fun DetailedWorkout(
         DetailedWorkoutHeader(workout = workout)
         DetailedWorkoutBody(
             workout = workout,
+            showEquipmentsEnabled = equipments.any(),
             onSeeEquipments = { showEquipmentModal = true },
             showWarmup = showWarmup,
             onSwitchWarmup = { showWarmup = it },
@@ -92,6 +97,9 @@ fun DetailedWorkout(
     }
     if (showDetailsOfExercise)
         detailedExercise?.let { DetailedExercise(exercise = it, onDismiss = { showDetailsOfExercise = false }) }
+    if (equipments.any() && showEquipmentModal) {
+        NeededEquipmentsModal(equipments = equipments, onDismiss = { showEquipmentModal = false })
+    }
 }
 
 @Composable
@@ -104,6 +112,7 @@ fun DetailedWorkoutHeader(workout: Workout) {
 @Composable
 fun DetailedWorkoutBody(
     workout: Workout,
+    showEquipmentsEnabled: Boolean,
     onSeeEquipments: () -> Unit,
     showWarmup: Boolean,
     onSwitchWarmup: (Boolean) -> Unit,
@@ -115,6 +124,7 @@ fun DetailedWorkoutBody(
     ) {
         WorkoutOverview(
             workout = workout,
+            showEquipmentsEnabled = showEquipmentsEnabled,
             onSeeEquipments = onSeeEquipments,
             showWarmup = showWarmup,
             onSwitchWarmup = onSwitchWarmup
@@ -162,11 +172,11 @@ fun WorkoutCoverBadges(
 @Composable
 fun WorkoutOverview(
     workout: Workout,
+    showEquipmentsEnabled: Boolean,
     onSeeEquipments: () -> Unit,
     showWarmup: Boolean,
     onSwitchWarmup: (Boolean) -> Unit
 ) {
-    val equipmentList = workout.exercises.filter { it.exercise != null && it.exercise!!.equipment != null }.map { it.exercise!!.equipment!! }
     Column(
         modifier = Modifier
             .height(120.dp)
@@ -178,7 +188,7 @@ fun WorkoutOverview(
             Text(text = workout.difficulty.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() })
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.FitnessCenter, title = "Equipments") {
-            ClickableText(text = AnnotatedString(stringResource(id = R.string.see_equipment)), onClick = { onSeeEquipments() })
+            ClickableText(text = AnnotatedString(stringResource(id = R.string.see_equipment)), style = TextStyle(textDecoration = TextDecoration.Underline), onClick = { if (showEquipmentsEnabled) onSeeEquipments() })
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Accessibility, title = "Warmup") {
             Switch(
@@ -317,6 +327,7 @@ fun WorkoutOverviewPreview() {
             owner = "gaborbognar123",
             warmupExercises = mutableListOf(WorkoutExercise(exerciseId = 1, sequenceNum = 1, isWarmup = 0, amount = 40))
         ),
+        showEquipmentsEnabled = true,
         onSeeEquipments = {},
         showWarmup = true,
         onSwitchWarmup = {})
