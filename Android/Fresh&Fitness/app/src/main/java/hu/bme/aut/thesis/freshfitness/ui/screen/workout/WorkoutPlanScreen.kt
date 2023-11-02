@@ -188,16 +188,6 @@ fun WorkoutsLoaded(
 }
 
 @Composable
-fun PlanWorkoutDialog() {
-
-}
-
-//@Composable
-//fun WorkoutFilter() {
-//
-//}
-
-@Composable
 fun WorkoutList(
     title: String,
     workouts: List<Workout>,

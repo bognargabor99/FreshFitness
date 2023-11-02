@@ -2,6 +2,7 @@ package hu.bme.aut.thesis.freshfitness.ui.util
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -131,10 +132,15 @@ fun ExerciseFilterBody(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DifficultyFilter(currentDifficulty: String, difficulties: List<String>, onDifficultyFilterChange: (String) -> Unit) {
-    FilterTitle(title = stringResource(id = R.string.difficulty))
-    FlowRow {
-        difficulties.forEach {
-            Badge(it, isSelected = currentDifficulty == it, onClick = onDifficultyFilterChange)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        FilterTitle(title = stringResource(id = R.string.difficulty))
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            difficulties.forEach {
+                Badge(it, isSelected = currentDifficulty == it, onClick = onDifficultyFilterChange)
+            }
         }
     }
 }
@@ -146,10 +152,19 @@ fun MuscleFilter(
     onMuscleFilterChange: (String) -> Unit,
     allMuscles: List<MuscleGroup>
 ) {
-    FilterTitle(title = stringResource(R.string.muscle_group))
-    FlowRow {
-        allMuscles.forEach {
-            MuscleGroupCard(muscleGroup = it, isSelected = muscleFilter == it.name, onClick = onMuscleFilterChange)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        FilterTitle(title = stringResource(R.string.muscle_group))
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            allMuscles.forEach {
+                MuscleGroupCard(
+                    muscleGroup = it,
+                    isSelected = muscleFilter == it.name,
+                    onClick = onMuscleFilterChange
+                )
+            }
         }
     }
 }
