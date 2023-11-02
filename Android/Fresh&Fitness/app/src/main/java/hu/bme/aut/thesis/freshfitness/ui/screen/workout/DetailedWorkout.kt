@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -49,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
-import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.model.workout.WorkoutExercise
@@ -65,6 +65,15 @@ fun DetailedWorkout(
     var showEquipmentModal by remember { mutableStateOf(false) }
     var showWarmup by remember { mutableStateOf(true) }
     val equipments = workout.exercises.filter { it.exercise != null && it.exercise!!.equipment != null }.map { it.exercise!!.equipment!! }
+
+    var showDetailsOfExercise by remember { mutableStateOf(false) }
+    var detailedExercise: Exercise? by remember { mutableStateOf(null) }
+
+    val onClickExercise: (Exercise) -> Unit = {
+        detailedExercise = it
+        showDetailsOfExercise = true
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -72,51 +81,88 @@ fun DetailedWorkout(
             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
             .clickable { onDisMiss() }
     ) {
-        WorkoutCover(name = workout.targetMuscle!!.name, imageRes = getWorkoutBackground(workout)) {
-            Row(
-                modifier = Modifier.height(IntrinsicSize.Max),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                WorkoutBadge(modifier = Modifier.fillMaxHeight(), text = workout.difficulty, backGroundColor = MaterialTheme.colorScheme.background, fontColor = MaterialTheme.colorScheme.onBackground)
-                WorkoutBadge(modifier = Modifier.fillMaxHeight(), text = "${workout.sets} sets", backGroundColor = MaterialTheme.colorScheme.background, fontColor = MaterialTheme.colorScheme.onBackground)
-                WorkoutBadge(modifier = Modifier.fillMaxHeight(), text = "warmup", backGroundColor = MaterialTheme.colorScheme.background, fontColor = MaterialTheme.colorScheme.onBackground,
-                    leadingIcon = { Icon(modifier = Modifier.heightIn(min = 14.dp, max = 14.dp), tint = MaterialTheme.colorScheme.primary, imageVector = if (workout.warmupExercises.any()) Icons.Filled.Check else Icons.Filled.Close, contentDescription = null) }
-                )
-            }
-        }
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        DetailedWorkoutHeader(workout = workout)
+        DetailedWorkoutBody(
+            workout = workout,
+            onSeeEquipments = { showEquipmentModal = true },
+            showWarmup = showWarmup,
+            onSwitchWarmup = { showWarmup = it },
+            onClickExercise = onClickExercise
+        )
+    }
+    if (showDetailsOfExercise)
+        detailedExercise?.let { DetailedExercise(exercise = it, onDismiss = { showDetailsOfExercise = false }) }
+}
+
+@Composable
+fun DetailedWorkoutHeader(workout: Workout) {
+    WorkoutCover(name = workout.targetMuscle!!.name, imageRes = getWorkoutBackground(workout)) {
+        WorkoutCoverBadges(workout)
+    }
+}
+
+@Composable
+fun DetailedWorkoutBody(
+    workout: Workout,
+    onSeeEquipments: () -> Unit,
+    showWarmup: Boolean,
+    onSwitchWarmup: (Boolean) -> Unit,
+    onClickExercise: (Exercise) -> Unit
+) {
+    Column(
+        modifier = Modifier.padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        WorkoutOverview(
+            workout = workout,
+            onSeeEquipments = onSeeEquipments,
+            showWarmup = showWarmup,
+            onSwitchWarmup = onSwitchWarmup
+        )
+        AnimatedVisibility(
+            visible = showWarmup && workout.warmupExercises.isNotEmpty()
         ) {
-            WorkoutOverview(
-                workout = workout,
-                onSeeEquipments = { showEquipmentModal = true },
-                showWarmup = showWarmup,
-                onSwitchWarmup = { showWarmup = it }
-            )
-            if (showWarmup && workout.warmupExercises.isNotEmpty()) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 ExerciseList(
                     title = "Warmup",
-                    exercises = workout.warmupExercises.sortedBy { it.sequenceNum }
+                    exercises = workout.warmupExercises.sortedBy { it.sequenceNum },
+                    onClickExercise = onClickExercise
                 )
-            }
-            if (showWarmup && workout.warmupExercises.any() && workout.exercises.any())
                 ExerciseGroupDivider(text = "Rest 2 minutes")
-            if (workout.exercises.any()) {
-                ExerciseList(
-                    title = "Workout",
-                    exercises = workout.exercises.sortedBy { it.sequenceNum }
-                )
             }
+        }
+        if (workout.exercises.any()) {
+            ExerciseList(
+                title = "Workout",
+                exercises = workout.exercises.sortedBy { it.sequenceNum },
+                onClickExercise = onClickExercise
+            )
         }
     }
 }
 
+@Composable
+fun WorkoutCoverBadges(
+    workout: Workout
+) {
+    Row(
+        modifier = Modifier.height(IntrinsicSize.Max),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        WorkoutBadge(modifier = Modifier.fillMaxHeight(), text = workout.difficulty, backGroundColor = MaterialTheme.colorScheme.background, fontColor = MaterialTheme.colorScheme.onBackground)
+        WorkoutBadge(modifier = Modifier.fillMaxHeight(), text = "${workout.sets} sets", backGroundColor = MaterialTheme.colorScheme.background, fontColor = MaterialTheme.colorScheme.onBackground)
+        WorkoutBadge(modifier = Modifier.fillMaxHeight(), text = "warmup", backGroundColor = MaterialTheme.colorScheme.background, fontColor = MaterialTheme.colorScheme.onBackground,
+            leadingIcon = { Icon(modifier = Modifier.heightIn(min = 14.dp, max = 14.dp), tint = MaterialTheme.colorScheme.primary, imageVector = if (workout.warmupExercises.any()) Icons.Filled.Check else Icons.Filled.Close, contentDescription = null) }
+        )
+    }
+}
 
 @Composable
 fun WorkoutOverview(
     workout: Workout,
-    onSeeEquipments: (List<Equipment>) -> Unit,
+    onSeeEquipments: () -> Unit,
     showWarmup: Boolean,
     onSwitchWarmup: (Boolean) -> Unit
 ) {
@@ -132,7 +178,7 @@ fun WorkoutOverview(
             Text(text = workout.difficulty.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() })
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.FitnessCenter, title = "Equipments") {
-            ClickableText(text = AnnotatedString(stringResource(id = R.string.see_equipment)), onClick = { onSeeEquipments(equipmentList) })
+            ClickableText(text = AnnotatedString(stringResource(id = R.string.see_equipment)), onClick = { onSeeEquipments() })
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Accessibility, title = "Warmup") {
             Switch(
@@ -172,18 +218,20 @@ fun WorkoutOverviewRow(
 
 @Composable
 fun ExerciseList(
+    modifier: Modifier = Modifier,
     title: String,
-    exercises: List<WorkoutExercise>
+    exercises: List<WorkoutExercise>,
+    onClickExercise: (Exercise) -> Unit// = { }
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(20.dp))
             .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Text(modifier = Modifier.padding(8.dp), text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         exercises.forEach {
-            WorkoutExerciseRow(workoutExercise = it, onClick = { })
+            WorkoutExerciseRow(workoutExercise = it, onClick = onClickExercise)
         }
     }
 }
