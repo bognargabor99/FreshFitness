@@ -48,4 +48,6 @@
     <string name="no_workouts_found">No workouts found</string>
     <string name="workouts">Workouts</string>
     <string name="see_equipment">See equipment</string>
+    <string name="plan_a_workout">Plan a workout</string>
+    <string name="create">Create</string>
 </resources>

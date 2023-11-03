@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -64,7 +65,7 @@ import java.util.Locale
 @Composable
 fun DetailedWorkout(
     workout: Workout,
-    onDisMiss: () -> Unit
+    onDismiss: () -> Unit
 ) {
     var showEquipmentModal by remember { mutableStateOf(false) }
     var showWarmup by remember { mutableStateOf(true) }
@@ -78,12 +79,13 @@ fun DetailedWorkout(
         showDetailsOfExercise = true
     }
 
+    BackHandler { onDismiss() }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
-            .clickable { onDisMiss() }
+            .clickable { onDismiss() }
     ) {
         DetailedWorkoutHeader(workout = workout)
         DetailedWorkoutBody(

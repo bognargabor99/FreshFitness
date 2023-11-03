@@ -1,6 +1,5 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -25,11 +24,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowLeft
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,11 +74,11 @@ import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
-import hu.bme.aut.thesis.freshfitness.viewmodel.WorkoutPlanViewModel
+import hu.bme.aut.thesis.freshfitness.viewmodel.ViewWorkoutsViewModel
 import java.util.Locale
 
 @Composable
-fun WorkoutPlanScreen(viewModel: WorkoutPlanViewModel = viewModel()) {
+fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel()) {
     ConnectivityStatus(
         availableContent = {
             viewModel.onNetworkAvailable()
@@ -106,6 +106,8 @@ fun WorkoutPlanScreen(viewModel: WorkoutPlanViewModel = viewModel()) {
         BackOnlineNotification()
     }
 
+    val workoutPlanState by viewModel.workoutPlanState.collectAsState()
+    var planWorkout by remember { mutableStateOf(false) }
     var showDetailsOfWorkout by remember { mutableStateOf(false) }
     var detailedWorkout: Workout? by remember { mutableStateOf(null) }
     val onWorkoutClick: (Workout) -> Unit = {
@@ -119,9 +121,8 @@ fun WorkoutPlanScreen(viewModel: WorkoutPlanViewModel = viewModel()) {
         }
         DetailedWorkout(
             workout = detailedWorkout!!,
-            onDisMiss = onDismiss
+            onDismiss = onDismiss
         )
-        BackHandler { onDismiss() }
     }
     else {
         Column(
@@ -132,15 +133,29 @@ fun WorkoutPlanScreen(viewModel: WorkoutPlanViewModel = viewModel()) {
                     NetworkUnavailable()
                 }
                 else {
-                    WorkoutsLoaded(communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick)
+                    WorkoutsLoaded(canCreateWorkout = false, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = { planWorkout = true })
                 }
             }
             else {
                 if (viewModel.isLoading) {
-                    WorkoutPlansLoading()
+                    ViewWorkoutsLoading()
+                }
+                else if (planWorkout) {
+                    PlanWorkoutScreen(
+                        workoutPlanState = workoutPlanState,
+                        allMuscles = viewModel.muscleGroups,
+                        allDifficulties = viewModel.allDifficulties,
+                        onSetCountChange = viewModel::onSetCountChange,
+                        onDifficultyChange = viewModel::onDifficultyChange,
+                        onMuscleChange = viewModel::onMuscleChange,
+                        onCreateWarmupChange = viewModel::onCreateWarmupChange,
+                        onTargetDateChange = viewModel::onTargetDateChange,
+                        isCreationEnabled = viewModel.isCreationEnabled(),
+                        onCreateWorkout = viewModel::createWorkoutPlan,
+                        onDismiss = { planWorkout = false })
                 }
                 else {
-                    WorkoutsLoaded(communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick)
+                    WorkoutsLoaded(canCreateWorkout = viewModel.isLoggedIn, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = { planWorkout = true })
                 }
             }
         }
@@ -148,7 +163,10 @@ fun WorkoutPlanScreen(viewModel: WorkoutPlanViewModel = viewModel()) {
 }
 
 @Composable
-fun WorkoutPlanScreenHeader() {
+fun ViewWorkoutsScreenHeader(
+    canCreateWorkout: Boolean,
+    onClickAdd: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -157,24 +175,29 @@ fun WorkoutPlanScreenHeader() {
         contentAlignment = Alignment.CenterEnd
     ) {
         Text(modifier = Modifier.fillMaxWidth(), text = stringResource(R.string.workouts), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-        IconButton(onClick = { /* TODO */ }) {
-            Icon(imageVector = Icons.Filled.FilterAlt, contentDescription = null)
-        }
+        if (canCreateWorkout)
+            IconButton(onClick = onClickAdd) {
+                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+            }
     }
 }
 
 @Composable
-fun WorkoutPlansLoading() {
+fun ViewWorkoutsLoading() {
     ScreenLoading(loadingText = stringResource(id = R.string.fetching_workouts))
 }
 
 @Composable
 fun WorkoutsLoaded(
+    canCreateWorkout: Boolean,
     communityWorkouts: List<Workout>,
     userWorkouts: List<Workout> = listOf(),
-    onWorkoutClick: (Workout) -> Unit
-) {
-    WorkoutPlanScreenHeader()
+    onWorkoutClick: (Workout) -> Unit,
+    onPlanWorkout: () -> Unit) {
+    ViewWorkoutsScreenHeader(
+        canCreateWorkout = canCreateWorkout,
+        onClickAdd = onPlanWorkout
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()

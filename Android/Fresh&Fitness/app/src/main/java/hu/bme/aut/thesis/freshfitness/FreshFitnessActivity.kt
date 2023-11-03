@@ -35,7 +35,7 @@ import hu.bme.aut.thesis.freshfitness.ui.screen.social.SocialScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.ExerciseBankScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.NearbyGymsScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.TrackRunningScreen
-import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutPlanScreen
+import hu.bme.aut.thesis.freshfitness.ui.screen.workout.ViewWorkoutsScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutScreen
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 
@@ -108,7 +108,7 @@ fun FreshFitnessApp() {
                     TrackRunningScreen()
                 }
                 composable(route = WorkoutPlanning.route) {
-                    WorkoutPlanScreen()
+                    ViewWorkoutsScreen()
                 }
                 composable(route = ExerciseBank.route) {
                     ExerciseBankScreen()

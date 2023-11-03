@@ -14,6 +14,7 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
 import hu.bme.aut.thesis.freshfitness.decodeJWT
+import hu.bme.aut.thesis.freshfitness.model.state.WorkoutPlanState
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
@@ -22,10 +23,14 @@ import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.model.workout.WorkoutExercise
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class WorkoutPlanViewModel : ViewModel() {
+class ViewWorkoutsViewModel : ViewModel() {
     // For fetching user's workouts
     var isLoggedIn by mutableStateOf(false)
     var userName by mutableStateOf("")
@@ -45,6 +50,13 @@ class WorkoutPlanViewModel : ViewModel() {
     var networkAvailable by mutableStateOf(true)
     private var wasNetworkUnavailableBefore by mutableStateOf(false)
     var showBackOnline by mutableStateOf(false)
+
+    // Planning a workout
+    private val _workoutPlanState = MutableStateFlow(WorkoutPlanState())
+    val workoutPlanState: StateFlow<WorkoutPlanState> = _workoutPlanState.asStateFlow()
+
+    val allDifficulties = listOf("Beginner", "Intermediate", "Advanced")
+    val allEquipmentTypes = listOf("None", "Calisthenics", "Gym")
 
     fun initScreen() {
         AuthService.fetchAuthSession(onSuccess = {
@@ -177,6 +189,54 @@ class WorkoutPlanViewModel : ViewModel() {
         this.userWorkouts.forEach(connectWorkoutExerciseData)
     }
 
+    fun onSetCountChange(setCount: Int) {
+        _workoutPlanState.update { currentState ->
+            currentState.copy(
+                setCount = setCount
+            )
+        }
+    }
+
+    fun onDifficultyChange(difficulty: String) {
+        _workoutPlanState.update { currentState ->
+            currentState.copy(
+                difficulty = if (currentState.difficulty != difficulty) difficulty else ""
+            )
+        }
+    }
+
+    fun onMuscleChange(muscle: String) {
+        _workoutPlanState.update { currentState ->
+            currentState.copy(
+                muscleGroup = if (currentState.muscleGroup != muscle) muscle else ""
+            )
+        }
+    }
+
+    fun onCreateWarmupChange(createWarmup: Boolean) {
+        _workoutPlanState.update { currentState ->
+            currentState.copy(
+                createWarmup = createWarmup
+            )
+        }
+    }
+
+    fun onTargetDateChange(targetDate: String) {
+        _workoutPlanState.update { currentState ->
+            currentState.copy(
+                targetDate = targetDate
+            )
+        }
+    }
+
+    fun isCreationEnabled(): Boolean = _workoutPlanState.value.run {
+        difficulty.isNotEmpty() && equipmentType.isNotEmpty() && muscleGroup.isNotEmpty()
+    }
+
+    fun createWorkoutPlan() {
+        Log.d("create_workout", "Creating workout...")
+    }
+
     fun onNetworkAvailable() {
         Log.d("network_connectivity", "Internet available")
         this.networkAvailable = true
@@ -184,8 +244,8 @@ class WorkoutPlanViewModel : ViewModel() {
             this.showBackOnline = true
             viewModelScope.launch(Dispatchers.IO) {
                 delay(3000)
-                this@WorkoutPlanViewModel.showBackOnline = false
-                this@WorkoutPlanViewModel.wasNetworkUnavailableBefore = false
+                this@ViewWorkoutsViewModel.showBackOnline = false
+                this@ViewWorkoutsViewModel.wasNetworkUnavailableBefore = false
             }
         }
     }
@@ -199,7 +259,7 @@ class WorkoutPlanViewModel : ViewModel() {
     companion object {
         val factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                WorkoutPlanViewModel(/*context = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Context*/)
+                ViewWorkoutsViewModel(/*context = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Context*/)
             }
         }
     }
