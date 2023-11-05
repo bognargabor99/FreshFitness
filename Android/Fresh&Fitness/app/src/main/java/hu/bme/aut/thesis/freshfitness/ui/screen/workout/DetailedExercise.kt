@@ -123,6 +123,7 @@ fun DetailedExerciseEquipment(equipment: Equipment) {
     ElevatedCard(
         modifier = Modifier
             .padding(horizontal = 4.dp, vertical = 12.dp)
+            .fillMaxHeight()
             .widthIn(min = 90.dp, max = 140.dp)
             .border(
                 width = 2.dp,
@@ -136,6 +137,7 @@ fun DetailedExerciseEquipment(equipment: Equipment) {
             modifier = Modifier.fillMaxWidth(),
             imageUri = "${BuildConfig.S3_IMAGES_BASE_URL}${equipment.imgKey}"
         )
+        //Spacer(modifier = Modifier.weight(1f))
         Text(modifier = Modifier
             .fillMaxWidth()
             .padding(top = 4.dp), text = equipment.name, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 16.sp)

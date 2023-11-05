@@ -7,12 +7,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -28,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import hu.bme.aut.thesis.freshfitness.R
@@ -140,9 +146,7 @@ fun WorkoutPlanningBody(
             onMuscleFilterChange = onMuscleChange,
             allMuscles = allMuscles
         )
-        TextButton(onClick = onShowTargetDateDialog) {
-            Text(text = "Choose date")
-        }
+        DateChooser(selectedDate = workoutPlanState.targetDate, onClick = onShowTargetDateDialog)
     }
 }
 
@@ -185,5 +189,32 @@ fun WarmupSwitch(
                 checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
             )
         )
+    }
+}
+
+@Composable
+fun DateChooser(selectedDate: String, onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(ButtonDefaults.IconSpacing, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(imageVector = Icons.Filled.CalendarMonth, contentDescription = null)
+            Text(text = selectedDate, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DateChooserPreview() {
+    TextButton(onClick = { }) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(imageVector = Icons.Filled.CalendarMonth, contentDescription = null)
+            Text(text = "2023-11-07", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }

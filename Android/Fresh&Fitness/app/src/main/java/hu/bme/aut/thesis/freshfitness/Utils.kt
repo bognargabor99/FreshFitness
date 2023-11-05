@@ -105,14 +105,17 @@ fun Context.createImageFile(): File {
 
 fun getEquipmentsOfWorkout(workout: Workout): MutableList<Equipment> {
     return workout.exercises
+        .asSequence()
         .filter { it.exercise != null && it.exercise!!.equipment != null && it.exercise!!.equipment!!.type != "none" }
         .map {
             val list = mutableListOf<Equipment>()
             list.add(it.exercise!!.equipment!!)
             if (it.exercise!!.alternateEquipment != null)
                 list.add(it.exercise!!.alternateEquipment!!)
-            return list
+            list
         }
+        .flatten()
+        .distinctBy { it.id }
         .toMutableList()
 }
 

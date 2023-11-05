@@ -1,12 +1,16 @@
 package hu.bme.aut.thesis.freshfitness.ui.util
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,14 +69,34 @@ fun NeededEquipmentsHeader(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NeededEquipmentsBody(equipments: List<Equipment>) {
-    FlowRow(
-        modifier = Modifier.padding(16.dp)
+    Row (
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.SpaceAround
     ) {
-        equipments.forEach {
-            DetailedExerciseEquipment(equipment = it)
+        Column {
+            equipments.forEachIndexed { index, equipment ->
+                if (index % 2 == 0)  DetailedExerciseEquipment(equipment = equipment)
+            }
+        }
+        Column {
+            equipments.forEachIndexed { index, equipment ->
+                if (index % 2 == 1)  DetailedExerciseEquipment(equipment = equipment)
+            }
         }
     }
+
+//    FlowRow(
+//        modifier = Modifier
+//            .padding(8.dp)
+//            .wrapContentHeight(),
+//        horizontalArrangement = Arrangement.SpaceAround
+//    ) {
+//        equipments.forEach {
+//            DetailedExerciseEquipment(equipment = it)
+//        }
+//    }
 }

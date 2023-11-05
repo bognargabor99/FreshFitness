@@ -140,6 +140,16 @@ fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel()) {
                 if (viewModel.isLoading) {
                     ViewWorkoutsLoading()
                 }
+                else if (viewModel.planningWorkout && viewModel.plannedWorkout != null) {
+                    WorkoutPlanReviewScreen(
+                        workout = viewModel.plannedWorkout as Workout,
+                        onNewPlan = { viewModel.createWorkoutPlan() },
+                        onAccept = { viewModel.createWorkout() },
+                        onCancel = {
+                            planWorkout = false
+                            viewModel.cancelWorkoutCreation()
+                        })
+                }
                 else if (planWorkout) {
                     PlanWorkoutScreen(
                         workoutPlanState = workoutPlanState,
@@ -195,7 +205,8 @@ fun WorkoutsLoaded(
     communityWorkouts: List<Workout>,
     userWorkouts: List<Workout> = listOf(),
     onWorkoutClick: (Workout) -> Unit,
-    onPlanWorkout: () -> Unit) {
+    onPlanWorkout: () -> Unit
+) {
     ViewWorkoutsScreenHeader(
         canCreateWorkout = canCreateWorkout,
         onClickAdd = onPlanWorkout
@@ -206,9 +217,9 @@ fun WorkoutsLoaded(
             .verticalScroll(rememberScrollState())
     ) {
         if (userWorkouts.isNotEmpty()) {
-            WorkoutList(title = stringResource(R.string.your_workouts), workouts = userWorkouts, onWorkoutClick = onWorkoutClick)
+            WorkoutList(title = stringResource(R.string.your_workouts), workouts = userWorkouts.sortedByDescending { it.date }, onWorkoutClick = onWorkoutClick)
         }
-        WorkoutList(title = stringResource(R.string.daily_workouts), workouts = communityWorkouts, onWorkoutClick = onWorkoutClick)
+        WorkoutList(title = stringResource(R.string.daily_workouts), workouts = communityWorkouts.sortedByDescending { it.date }, onWorkoutClick = onWorkoutClick)
     }
 }
 

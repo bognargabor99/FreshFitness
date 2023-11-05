@@ -20,7 +20,7 @@ data class WorkoutPlanState(
                 "Difficulty: $difficulty\n" +
                 "Muscle group: $muscleId\n" +
                 "Equipment types: $equipmentType\n" +
-                "Target date: $targetDate" +
+                "Target date: $targetDate\n" +
                 "Owner: $owner"
     }
 }

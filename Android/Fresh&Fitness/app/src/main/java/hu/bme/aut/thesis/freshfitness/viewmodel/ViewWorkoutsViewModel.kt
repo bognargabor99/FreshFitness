@@ -20,7 +20,7 @@ import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.model.workout.UnitOfMeasure
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
-import hu.bme.aut.thesis.freshfitness.model.workout.WorkoutExercise
+import hu.bme.aut.thesis.freshfitness.repository.WorkoutCreationRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +33,7 @@ import org.json.JSONObject
 class ViewWorkoutsViewModel : ViewModel() {
     // For fetching user's workouts
     var isLoggedIn by mutableStateOf(false)
-    var userName by mutableStateOf("")
+    private var userName by mutableStateOf("")
 
     val userWorkouts = mutableStateListOf<Workout>()
     val communityWorkouts = mutableStateListOf<Workout>()
@@ -57,6 +57,10 @@ class ViewWorkoutsViewModel : ViewModel() {
 
     val allDifficulties = listOf("Beginner", "Intermediate", "Advanced")
     val allEquipmentTypes = listOf("None", "Calisthenics", "Gym")
+
+    private lateinit var workoutCreationRepository: WorkoutCreationRepository
+    var planningWorkout by mutableStateOf(false)
+    var plannedWorkout: Workout? by mutableStateOf(null)
 
     fun initScreen() {
         AuthService.fetchAuthSession(onSuccess = {
@@ -142,15 +146,22 @@ class ViewWorkoutsViewModel : ViewModel() {
         })
     }
 
-    fun createWorkout(workout: Workout, exercises: List<WorkoutExercise>) {
+    fun createWorkout() {
+        if (this.plannedWorkout == null)
+            return
+        this._workoutPlanState.update {
+            WorkoutPlanState(owner = this.userName)
+        }
+        val workout = (this.plannedWorkout as Workout)
         ApiService.postWorkout(workout,
             onSuccess = { w ->
                 if (w.owner == "community")
                     communityWorkouts.add(w)
                 else
                     userWorkouts.add(w)
-                exercises.forEach { e -> e.workoutId = w.id }
-                ApiService.postWorkoutExercises(exercises,
+                workout.exercises.forEach { e -> e.workoutId = w.id }
+                workout.warmupExercises.forEach { e -> e.workoutId = w.id }
+                ApiService.postWorkoutExercises(workout.warmupExercises + workout.exercises,
                     onSuccess = {
                         val wOut: Workout = if (w.owner == "community")
                             communityWorkouts.singleOrNull { _w -> _w.id == w.id }!!
@@ -160,6 +171,8 @@ class ViewWorkoutsViewModel : ViewModel() {
                         wOut.warmupExercises.addAll(it.filter { workoutExercise -> workoutExercise.isWarmup() })
                     })
             })
+        this.planningWorkout = false
+        this.plannedWorkout = null
     }
 
     private fun updateDataAvailability() {
@@ -183,6 +196,7 @@ class ViewWorkoutsViewModel : ViewModel() {
             ex.muscleGroup = this.muscleGroups.firstOrNull { group -> group.id == ex.muscleGroupId }
         }
         this.exercises.forEach { connectExerciseData(it) }
+        this.workoutCreationRepository = WorkoutCreationRepository(exercises = this.exercises, muscles = this.muscleGroups)
 
         val connectWorkoutExerciseData: (Workout) -> Unit = {
             it.targetMuscle = this.muscleGroups.singleOrNull { m -> m.id == it.muscleId }
@@ -247,10 +261,19 @@ class ViewWorkoutsViewModel : ViewModel() {
         difficulty.isNotEmpty() && equipmentType.isNotEmpty() && muscleId != -1
     }
 
+    fun cancelWorkoutCreation() {
+        this.planningWorkout = false
+        this.plannedWorkout = null
+        this._workoutPlanState.update {
+            WorkoutPlanState(owner = this.userName)
+        }
+    }
+
     fun createWorkoutPlan() {
         Log.d("create_workout", "Creating workout...")
         Log.d("create_workout", "New workout settings:\n${_workoutPlanState.value}")
-
+        this.plannedWorkout = workoutCreationRepository.createWorkoutPlan(_workoutPlanState.value)
+        this.planningWorkout = true
     }
 
     fun onNetworkAvailable() {
