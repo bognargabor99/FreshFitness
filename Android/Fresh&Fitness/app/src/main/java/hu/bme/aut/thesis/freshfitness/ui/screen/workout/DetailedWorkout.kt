@@ -190,7 +190,11 @@ fun WorkoutOverview(
             Text(text = workout.difficulty.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() })
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.FitnessCenter, title = "Equipments") {
-            ClickableText(text = AnnotatedString(stringResource(id = R.string.see_equipment)), style = TextStyle(textDecoration = TextDecoration.Underline), onClick = { if (showEquipmentsEnabled) onSeeEquipments() })
+            ClickableText(
+                text = if (showEquipmentsEnabled) AnnotatedString(stringResource(id = R.string.see_equipment)) else AnnotatedString(stringResource(id = R.string.no_equipment)),
+                style = TextStyle(textDecoration = if (showEquipmentsEnabled) TextDecoration.Underline else TextDecoration.None),
+                onClick = { if (showEquipmentsEnabled) onSeeEquipments() }
+            )
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Accessibility, title = "Warmup") {
             Switch(
