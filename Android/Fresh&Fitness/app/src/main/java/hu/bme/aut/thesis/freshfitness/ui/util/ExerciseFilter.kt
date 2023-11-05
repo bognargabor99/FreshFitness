@@ -129,17 +129,22 @@ fun ExerciseFilterBody(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DifficultyFilter(currentDifficulty: String, difficulties: List<String>, onDifficultyFilterChange: (String) -> Unit) {
+    ToggleFilter(title = stringResource(id = R.string.difficulty), selected = currentDifficulty, allElements = difficulties, onFilterChange = onDifficultyFilterChange)
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun ToggleFilter(title: String, selected: String, allElements: List<String>, onFilterChange: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        FilterTitle(title = stringResource(id = R.string.difficulty))
+        FilterTitle(title = title)
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            difficulties.forEach {
-                Badge(it, isSelected = currentDifficulty == it, onClick = onDifficultyFilterChange)
+            allElements.forEach {
+                Badge(it, isSelected = selected == it, onClick = onFilterChange)
             }
         }
     }

@@ -12,4 +12,13 @@ data class WorkoutPlanState(
     var createWarmup: Boolean = true,
     var equipmentType: String = "",
     var targetDate: String = SimpleDateFormat("yyyy-MM-dd").format(Date())
-)
+) {
+    override fun toString(): String {
+        return "Warmup: ${if (createWarmup) "YES" else "NO"}\n" +
+                "Sets: $setCount\n" +
+                "Difficulty: $difficulty\n" +
+                "Muscle group: $muscleGroup\n" +
+                "Equipment types: $equipmentType\n" +
+                "Target date: $targetDate"
+    }
+}

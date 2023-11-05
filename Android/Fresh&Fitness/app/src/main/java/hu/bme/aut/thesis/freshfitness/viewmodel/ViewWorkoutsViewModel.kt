@@ -205,6 +205,14 @@ class ViewWorkoutsViewModel : ViewModel() {
         }
     }
 
+    fun onEquipmentTypeChange(equipmentType: String) {
+        _workoutPlanState.update { currentState ->
+            currentState.copy(
+                equipmentType = if (currentState.equipmentType != equipmentType) equipmentType else ""
+            )
+        }
+    }
+
     fun onMuscleChange(muscle: String) {
         _workoutPlanState.update { currentState ->
             currentState.copy(
@@ -235,6 +243,7 @@ class ViewWorkoutsViewModel : ViewModel() {
 
     fun createWorkoutPlan() {
         Log.d("create_workout", "Creating workout...")
+        Log.d("create_workout", "New workout settings:\n${_workoutPlanState.value}")
     }
 
     fun onNetworkAvailable() {

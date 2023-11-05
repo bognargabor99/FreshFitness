@@ -23,7 +23,7 @@ fun TargetDatePicker(
     val state = rememberDatePickerState()
     state.setSelection(SimpleDateFormat("yyyy-MM-dd").parse(selectedDate)?.time?.plus((1000 * 60 * 60)))
     val dateValidator: (Long) -> Boolean = {
-        Date().before(Date(it))
+        Date(Date().time - 1000 * 60 * 60 * 24).before(Date(it))
     }
 
     DatePickerDialog(

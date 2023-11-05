@@ -37,6 +37,7 @@ import hu.bme.aut.thesis.freshfitness.ui.util.DifficultyFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.MuscleFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.NumberPicker
 import hu.bme.aut.thesis.freshfitness.ui.util.TargetDatePicker
+import hu.bme.aut.thesis.freshfitness.ui.util.ToggleFilter
 
 @SuppressLint("SimpleDateFormat")
 @Composable
@@ -44,8 +45,10 @@ fun PlanWorkoutScreen(
     workoutPlanState: WorkoutPlanState,
     allMuscles: List<MuscleGroup>,
     allDifficulties: List<String>,
+    allEquipmentTypes: List<String>,
     onSetCountChange: (Int) -> Unit,
     onDifficultyChange: (String) -> Unit,
+    onEquipmentTypeChange: (String) -> Unit,
     onMuscleChange: (String) -> Unit,
     onCreateWarmupChange: (Boolean) -> Unit,
     onTargetDateChange: (String) -> Unit,
@@ -66,9 +69,11 @@ fun PlanWorkoutScreen(
         WorkoutPlanningBody(
             allMuscles = allMuscles,
             allDifficulties = allDifficulties,
+            allEquipmentTypes = allEquipmentTypes,
             workoutPlanState = workoutPlanState,
             onCreateWarmupChange = onCreateWarmupChange,
             onDifficultyChange = onDifficultyChange,
+            onEquipmentTypeChange = onEquipmentTypeChange,
             onMuscleChange = onMuscleChange,
             onSetCountChange = onSetCountChange,
             onShowTargetDateDialog = { showTargetDateDialog = true }
@@ -105,10 +110,12 @@ fun WorkoutPlanningHeader() {
 @Composable
 fun WorkoutPlanningBody(
     allDifficulties: List<String>,
+    allEquipmentTypes: List<String>,
     allMuscles: List<MuscleGroup>,
     workoutPlanState: WorkoutPlanState,
     onSetCountChange: (Int) -> Unit,
     onDifficultyChange: (String) -> Unit,
+    onEquipmentTypeChange: (String) -> Unit,
     onMuscleChange: (String) -> Unit,
     onCreateWarmupChange: (Boolean) -> Unit,
     onShowTargetDateDialog: () -> Unit,
@@ -118,6 +125,10 @@ fun WorkoutPlanningBody(
             currentDifficulty = workoutPlanState.difficulty,
             difficulties = allDifficulties,
             onDifficultyFilterChange = onDifficultyChange)
+        EquipmentTypeFilter(
+            currentEquipment = workoutPlanState.equipmentType,
+            equipmentTypes = allEquipmentTypes,
+            onEquipmentTypeFilterChange = onEquipmentTypeChange)
         NumberPicker(
             title = "Sets",
             currentNumber = workoutPlanState.setCount,
@@ -133,6 +144,11 @@ fun WorkoutPlanningBody(
             Text(text = "Choose date")
         }
     }
+}
+
+@Composable
+fun EquipmentTypeFilter(currentEquipment: String, equipmentTypes: List<String>, onEquipmentTypeFilterChange: (String) -> Unit) {
+    ToggleFilter(title = stringResource(id = R.string.equipment_types), selected = currentEquipment, allElements = equipmentTypes, onFilterChange = onEquipmentTypeFilterChange)
 }
 
 @Composable
