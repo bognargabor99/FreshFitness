@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Exercise(
+data class Exercise(
     val id: Int,
     val name: String,
     val details: String,

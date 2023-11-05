@@ -52,7 +52,7 @@ class ViewWorkoutsViewModel : ViewModel() {
     var showBackOnline by mutableStateOf(false)
 
     // Planning a workout
-    private val _workoutPlanState = MutableStateFlow(WorkoutPlanState())
+    private val _workoutPlanState = MutableStateFlow(WorkoutPlanState(owner = ""))
     val workoutPlanState: StateFlow<WorkoutPlanState> = _workoutPlanState.asStateFlow()
 
     val allDifficulties = listOf("Beginner", "Intermediate", "Advanced")
@@ -66,6 +66,11 @@ class ViewWorkoutsViewModel : ViewModel() {
                 val jwt = decodeJWT(session.accessToken!!.split(".").getOrElse(1) { "" })
                 val jsonObject = JSONObject(jwt)
                 this.userName = jsonObject.getString("username")
+                this._workoutPlanState.update { currentState ->
+                    currentState.copy(
+                        owner = this.userName
+                    )
+                }
             } else {
                 this.isLoggedIn = false
                 this.userName = ""
@@ -214,9 +219,10 @@ class ViewWorkoutsViewModel : ViewModel() {
     }
 
     fun onMuscleChange(muscle: String) {
+        val muscleId = this.muscleGroups.singleOrNull { it.name == muscle }?.id ?: return
         _workoutPlanState.update { currentState ->
             currentState.copy(
-                muscleGroup = if (currentState.muscleGroup != muscle) muscle else ""
+                muscleId = if (currentState.muscleId != muscleId) muscleId else -1
             )
         }
     }
@@ -238,12 +244,13 @@ class ViewWorkoutsViewModel : ViewModel() {
     }
 
     fun isCreationEnabled(): Boolean = _workoutPlanState.value.run {
-        difficulty.isNotEmpty() && equipmentType.isNotEmpty() && muscleGroup.isNotEmpty()
+        difficulty.isNotEmpty() && equipmentType.isNotEmpty() && muscleId != -1
     }
 
     fun createWorkoutPlan() {
         Log.d("create_workout", "Creating workout...")
         Log.d("create_workout", "New workout settings:\n${_workoutPlanState.value}")
+
     }
 
     fun onNetworkAvailable() {

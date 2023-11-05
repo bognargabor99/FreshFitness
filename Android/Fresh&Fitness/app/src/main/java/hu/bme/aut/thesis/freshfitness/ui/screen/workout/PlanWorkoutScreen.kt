@@ -132,11 +132,11 @@ fun WorkoutPlanningBody(
         NumberPicker(
             title = "Sets",
             currentNumber = workoutPlanState.setCount,
-            numbers = 1..6,
+            numbers = 2..6,
             onNumberChange = onSetCountChange)
         WarmupSwitch(checked = workoutPlanState.createWarmup, onCheckedChange = onCreateWarmupChange)
         MuscleFilter(
-            muscleFilter = workoutPlanState.muscleGroup,
+            muscleFilter = allMuscles.singleOrNull { it.id == workoutPlanState.muscleId }?.name ?: "",
             onMuscleFilterChange = onMuscleChange,
             allMuscles = allMuscles
         )

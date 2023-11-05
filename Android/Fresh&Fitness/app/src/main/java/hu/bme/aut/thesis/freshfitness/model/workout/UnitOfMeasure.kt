@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-class UnitOfMeasure(
+data class UnitOfMeasure(
     val id: Int,
     @SerialName(value = "name") val unit: String,
     val type: String

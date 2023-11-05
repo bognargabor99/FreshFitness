@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Equipment(
+data class Equipment(
     val id: Int,
     val name: String,
     @SerialName(value = "img_key") val imgKey: String,
