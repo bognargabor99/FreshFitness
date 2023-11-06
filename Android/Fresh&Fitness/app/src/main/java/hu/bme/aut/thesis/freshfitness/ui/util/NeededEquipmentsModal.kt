@@ -2,10 +2,9 @@ package hu.bme.aut.thesis.freshfitness.ui.util
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -44,7 +43,8 @@ fun NeededEquipmentsModal(
             .fillMaxHeight(1f)
             .nestedScroll(rememberNestedScrollInteropConnection()),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        dragHandle = { }
     ) {
         NeededEquipmentsHeader(onDismiss = onDismiss)
         NeededEquipmentsBody(equipments = equipments)
@@ -69,34 +69,20 @@ fun NeededEquipmentsHeader(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NeededEquipmentsBody(equipments: List<Equipment>) {
-    Row (
+    FlowRow(
         modifier = Modifier
-            .fillMaxSize()
+            .padding(8.dp)
+            .fillMaxWidth()
+            .wrapContentHeight()
             .verticalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.SpaceAround
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            equipments.forEachIndexed { index, equipment ->
-                if (index % 2 == 0)  DetailedExerciseEquipment(equipment = equipment)
-            }
-        }
-        Column {
-            equipments.forEachIndexed { index, equipment ->
-                if (index % 2 == 1)  DetailedExerciseEquipment(equipment = equipment)
-            }
+        equipments.forEach {
+            DetailedExerciseEquipment(equipment = it)
         }
     }
-
-//    FlowRow(
-//        modifier = Modifier
-//            .padding(8.dp)
-//            .wrapContentHeight(),
-//        horizontalArrangement = Arrangement.SpaceAround
-//    ) {
-//        equipments.forEach {
-//            DetailedExerciseEquipment(equipment = it)
-//        }
-//    }
 }

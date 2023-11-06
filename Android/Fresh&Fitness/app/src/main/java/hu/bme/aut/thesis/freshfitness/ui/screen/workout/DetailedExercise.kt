@@ -123,7 +123,6 @@ fun DetailedExerciseEquipment(equipment: Equipment) {
     ElevatedCard(
         modifier = Modifier
             .padding(horizontal = 4.dp, vertical = 12.dp)
-            .fillMaxHeight()
             .widthIn(min = 90.dp, max = 140.dp)
             .border(
                 width = 2.dp,
