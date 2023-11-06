@@ -155,6 +155,7 @@ class ViewWorkoutsViewModel : ViewModel() {
         val workout = (this.plannedWorkout as Workout)
         ApiService.postWorkout(workout,
             onSuccess = { w ->
+                w.targetMuscle = this@ViewWorkoutsViewModel.muscleGroups.singleOrNull { m -> m.id == w.muscleId }
                 if (w.owner == "community")
                     communityWorkouts.add(w)
                 else
@@ -163,16 +164,18 @@ class ViewWorkoutsViewModel : ViewModel() {
                 workout.warmupExercises.forEach { e -> e.workoutId = w.id }
                 ApiService.postWorkoutExercises(workout.warmupExercises + workout.exercises,
                     onSuccess = {
-                        val wOut: Workout =
-                            if (w.owner == "community")
-                                communityWorkouts.singleOrNull { _w -> _w.id == w.id }!!
-                            else
-                                userWorkouts.singleOrNull { _w -> _w.id == w.id }!!
+                        val index = if (w.owner == "community")
+                            communityWorkouts.indexOfFirst { _w -> _w.id == w.id }
+                        else
+                            userWorkouts.indexOfFirst { _w -> _w.id == w.id }
                         it.forEach { we -> we.exercise = this.exercises.singleOrNull { e -> e.id == we.exerciseId } }
 
-                        wOut.exercises.addAll(it.filter { workoutExercise -> !workoutExercise.isWarmup() })
-                        wOut.warmupExercises.addAll(it.filter { workoutExercise -> workoutExercise.isWarmup() })
-                        wOut.targetMuscle = this.muscleGroups.singleOrNull { m -> m.id == wOut.muscleId }
+                        (if (w.owner == "community") this.communityWorkouts else this.userWorkouts)[index]
+                            .run {
+                                exercises.addAll(it.filter { workoutExercise -> !workoutExercise.isWarmup() })
+                                warmupExercises.addAll(it.filter { workoutExercise -> workoutExercise.isWarmup() })
+                            }
+                        Log.d("create_workout", "Successfully created workout")
                     })
             })
         this.planningWorkout = false
