@@ -142,7 +142,7 @@ fun DetailedWorkoutBody(
                     exercises = workout.warmupExercises.sortedBy { it.sequenceNum },
                     onClickExercise = onClickExercise
                 )
-                ExerciseGroupDivider(text = "Rest 2 minutes")
+                ExerciseGroupDivider(text = "Rest 1-2 minutes")
             }
         }
         if (workout.exercises.any()) {

@@ -40,6 +40,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -107,9 +108,9 @@ fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel()) {
     }
 
     val workoutPlanState by viewModel.workoutPlanState.collectAsState()
-    var planWorkout by remember { mutableStateOf(false) }
-    var showDetailsOfWorkout by remember { mutableStateOf(false) }
-    var detailedWorkout: Workout? by remember { mutableStateOf(null) }
+    var planWorkout by rememberSaveable { mutableStateOf(false) }
+    var showDetailsOfWorkout by rememberSaveable { mutableStateOf(false) }
+    var detailedWorkout: Workout? by rememberSaveable { mutableStateOf(null) }
     val onWorkoutClick: (Workout) -> Unit = {
         detailedWorkout = it
         showDetailsOfWorkout = true
@@ -236,19 +237,21 @@ fun WorkoutList(
     var showAll: Boolean by remember { mutableStateOf(false) }
     Column {
         WorkoutTitle(title = title, listShown = showAny, onShowClick = { showAny = !showAny })
-        if (showAny) {
-            if (workouts.any()) {
-                val count = if (workouts.size >= 3) { if (!showAll) 3 else workouts.size } else { workouts.size }
-                for (i in 0 until count)
-                    WorkoutRow(
-                        modifier = Modifier,
-                        workout = workouts[i],
-                        onWorkoutClick = onWorkoutClick
-                    )
-                if (workouts.size >= 3)
-                    WorkoutShowMoreOrLess(showMore = !showAll, onClick = { showAll = !showAll})
-            } else
-                NoWorkoutsBanner()
+        AnimatedVisibility(visible = showAny) {
+            Column {
+                if (workouts.any()) {
+                    val count = if (workouts.size >= 3) { if (!showAll) 3 else workouts.size } else { workouts.size }
+                    for (i in 0 until count)
+                        WorkoutRow(
+                            modifier = Modifier,
+                            workout = workouts[i],
+                            onWorkoutClick = onWorkoutClick
+                        )
+                    if (workouts.size >= 3)
+                        WorkoutShowMoreOrLess(showMore = !showAll, onClick = { showAll = !showAll})
+                } else
+                    NoWorkoutsBanner()
+            }
         }
     }
 }
