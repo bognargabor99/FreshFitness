@@ -163,12 +163,16 @@ class ViewWorkoutsViewModel : ViewModel() {
                 workout.warmupExercises.forEach { e -> e.workoutId = w.id }
                 ApiService.postWorkoutExercises(workout.warmupExercises + workout.exercises,
                     onSuccess = {
-                        val wOut: Workout = if (w.owner == "community")
-                            communityWorkouts.singleOrNull { _w -> _w.id == w.id }!!
-                        else
-                            userWorkouts.singleOrNull { _w -> _w.id == w.id }!!
+                        val wOut: Workout =
+                            if (w.owner == "community")
+                                communityWorkouts.singleOrNull { _w -> _w.id == w.id }!!
+                            else
+                                userWorkouts.singleOrNull { _w -> _w.id == w.id }!!
+                        it.forEach { we -> we.exercise = this.exercises.singleOrNull { e -> e.id == we.exerciseId } }
+
                         wOut.exercises.addAll(it.filter { workoutExercise -> !workoutExercise.isWarmup() })
                         wOut.warmupExercises.addAll(it.filter { workoutExercise -> workoutExercise.isWarmup() })
+                        wOut.targetMuscle = this.muscleGroups.singleOrNull { m -> m.id == wOut.muscleId }
                     })
             })
         this.planningWorkout = false

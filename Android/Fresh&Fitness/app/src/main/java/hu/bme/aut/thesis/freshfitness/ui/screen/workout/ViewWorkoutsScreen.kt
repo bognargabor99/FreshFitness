@@ -144,7 +144,10 @@ fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel()) {
                     WorkoutPlanReviewScreen(
                         workout = viewModel.plannedWorkout as Workout,
                         onNewPlan = { viewModel.createWorkoutPlan() },
-                        onAccept = { viewModel.createWorkout() },
+                        onAccept = {
+                            planWorkout = false
+                            viewModel.createWorkout()
+                        },
                         onCancel = {
                             planWorkout = false
                             viewModel.cancelWorkoutCreation()
