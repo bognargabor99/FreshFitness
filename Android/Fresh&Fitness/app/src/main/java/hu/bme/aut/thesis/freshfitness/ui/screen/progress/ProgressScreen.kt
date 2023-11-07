@@ -70,6 +70,7 @@ import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.Day
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.getWeekPageTitle
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.rememberFirstVisibleWeekAfterScroll
+import hu.bme.aut.thesis.freshfitness.ui.util.swiper
 import hu.bme.aut.thesis.freshfitness.viewmodel.ProgressViewModel
 import java.time.LocalDate
 import java.util.Locale
@@ -129,7 +130,7 @@ fun ProgressScreenLoaded(
     var selection by remember { mutableStateOf(currentDate) }
     Column(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize().background(MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.25f)),
     ) {
         UpperWeekCalendar(
             currentDate = currentDate,
@@ -145,9 +146,17 @@ fun ProgressScreenLoaded(
         else {
             val w = savedWorkouts.singleOrNull { it.date.take(10) == selection.toString() }
             if (w != null) {
-                DayContent(workout = w, onClick = { onClickWorkout(w) })
+                DayContent(
+                    workout = w,
+                    onClick = { onClickWorkout(w) },
+                    onSwipeLeft = { selection = selection.plusDays(1) },
+                    onSwipeRight = { selection = selection.minusDays(1) }
+                )
             } else {
-                NoWorkoutsForTheDay()
+                NoWorkoutsForTheDay(
+                    onSwipeLeft = { selection = selection.plusDays(1) },
+                    onSwipeRight = { selection = selection.minusDays(1) }
+                )
             }
         }
     }
@@ -155,18 +164,23 @@ fun ProgressScreenLoaded(
 
 @Composable
 fun LoadingDayContent() {
-    ScreenLoading(backgroundColor = MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.5f), loadingText = stringResource(R.string.loading_workout))
+    ScreenLoading(backgroundColor = MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.25f), loadingText = stringResource(R.string.loading_workout))
 }
 
 @Composable
-fun NoWorkoutsForTheDay() {
+fun NoWorkoutsForTheDay(
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .swiper(onLeftSwipe = onSwipeLeft, onRightSwipe = onSwipeRight)
             .background(MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.25f))
             .wrapContentSize()
     ) {
         Column(
+            modifier = Modifier.swiper(onLeftSwipe = onSwipeLeft, onRightSwipe = onSwipeRight),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -221,11 +235,15 @@ fun UpperWeekCalendar(
 @Composable
 fun DayContent(
     workout: Workout,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit
 ) {
     val equipments = getEquipmentsOfWorkout(workout)
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .swiper(onLeftSwipe = onSwipeLeft, onRightSwipe = onSwipeRight),
         contentAlignment = Alignment.BottomCenter
     ) {
         DayContentBackground(imageRes = getWorkoutBackground(workout))
