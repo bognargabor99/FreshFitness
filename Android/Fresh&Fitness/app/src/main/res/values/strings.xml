@@ -53,4 +53,5 @@
     <string name="no_equipment">No equipment</string>
     <string name="equipment_types">Equipment types</string>
     <string name="review_workout">Review workout</string>
+    <string name="fetching_data">Fetching data…</string>
 </resources>

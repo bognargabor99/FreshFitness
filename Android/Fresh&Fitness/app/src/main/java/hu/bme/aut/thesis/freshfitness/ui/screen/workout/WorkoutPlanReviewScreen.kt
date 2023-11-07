@@ -35,7 +35,7 @@ fun WorkoutPlanReviewScreen(
     BackHandler { onCancel() }
     Column {
         WorkoutPlanReviewHeader(onNewPlan = onNewPlan, onAccept = onAccept)
-        DetailedWorkout(workout = workout, onDismiss = onCancel)
+        DetailedWorkout(workout = workout, onDismiss = onCancel, isSaved = false, onSave = { }, saveEnabled = false, onDelete = { })
     }
 }
 

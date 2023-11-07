@@ -6,10 +6,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +44,10 @@ import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutBadge
 @Composable
 fun WorkoutCover(
     name: String,
+    saveEnabled: Boolean,
+    isSaved: Boolean,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
     @DrawableRes imageRes: Int,
     content: @Composable () -> Unit
 ) {
@@ -51,29 +62,43 @@ fun WorkoutCover(
                 colorFilter = ColorFilter.colorMatrix(colorMatrix = ColorMatrix().apply { setToScale(0.8f,0.8f,0.8f,1f) }),
                 contentScale = ContentScale.Crop
             )
-            Column(
+            Row(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
                     .fillMaxWidth()
+                    .align(Alignment.BottomStart)
                     .background(
                         Brush.verticalGradient(
                             0F to Color.Transparent,
                             0.3F to Color.Black.copy(alpha = 0.5F),
-                            1F to Color.Black.copy(alpha = 1F)))
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = name,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.background,
-                    style = TextStyle.Default.copy(
-                        drawStyle = Fill,
-                        shadow = Shadow(Color.Black, Offset(4f, 4f), blurRadius = 3f)
+                            1F to Color.Black.copy(alpha = 1F)
+                        )
                     )
-                )
-                content()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = name,
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.background,
+                        style = TextStyle.Default.copy(
+                            drawStyle = Fill,
+                            shadow = Shadow(Color.Black, Offset(4f, 4f), blurRadius = 3f)
+                        )
+                    )
+                    content()
+                }
+                if (saveEnabled)
+                    IconButton(
+                        onClick = { if (!isSaved) onSave() else onDelete() },
+                        colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.background)
+                    ) {
+                        Icon(imageVector = if (!isSaved) Icons.Filled.SaveAlt else Icons.Filled.Delete, contentDescription = null)
+                    }
             }
         }
     }
@@ -82,7 +107,7 @@ fun WorkoutCover(
 @Preview(showBackground = true)
 @Composable
 fun CoverPreview() {
-    WorkoutCover(name = "Chest & Triceps", imageRes = R.drawable.calisthenics) {
+    WorkoutCover(name = "Chest & Triceps", imageRes = R.drawable.calisthenics, saveEnabled = true, isSaved = false, onSave = { }, onDelete = { }) {
         WorkoutBadge(
             text = "3 sets",
             backGroundColor = MaterialTheme.colorScheme.background,

@@ -18,6 +18,7 @@ interface RunningDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertCheckpointsForRun(checkpoints: List<RunCheckpointEntity>)
 
+    @Transaction
     @Query("SELECT * FROM runs")
     fun getRuns(): List<RunWithCheckpoints>
 

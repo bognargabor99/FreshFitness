@@ -9,6 +9,8 @@ import hu.bme.aut.thesis.freshfitness.persistence.model.MuscleEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.UnitOfMeasureEntity
+import hu.bme.aut.thesis.freshfitness.persistence.model.WorkoutEntity
+import hu.bme.aut.thesis.freshfitness.persistence.model.WorkoutExerciseEntity
 
 @Database(
     entities = [
@@ -18,10 +20,15 @@ import hu.bme.aut.thesis.freshfitness.persistence.model.UnitOfMeasureEntity
         FavouriteExerciseEntity::class,
         MuscleEntity::class,
         UnitOfMeasureEntity::class,
-        EquipmentEntity::class
+        EquipmentEntity::class,
+        WorkoutEntity::class,
+        WorkoutExerciseEntity::class
                ],
-    version = 3)
+    version = 4)
 abstract class RunningDatabase : RoomDatabase() {
     abstract fun runningDao(): RunningDao
+
     abstract fun exercisesDao(): FavouriteExercisesDao
+
+    abstract fun workoutsDao(): WorkoutsDao
 }

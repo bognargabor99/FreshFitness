@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
+import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
 import hu.bme.aut.thesis.freshfitness.decodeJWT
@@ -21,6 +22,7 @@ import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.model.workout.UnitOfMeasure
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.repository.WorkoutCreationRepository
+import hu.bme.aut.thesis.freshfitness.repository.WorkoutsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +39,9 @@ class ViewWorkoutsViewModel : ViewModel() {
 
     val userWorkouts = mutableStateListOf<Workout>()
     val communityWorkouts = mutableStateListOf<Workout>()
+
+    var savedWorkoutsFetched by mutableStateOf(false)
+    val savedWorkouts = mutableStateListOf<Workout>()
 
     var exercises = mutableListOf<Exercise>()
     var equipments = mutableListOf<Equipment>()
@@ -59,6 +64,7 @@ class ViewWorkoutsViewModel : ViewModel() {
     val allEquipmentTypes = listOf("None", "Calisthenics", "Gym")
 
     private lateinit var workoutCreationRepository: WorkoutCreationRepository
+    private val workoutsRepository = WorkoutsRepository(FreshFitnessApplication.runningDatabase.workoutsDao())
     var planningWorkout by mutableStateOf(false)
     var plannedWorkout: Workout? by mutableStateOf(null)
 
@@ -86,6 +92,7 @@ class ViewWorkoutsViewModel : ViewModel() {
     }
 
     private fun resetScreen() {
+        getSavedWorkouts()
         fetchExercises()
         fetchEquipments()
         fetchUnits()
@@ -180,6 +187,31 @@ class ViewWorkoutsViewModel : ViewModel() {
             })
         this.planningWorkout = false
         this.plannedWorkout = null
+    }
+
+    private fun getSavedWorkouts() {
+        viewModelScope.launch {
+            savedWorkouts.clear()
+            savedWorkouts.addAll(workoutsRepository.getWorkouts())
+            savedWorkoutsFetched = true
+        }
+    }
+
+    fun saveWorkout(workout: Workout) {
+        Log.d("fresh_fitness_workout_save", "Saving workout...")
+        viewModelScope.launch {
+            workoutsRepository.insertWorkout(workout)
+        }.invokeOnCompletion {
+            getSavedWorkouts()
+        }
+    }
+
+    fun deleteSavedWorkout(workout: Workout) {
+        viewModelScope.launch {
+            workoutsRepository.deleteWorkout(workout)
+        }.invokeOnCompletion {
+            getSavedWorkouts()
+        }
     }
 
     private fun updateDataAvailability() {

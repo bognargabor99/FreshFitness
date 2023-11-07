@@ -122,7 +122,11 @@ fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel()) {
         }
         DetailedWorkout(
             workout = detailedWorkout!!,
-            onDismiss = onDismiss
+            onDismiss = onDismiss,
+            isSaved = viewModel.savedWorkouts.any { it.id == detailedWorkout!!.id },
+            onSave = { viewModel.saveWorkout(detailedWorkout!!) },
+            onDelete = { viewModel.deleteSavedWorkout(detailedWorkout!!) },
+            saveEnabled = true,
         )
     }
     else {

@@ -65,6 +65,10 @@ import java.util.Locale
 @Composable
 fun DetailedWorkout(
     workout: Workout,
+    saveEnabled: Boolean,
+    isSaved: Boolean,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
     var showEquipmentModal by remember { mutableStateOf(false) }
@@ -87,7 +91,13 @@ fun DetailedWorkout(
             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
             .clickable { onDismiss() }
     ) {
-        DetailedWorkoutHeader(workout = workout)
+        DetailedWorkoutHeader(
+            workout = workout,
+            saveEnabled = saveEnabled,
+            isSaved = isSaved,
+            onSave = onSave,
+            onDelete = onDelete
+        )
         DetailedWorkoutBody(
             workout = workout,
             showEquipmentsEnabled = equipments.any(),
@@ -105,8 +115,21 @@ fun DetailedWorkout(
 }
 
 @Composable
-fun DetailedWorkoutHeader(workout: Workout) {
-    WorkoutCover(name = workout.targetMuscle!!.name, imageRes = getWorkoutBackground(workout)) {
+fun DetailedWorkoutHeader(
+    workout: Workout,
+    saveEnabled: Boolean,
+    isSaved: Boolean,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    WorkoutCover(
+        name = workout.targetMuscle!!.name,
+        saveEnabled = saveEnabled,
+        imageRes = getWorkoutBackground(workout),
+        isSaved = isSaved,
+        onSave = onSave,
+        onDelete = onDelete
+    ) {
         WorkoutCoverBadges(workout)
     }
 }
