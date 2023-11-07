@@ -66,9 +66,9 @@ import java.util.Locale
 fun DetailedWorkout(
     workout: Workout,
     saveEnabled: Boolean,
-    isSaved: Boolean,
-    onSave: () -> Unit,
-    onDelete: () -> Unit,
+    isSaved: Boolean = false,
+    onSave: () -> Unit = { },
+    onDelete: () -> Unit = { },
     onDismiss: () -> Unit
 ) {
     var showEquipmentModal by remember { mutableStateOf(false) }

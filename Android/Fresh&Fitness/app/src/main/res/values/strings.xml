@@ -54,4 +54,7 @@
     <string name="equipment_types">Equipment types</string>
     <string name="review_workout">Review workout</string>
     <string name="fetching_data">Fetching data…</string>
+    <string name="loading_workout">Loading workout…</string>
+    <string name="no_workouts_scheduled">No workouts scheduled for today</string>
+    <string name="view_workout">View workout</string>
 </resources>

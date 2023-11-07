@@ -53,7 +53,7 @@ fun NeededEquipmentsModal(
 
 @Composable
 fun NeededEquipmentsHeader(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit = { }
 ) {
     Box(
         modifier = Modifier

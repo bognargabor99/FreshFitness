@@ -102,6 +102,9 @@ dependencies {
     implementation 'com.google.maps:google-maps-services:0.11.0'
     implementation 'com.google.maps.android:android-maps-utils:3.4.0'
 
+    // Calendar composable
+    implementation 'com.kizitonwose.calendar:compose:2.3.0'
+
     // Room
     def room_version = "2.5.2"
     implementation "androidx.room:room-runtime:$room_version"
@@ -121,7 +124,7 @@ dependencies {
     // S3 storage
     implementation 'com.amplifyframework:aws-storage-s3:2.13.2'
 
-    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.3")
+    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
 
     // Test
     testImplementation 'junit:junit:4.13.2'
