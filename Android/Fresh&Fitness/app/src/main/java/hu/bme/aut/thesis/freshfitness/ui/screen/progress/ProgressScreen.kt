@@ -1,6 +1,7 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.progress
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -40,8 +43,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,8 +75,8 @@ import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.Day
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.getWeekPageTitle
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.rememberFirstVisibleWeekAfterScroll
-import hu.bme.aut.thesis.freshfitness.ui.util.swiper
 import hu.bme.aut.thesis.freshfitness.viewmodel.ProgressViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.Locale
 
@@ -117,6 +122,7 @@ fun ProgressScreenLoading() {
     ScreenLoading(loadingText = stringResource(R.string.fetching_data))
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProgressScreenLoaded(
     savedWorkouts: List<Workout>,
@@ -130,33 +136,51 @@ fun ProgressScreenLoaded(
     var selection by remember { mutableStateOf(currentDate) }
     Column(
         modifier = Modifier
-            .fillMaxSize().background(MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.25f)),
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.25f)),
     ) {
+        val pagerState = rememberPagerState(initialPage = currentDate.dayOfWeek.value - 1)
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.currentPage }.collect { page ->
+                // viewModel.sendPageSelectedEvent(page)
+                selection = currentDate.plusDays((page - (currentDate.dayOfWeek.value - 1)).toLong())
+            }
+        }
+        val coroutineScope = rememberCoroutineScope()
         UpperWeekCalendar(
             currentDate = currentDate,
             startDate = startDate,
             endDate = endDate,
             selection = selection,
-            onSelectionChange = { clicked -> if (selection != clicked) { selection = clicked } },
+            onSelectionChange = { clicked ->
+                if (selection != clicked) {
+                    selection = clicked
+                }
+                coroutineScope.launch {
+                    pagerState.animateScrollToPage(clicked.dayOfWeek.value - 1)
+                }
+                                },
             onRefresh = onRefresh
         )
         if (!viewEnabled) {
             LoadingDayContent()
         }
         else {
-            val w = savedWorkouts.singleOrNull { it.date.take(10) == selection.toString() }
-            if (w != null) {
-                DayContent(
-                    workout = w,
-                    onClick = { onClickWorkout(w) },
-                    onSwipeLeft = { selection = selection.plusDays(1) },
-                    onSwipeRight = { selection = selection.minusDays(1) }
-                )
-            } else {
-                NoWorkoutsForTheDay(
-                    onSwipeLeft = { selection = selection.plusDays(1) },
-                    onSwipeRight = { selection = selection.minusDays(1) }
-                )
+            HorizontalPager(
+                state = pagerState,
+                pageCount = 7,
+                beyondBoundsPageCount = 2
+            ) {
+                val viewedDate = currentDate.plusDays((it - (currentDate.dayOfWeek.value - 1)).toLong())
+                val w = savedWorkouts.singleOrNull { sw -> sw.date.take(10) == viewedDate.toString() }
+                if (w != null) {
+                    DayContent(
+                        workout = w,
+                        onClick = { onClickWorkout(w) }
+                    )
+                } else {
+                    NoWorkoutsForTheDay()
+                }
             }
         }
     }
@@ -168,19 +192,14 @@ fun LoadingDayContent() {
 }
 
 @Composable
-fun NoWorkoutsForTheDay(
-    onSwipeLeft: () -> Unit,
-    onSwipeRight: () -> Unit
-) {
+fun NoWorkoutsForTheDay() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .swiper(onLeftSwipe = onSwipeLeft, onRightSwipe = onSwipeRight)
             .background(MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.25f))
             .wrapContentSize()
     ) {
         Column(
-            modifier = Modifier.swiper(onLeftSwipe = onSwipeLeft, onRightSwipe = onSwipeRight),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -224,6 +243,7 @@ fun UpperWeekCalendar(
     WeekCalendar(
         modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)),
         state = state,
+        userScrollEnabled = false,
         dayContent = { day ->
             Day(day.date, isSelected = selection == day.date) { clicked ->
                 onSelectionChange(clicked)
@@ -235,15 +255,12 @@ fun UpperWeekCalendar(
 @Composable
 fun DayContent(
     workout: Workout,
-    onClick: () -> Unit,
-    onSwipeLeft: () -> Unit,
-    onSwipeRight: () -> Unit
+    onClick: () -> Unit
 ) {
     val equipments = getEquipmentsOfWorkout(workout)
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .swiper(onLeftSwipe = onSwipeLeft, onRightSwipe = onSwipeRight),
+            .fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
     ) {
         DayContentBackground(imageRes = getWorkoutBackground(workout))
