@@ -32,6 +32,6 @@ class WorkoutsRepository(private val workoutsDao: WorkoutsDao) {
 
     suspend fun deleteWorkout(workout: Workout) =
         withContext(Dispatchers.IO) {
-            workoutsDao.deleteWorkout(workout.toWorkoutEntity())
+            workoutsDao.deleteWorkout(workout.id)
         }
 }

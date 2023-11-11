@@ -172,7 +172,7 @@ fun ProgressScreenLoaded(
                 beyondBoundsPageCount = 2
             ) {
                 val viewedDate = currentDate.plusDays((it - (currentDate.dayOfWeek.value - 1)).toLong())
-                val w = savedWorkouts.singleOrNull { sw -> sw.date.take(10) == viewedDate.toString() }
+                val w = savedWorkouts.singleOrNull { sw -> sw.savedToDate.take(10) == viewedDate.toString() }
                 if (w != null) {
                     DayContent(
                         workout = w,

@@ -82,7 +82,6 @@ fun DetailedWorkout(
         detailedExercise = it
         showDetailsOfExercise = true
     }
-
     BackHandler { onDismiss() }
     Column(
         modifier = Modifier

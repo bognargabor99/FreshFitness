@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
+import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -52,6 +53,7 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.ExperimentalTextApi
@@ -64,6 +66,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
@@ -74,12 +78,16 @@ import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
+import hu.bme.aut.thesis.freshfitness.ui.util.TargetDatePicker
+import hu.bme.aut.thesis.freshfitness.ui.util.TargetTimePicker
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.viewmodel.ViewWorkoutsViewModel
+import java.time.LocalDate
 import java.util.Locale
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel()) {
+fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel(factory = ViewWorkoutsViewModel.factory)) {
     ConnectivityStatus(
         availableContent = {
             viewModel.onNetworkAvailable()
@@ -115,19 +123,54 @@ fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel()) {
         detailedWorkout = it
         showDetailsOfWorkout = true
     }
+
+    var showDateChooser by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var chosenDate by remember { mutableStateOf(LocalDate.now().toString()) }
+
+    var permissionGranted by remember { mutableStateOf(false) }
+    val permission = rememberPermissionState(
+        permission = Manifest.permission.WRITE_CALENDAR,
+        onPermissionResult = { permissionGranted = it }
+    )
+
     if (showDetailsOfWorkout) {
         val onDismiss: () -> Unit = {
             showDetailsOfWorkout = false
             detailedWorkout = null
         }
+        val context = LocalContext.current
+        LaunchedEffect(true) {
+            permission.launchPermissionRequest()
+        }
         DetailedWorkout(
             workout = detailedWorkout!!,
             onDismiss = onDismiss,
             isSaved = viewModel.savedWorkouts.any { it.id == detailedWorkout!!.id },
-            onSave = { viewModel.saveWorkout(detailedWorkout!!) },
-            onDelete = { viewModel.deleteSavedWorkout(detailedWorkout!!) },
+            onSave = { showDateChooser = true },
+            onDelete = { viewModel.deleteSavedWorkout(detailedWorkout!!, context) },
             saveEnabled = true,
         )
+        if (showDateChooser) {
+            TargetDatePicker(
+                selectedDate = chosenDate,
+                onSelectDate = { date ->
+                    chosenDate = date
+                    showDateChooser = false
+                    showTimePicker = true
+                },
+                onDismiss = { showDateChooser = false }
+            )
+        }
+        if (showTimePicker) {
+            TargetTimePicker(
+                onDismiss = { showTimePicker = false },
+                onSelectTime = { h, m ->
+                    showTimePicker = false
+                    viewModel.saveWorkout(context = context, workout = detailedWorkout!!, dateToSave = chosenDate, hour = h, minute = m)
+                }
+            )
+        }
     }
     else {
         Column(

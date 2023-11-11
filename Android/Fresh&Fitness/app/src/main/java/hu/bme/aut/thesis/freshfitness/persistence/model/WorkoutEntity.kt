@@ -11,5 +11,7 @@ data class WorkoutEntity(
     val owner: String,
     val sets: Int,
     val equipmentTypes: String,
-    val date: String
+    val date: String,
+    val savedToDate: String,
+    val calendarEventId: Int
 )

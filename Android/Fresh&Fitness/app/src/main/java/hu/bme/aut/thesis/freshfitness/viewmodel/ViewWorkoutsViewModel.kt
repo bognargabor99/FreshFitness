@@ -1,5 +1,8 @@
 package hu.bme.aut.thesis.freshfitness.viewmodel
 
+import android.content.ContentValues
+import android.content.Context
+import android.provider.CalendarContract
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -15,6 +18,7 @@ import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
 import hu.bme.aut.thesis.freshfitness.decodeJWT
+import hu.bme.aut.thesis.freshfitness.getWorkoutDescription
 import hu.bme.aut.thesis.freshfitness.model.state.WorkoutPlanState
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
@@ -31,6 +35,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.TimeZone
 
 class ViewWorkoutsViewModel : ViewModel() {
     // For fetching user's workouts
@@ -40,7 +48,7 @@ class ViewWorkoutsViewModel : ViewModel() {
     val userWorkouts = mutableStateListOf<Workout>()
     val communityWorkouts = mutableStateListOf<Workout>()
 
-    var savedWorkoutsFetched by mutableStateOf(false)
+    private var savedWorkoutsFetched by mutableStateOf(false)
     val savedWorkouts = mutableStateListOf<Workout>()
 
     var exercises = mutableListOf<Exercise>()
@@ -197,20 +205,61 @@ class ViewWorkoutsViewModel : ViewModel() {
         }
     }
 
-    fun saveWorkout(workout: Workout) {
-        Log.d("fresh_fitness_workout_save", "Saving workout...")
+    fun saveWorkout(
+        context: Context,
+        workout: Workout,
+        dateToSave: String,
+        hour: Int = 18,
+        minute: Int = 0
+    ) {
+        workout.savedToDate = dateToSave
+        val start = LocalDate.parse(dateToSave).atTime(hour, minute)
+        val zdt = ZonedDateTime.of(start, ZoneId.systemDefault())
+        Log.d("fresh_fitness_workout_save", "Saving workout to calendar...")
+        val eventId = insertEventToCalendar(workout, zdt.toInstant().toEpochMilli(), context)
+        workout.calendarEventId = eventId
+        Log.d("fresh_fitness_workout_save", "Calendar event ID is $eventId")
         viewModelScope.launch {
-            workoutsRepository.insertWorkout(workout)
+            workoutsRepository.insertWorkout(workout = workout)
         }.invokeOnCompletion {
             getSavedWorkouts()
         }
     }
 
-    fun deleteSavedWorkout(workout: Workout) {
+    fun deleteSavedWorkout(workout: Workout, context: Context) {
+        val eventId = this.savedWorkouts.singleOrNull { it.id == workout.id }?.calendarEventId
+        if (eventId != null) {
+            try {
+                Log.d("fresh_fitness_workout_delete", "Deleting calendar event with id $eventId")
+                context.contentResolver.delete(CalendarContract.Events.CONTENT_URI, CalendarContract.Events._ID+"=${eventId}", null)
+                Log.d("fresh_fitness_workout_delete", "Deleted calendar event with id $eventId")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
         viewModelScope.launch {
             workoutsRepository.deleteWorkout(workout)
         }.invokeOnCompletion {
             getSavedWorkouts()
+        }
+    }
+
+    private fun insertEventToCalendar(workout: Workout, start: Long, context: Context): Int {
+        try {
+            val values = ContentValues()
+            values.put(CalendarContract.Events.DTSTART, start)
+            values.put(CalendarContract.Events.DURATION, "PT1H")
+            values.put(CalendarContract.Events.TITLE, "${workout.targetMuscle?.name} workout")
+            values.put(CalendarContract.Events.DESCRIPTION, getWorkoutDescription(workout))
+            values.put(CalendarContract.Events.CALENDAR_ID, 1)
+            values.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+            val uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+            Log.d("add_workout_to_calendar", "Uri of the new event: $uri")
+            return uri?.toString()?.substring(uri.toString().lastIndexOf("/") + 1)?.toInt() ?: 0
+
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+            return 0
         }
     }
 

@@ -16,7 +16,9 @@ data class Workout(
     val owner: String,
     @SerialName("set_count") val sets: Int,
     @SerialName("equipment_types") val equipmentTypes: String,
-    @SerialName("target_date") val date: String
+    @SerialName("target_date") val date: String,
+    @Transient var savedToDate: String = "",
+    @Transient var calendarEventId: Int = -1
 ) {
     fun toWorkoutEntity(): WorkoutEntity {
         return WorkoutEntity(
@@ -26,7 +28,9 @@ data class Workout(
             owner = owner,
             sets = sets,
             equipmentTypes = equipmentTypes,
-            date = date
+            date = date,
+            savedToDate = savedToDate,
+            calendarEventId = calendarEventId
         )
     }
 
@@ -39,7 +43,9 @@ data class Workout(
                 owner = entity.owner,
                 equipmentTypes = entity.equipmentTypes,
                 sets = entity.sets,
-                date = entity.date
+                date = entity.date,
+                savedToDate = entity.savedToDate,
+                calendarEventId = entity.calendarEventId
             )
         }
     }

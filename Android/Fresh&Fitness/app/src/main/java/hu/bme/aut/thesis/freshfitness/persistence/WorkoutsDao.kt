@@ -1,7 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.persistence
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
@@ -25,6 +24,6 @@ interface WorkoutsDao {
     @Query("SELECT * from workouts WHERE id = :workoutId")
     fun getWorkout(workoutId: Int): List<WorkoutWithExercises>
 
-    @Delete
-    fun deleteWorkout(workoutEntity: WorkoutEntity)
+    @Query("DELETE FROM workouts WHERE id = :workoutId")
+    fun deleteWorkout(workoutId: Int)
 }

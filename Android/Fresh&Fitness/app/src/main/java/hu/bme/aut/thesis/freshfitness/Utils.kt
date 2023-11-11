@@ -119,6 +119,20 @@ fun getEquipmentsOfWorkout(workout: Workout): MutableList<Equipment> {
         .toMutableList()
 }
 
+fun getWorkoutDescription(workout: Workout): String {
+    val description = StringBuilder()
+    if (workout.warmupExercises.any()) {
+        description.appendLine("Warmup")
+        workout.warmupExercises.sortedBy { it.sequenceNum }.forEach { description.appendLine("\t${it.sequenceNum}. ${it.exercise?.name}") }
+        description.appendLine()
+    }
+    description.appendLine("Workout (${workout.sets} sets)")
+    workout.exercises.sortedBy { it.sequenceNum }.forEach {
+        description.appendLine("\t${it.sequenceNum}. ${it.exercise?.name}")
+    }
+    return description.toString()
+}
+
 val paintBlackFill = Paint().apply {
     style = Paint.Style.STROKE
     strokeCap = Paint.Cap.ROUND
