@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kizitonwose.calendar.compose.WeekCalendar
+import com.kizitonwose.calendar.compose.weekcalendar.WeekCalendarState
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.getEquipmentsOfWorkout
@@ -78,7 +79,10 @@ import hu.bme.aut.thesis.freshfitness.ui.util.calendar.rememberFirstVisibleWeekA
 import hu.bme.aut.thesis.freshfitness.viewmodel.ProgressViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit.DAYS
+import java.time.temporal.WeekFields
 import java.util.Locale
+import kotlin.math.absoluteValue
 
 @Composable
 fun ProgressScreen(viewModel: ProgressViewModel = viewModel()) {
@@ -131,8 +135,8 @@ fun ProgressScreenLoaded(
     onClickWorkout: (Workout) -> Unit,
 ) {
     val currentDate = remember { LocalDate.now() }
-    val startDate = remember { currentDate.minusDays(365) }
-    val endDate = remember { currentDate.plusDays(35) }
+    val startDate = remember { currentDate.with(WeekFields.ISO.dayOfWeek(), 1) }
+    val endDate = remember { currentDate.plusWeeks(1).with(WeekFields.ISO.dayOfWeek(), 7) }
     var selection by remember { mutableStateOf(currentDate) }
     Column(
         modifier = Modifier
@@ -140,26 +144,29 @@ fun ProgressScreenLoaded(
             .background(MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.25f)),
     ) {
         val pagerState = rememberPagerState(initialPage = currentDate.dayOfWeek.value - 1)
-        LaunchedEffect(pagerState) {
-            snapshotFlow { pagerState.currentPage }.collect { page ->
-                // viewModel.sendPageSelectedEvent(page)
-                selection = currentDate.plusDays((page - (currentDate.dayOfWeek.value - 1)).toLong())
-            }
-        }
-        val coroutineScope = rememberCoroutineScope()
-        UpperWeekCalendar(
-            currentDate = currentDate,
+        val weekCalendarState = rememberWeekCalendarState(
             startDate = startDate,
             endDate = endDate,
+            firstVisibleWeekDate = currentDate,
+        )
+        val coroutineScope = rememberCoroutineScope()
+
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.currentPage }.collect { page ->
+                selection = currentDate.plusDays((page - (currentDate.dayOfWeek.value - 1)).toLong())
+                weekCalendarState.animateScrollToWeek(selection)
+            }
+        }
+        UpperWeekCalendar(
+            state = weekCalendarState,
             selection = selection,
             onSelectionChange = { clicked ->
                 if (selection != clicked) {
                     selection = clicked
                 }
                 coroutineScope.launch {
-                    pagerState.animateScrollToPage(clicked.dayOfWeek.value - 1)
-                }
-                                },
+                    pagerState.animateScrollToPage(DAYS.between(startDate, clicked).absoluteValue.toInt())
+                } },
             onRefresh = onRefresh
         )
         if (!viewEnabled) {
@@ -168,7 +175,7 @@ fun ProgressScreenLoaded(
         else {
             HorizontalPager(
                 state = pagerState,
-                pageCount = 7,
+                pageCount = 14,
                 beyondBoundsPageCount = 2
             ) {
                 val viewedDate = currentDate.plusDays((it - (currentDate.dayOfWeek.value - 1)).toLong())
@@ -218,18 +225,11 @@ fun NoWorkoutsForTheDay() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpperWeekCalendar(
-    currentDate: LocalDate,
-    startDate: LocalDate,
-    endDate: LocalDate,
+    state: WeekCalendarState,
     selection: LocalDate,
     onSelectionChange: (LocalDate) -> Unit,
     onRefresh: () -> Unit
 ) {
-    val state = rememberWeekCalendarState(
-        startDate = startDate,
-        endDate = endDate,
-        firstVisibleWeekDate = currentDate,
-    )
     val visibleWeek = rememberFirstVisibleWeekAfterScroll(state)
     TopAppBar(
         title = { Text(text = getWeekPageTitle(visibleWeek), color = MaterialTheme.colorScheme.background) },
@@ -243,7 +243,7 @@ fun UpperWeekCalendar(
     WeekCalendar(
         modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)),
         state = state,
-        userScrollEnabled = false,
+        userScrollEnabled = true,
         dayContent = { day ->
             Day(day.date, isSelected = selection == day.date) { clicked ->
                 onSelectionChange(clicked)
