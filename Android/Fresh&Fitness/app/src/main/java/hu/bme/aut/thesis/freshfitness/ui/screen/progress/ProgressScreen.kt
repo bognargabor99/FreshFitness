@@ -57,7 +57,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -66,6 +65,7 @@ import com.kizitonwose.calendar.compose.weekcalendar.WeekCalendarState
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.getEquipmentsOfWorkout
+import hu.bme.aut.thesis.freshfitness.isValidDate
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.DetailedExerciseEquipment
@@ -85,7 +85,10 @@ import java.util.Locale
 import kotlin.math.absoluteValue
 
 @Composable
-fun ProgressScreen(viewModel: ProgressViewModel = viewModel()) {
+fun ProgressScreen(
+    date: String = LocalDate.now().toString(),
+    viewModel: ProgressViewModel = viewModel()
+) {
     LaunchedEffect(key1 = false) {
         if (viewModel.exercises.isEmpty())
             viewModel.initScreen()
@@ -109,6 +112,7 @@ fun ProgressScreen(viewModel: ProgressViewModel = viewModel()) {
         }
         else {
             ProgressScreenLoaded(
+                date = if (isValidDate(date)) date else LocalDate.now().toString(),
                 savedWorkouts = viewModel.savedWorkouts,
                 viewEnabled = viewModel.hasDataToShow,
                 onRefresh = { viewModel.getSavedWorkouts() },
@@ -129,6 +133,7 @@ fun ProgressScreenLoading() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProgressScreenLoaded(
+    date: String,
     savedWorkouts: List<Workout>,
     viewEnabled: Boolean,
     onRefresh: () -> Unit,
@@ -137,17 +142,17 @@ fun ProgressScreenLoaded(
     val currentDate = remember { LocalDate.now() }
     val startDate = remember { currentDate.with(WeekFields.ISO.dayOfWeek(), 1) }
     val endDate = remember { currentDate.plusWeeks(1).with(WeekFields.ISO.dayOfWeek(), 7) }
-    var selection by remember { mutableStateOf(currentDate) }
+    var selection by remember { mutableStateOf(LocalDate.parse(date)) }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.25f)),
     ) {
-        val pagerState = rememberPagerState(initialPage = currentDate.dayOfWeek.value - 1)
+        val pagerState = rememberPagerState(initialPage = DAYS.between(startDate, selection).absoluteValue.toInt())
         val weekCalendarState = rememberWeekCalendarState(
             startDate = startDate,
             endDate = endDate,
-            firstVisibleWeekDate = currentDate,
+            firstVisibleWeekDate = selection,
         )
         val coroutineScope = rememberCoroutineScope()
 
@@ -405,10 +410,4 @@ fun EquipmentsBody(equipments: List<Equipment>) {
             DetailedExerciseEquipment(equipment = it)
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProgressScreenPreview() {
-    ProgressScreenLoaded(savedWorkouts = listOf(), viewEnabled = false, onRefresh = { }, onClickWorkout = { })
 }

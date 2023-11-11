@@ -17,6 +17,7 @@ import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
 import java.io.File
 import java.nio.charset.Charset
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -131,6 +132,18 @@ fun getWorkoutDescription(workout: Workout): String {
         description.appendLine("\t${it.sequenceNum}. ${it.exercise?.name}")
     }
     return description.toString()
+}
+
+@SuppressLint("SimpleDateFormat")
+fun isValidDate(dateStr: String): Boolean {
+    val sdf = SimpleDateFormat("yyyy-MM-dd")
+    sdf.isLenient = false
+    try {
+        sdf.parse(dateStr)
+    } catch (e: ParseException) {
+        return false
+    }
+    return true
 }
 
 val paintBlackFill = Paint().apply {

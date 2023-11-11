@@ -7,6 +7,9 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 
 interface FitnessDestination {
     val icon: ImageVector
@@ -41,6 +44,14 @@ object Social : FitnessDestination {
 object Progress : FitnessDestination {
     override val icon = Icons.Default.BarChart
     override val route = "progress"
+    const val accountTypeArg = "date"
+    val routeWithArgs = "$route/{$accountTypeArg}"
+    val arguments = listOf(
+        navArgument(accountTypeArg) { type = NavType.StringType }
+    )
+    val deepLinks = listOf(
+        navDeepLink { uriPattern = "fresh_fitness://$route/{$accountTypeArg}"}
+    )
 }
 
 val freshFitnessBottomTabs = listOf(Home, Workout, Social, Progress, Profile)

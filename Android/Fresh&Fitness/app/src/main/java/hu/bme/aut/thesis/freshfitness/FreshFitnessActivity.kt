@@ -54,7 +54,10 @@ fun FreshFitnessApp() {
         val currentBackStack by navController.currentBackStackEntryAsState()
         val currentDestination = currentBackStack?.destination
 
-        val currentScreen = freshFitnessBottomTabs.find { it.route == currentDestination?.route } ?: Home
+        val currentScreen = freshFitnessBottomTabs.find {
+            val idx = currentDestination?.route?.indexOf("/") ?: currentDestination?.route?.lastIndex ?: 0
+            it.route == currentDestination?.route?.substring(0, if (idx == -1) 0 else idx)
+        } ?: Home
 
         var showBottomBar by rememberSaveable { mutableStateOf(true) }
         showBottomBar = when (currentDestination?.route) {
@@ -71,7 +74,10 @@ fun FreshFitnessApp() {
                         allScreens = freshFitnessBottomTabs,
                         currentScreen = currentScreen,
                         onTabSelected = { newScreen ->
-                            navController.navigateSingleTopTo(newScreen.route)
+                            if (newScreen is Progress)
+                                navController.navigateSingleTopTo(newScreen.routeWithArgs)
+                            else
+                                navController.navigateSingleTopTo(newScreen.route)
                         }
                     )
             }
@@ -95,8 +101,13 @@ fun FreshFitnessApp() {
                 composable(route = Social.route) {
                     SocialScreen()
                 }
-                composable(route = Progress.route) {
-                    ProgressScreen()
+                composable(
+                    route = Progress.routeWithArgs,
+                    arguments = Progress.arguments,
+                    deepLinks = Progress.deepLinks
+                ) { navBackStackEntry ->
+                    val dateArg = navBackStackEntry.arguments?.getString(Progress.accountTypeArg) ?: ""
+                    ProgressScreen(date = dateArg)
                 }
                 composable(route = Home.route) {
                     HomeScreen()
