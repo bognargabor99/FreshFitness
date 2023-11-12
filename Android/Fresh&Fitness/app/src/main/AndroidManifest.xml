@@ -46,6 +46,18 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="fresh_fitness" android:host="progress" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" android:host="hu.bme.aut.thesis.freshfitness" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="hu.bme.aut.thesis.freshfitness" />
+            </intent-filter>
         </activity>
 
         <service android:name=".service.TrackRunningService"

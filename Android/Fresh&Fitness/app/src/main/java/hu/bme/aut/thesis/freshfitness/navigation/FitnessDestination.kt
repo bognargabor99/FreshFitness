@@ -50,7 +50,9 @@ object Progress : FitnessDestination {
         navArgument(accountTypeArg) { type = NavType.StringType }
     )
     val deepLinks = listOf(
-        navDeepLink { uriPattern = "fresh_fitness://$route/{$accountTypeArg}"}
+        navDeepLink { uriPattern = "fresh_fitness://$route/{$accountTypeArg}"},
+        navDeepLink { uriPattern = "http://hu.bme.aut.thesis.freshfitness/{$accountTypeArg}"},
+        navDeepLink { uriPattern = "https://hu.bme.aut.thesis.freshfitness/{$accountTypeArg}"}
     )
 }
 
