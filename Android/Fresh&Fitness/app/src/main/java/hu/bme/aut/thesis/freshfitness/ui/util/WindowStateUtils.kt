@@ -37,3 +37,10 @@ fun isSeparating(foldFeature: FoldingFeature?): Boolean {
 enum class FreshFitnessNavigationType {
     BOTTOM_NAVIGATION, NAVIGATION_RAIL, PERMANENT_NAVIGATION_DRAWER
 }
+
+/**
+ * Content shown depending on size and state of device.
+ */
+enum class FreshFitnessContentType {
+    LIST_ONLY, LIST_AND_DETAIL
+}

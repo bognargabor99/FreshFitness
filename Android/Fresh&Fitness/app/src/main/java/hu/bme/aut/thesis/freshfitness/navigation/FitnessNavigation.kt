@@ -48,12 +48,14 @@ import hu.bme.aut.thesis.freshfitness.FreshFitnessAppContent
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.navigateSingleTopTo
 import hu.bme.aut.thesis.freshfitness.ui.util.DevicePosture
+import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessNavigationType
 import kotlinx.coroutines.launch
 
 @Composable
 fun FitnessNavigationWrapperUI(
     navigationType: FreshFitnessNavigationType,
+    contentType: FreshFitnessContentType
 ) {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -90,7 +92,7 @@ fun FitnessNavigationWrapperUI(
                 }
             }
         ) {
-            FreshFitnessAppContent(navController = navController, navigationType = navigationType, navInfo = navigationInfo, onTabSelected = onTabSelected)
+            FreshFitnessAppContent(navController = navController, navigationType = navigationType, contentType = contentType, navInfo = navigationInfo, onTabSelected = onTabSelected)
         }
     } else {
         ModalNavigationDrawer(
@@ -112,6 +114,7 @@ fun FitnessNavigationWrapperUI(
             FreshFitnessAppContent(
                 navController = navController,
                 navigationType = navigationType,
+                contentType = contentType,
                 navInfo = navigationInfo,
                 onDrawerClicked = {
                     scope.launch {
@@ -251,27 +254,39 @@ fun FreshFitnessNavigationRailPreview() {
     )
 }
 
-fun getNavigationType(
+fun getNavigationAndContentType(
     windowSize: WindowWidthSizeClass,
     foldingDevicePosture: DevicePosture
-): FreshFitnessNavigationType {
-    val navigationType: FreshFitnessNavigationType = when (windowSize) {
+): Pair<FreshFitnessNavigationType, FreshFitnessContentType> {
+    val navigationType: FreshFitnessNavigationType
+    val contentType: FreshFitnessContentType
+
+    when (windowSize) {
         WindowWidthSizeClass.Compact -> {
-            FreshFitnessNavigationType.BOTTOM_NAVIGATION
+            navigationType = FreshFitnessNavigationType.BOTTOM_NAVIGATION
+            contentType = FreshFitnessContentType.LIST_ONLY
         }
         WindowWidthSizeClass.Medium -> {
-            FreshFitnessNavigationType.NAVIGATION_RAIL
+            navigationType = FreshFitnessNavigationType.NAVIGATION_RAIL
+            contentType = if (foldingDevicePosture is DevicePosture.BookPosture
+                || foldingDevicePosture is DevicePosture.Separating) {
+                FreshFitnessContentType.LIST_AND_DETAIL
+            } else {
+                FreshFitnessContentType.LIST_ONLY
+            }
         }
         WindowWidthSizeClass.Expanded -> {
-            if (foldingDevicePosture is DevicePosture.BookPosture) {
+            navigationType = if (foldingDevicePosture is DevicePosture.BookPosture) {
                 FreshFitnessNavigationType.NAVIGATION_RAIL
             } else {
                 FreshFitnessNavigationType.PERMANENT_NAVIGATION_DRAWER
             }
+            contentType = FreshFitnessContentType.LIST_AND_DETAIL
         }
         else -> {
-            FreshFitnessNavigationType.BOTTOM_NAVIGATION
+            navigationType = FreshFitnessNavigationType.BOTTOM_NAVIGATION
+            contentType = FreshFitnessContentType.LIST_ONLY
         }
     }
-    return navigationType
+    return navigationType to contentType
 }

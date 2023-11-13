@@ -37,7 +37,7 @@ import hu.bme.aut.thesis.freshfitness.navigation.Social
 import hu.bme.aut.thesis.freshfitness.navigation.TrackRunning
 import hu.bme.aut.thesis.freshfitness.navigation.Workout
 import hu.bme.aut.thesis.freshfitness.navigation.WorkoutPlanning
-import hu.bme.aut.thesis.freshfitness.navigation.getNavigationType
+import hu.bme.aut.thesis.freshfitness.navigation.getNavigationAndContentType
 import hu.bme.aut.thesis.freshfitness.ui.screen.home.HomeScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.profile.ProfileScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.progress.ProgressScreen
@@ -49,6 +49,7 @@ import hu.bme.aut.thesis.freshfitness.ui.screen.workout.ViewWorkoutsScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutScreen
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 import hu.bme.aut.thesis.freshfitness.ui.util.DevicePosture
+import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessNavigationType
 import hu.bme.aut.thesis.freshfitness.ui.util.isBookPosture
 import hu.bme.aut.thesis.freshfitness.ui.util.isSeparating
@@ -101,14 +102,15 @@ fun FreshFitnessApp(
     foldingDevicePosture: DevicePosture
 ) {
     FreshFitnessTheme {
-        val navigationType = getNavigationType(windowSize, foldingDevicePosture)
-        FitnessNavigationWrapperUI(navigationType = navigationType)
+        val (navigationType, contentType) = getNavigationAndContentType(windowSize, foldingDevicePosture)
+        FitnessNavigationWrapperUI(navigationType = navigationType, contentType = contentType)
     }
 }
 
 @Composable
 fun FreshFitnessAppContent(
     navigationType: FreshFitnessNavigationType,
+    contentType: FreshFitnessContentType,
     navInfo: NavigationInfo,
     navController: NavHostController,
     onDrawerClicked: () -> Unit = {},
@@ -126,8 +128,7 @@ fun FreshFitnessAppContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.inverseOnSurface)
         ) {
-
-            FreshFitnessNavigationHost(navController = navController, modifier = Modifier.weight(1f))
+            FreshFitnessNavigationHost(navController = navController, contentType = contentType, modifier = Modifier.weight(1f))
 
             AnimatedVisibility(visible = navigationType == FreshFitnessNavigationType.BOTTOM_NAVIGATION) {
                 FitnessBottomNavigation(navInfo = navInfo, onTabSelected = onTabSelected)
@@ -139,7 +140,8 @@ fun FreshFitnessAppContent(
 @Composable
 fun FreshFitnessNavigationHost(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    contentType: FreshFitnessContentType,
+    modifier: Modifier = Modifier,
 ) {
     NavHost(
         modifier = modifier,
