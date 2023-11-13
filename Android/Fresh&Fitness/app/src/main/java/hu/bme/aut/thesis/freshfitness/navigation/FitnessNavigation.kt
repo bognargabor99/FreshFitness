@@ -1,5 +1,7 @@
 package hu.bme.aut.thesis.freshfitness.navigation
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -70,7 +72,13 @@ fun FitnessNavigationWrapperUI(
                         navInfo = navInfo,
                         onDrawerClicked = {
                             scope.launch {
-                                drawerState.close()
+                                drawerState.animateTo(
+                                    DrawerValue.Closed,
+                                    anim = spring(
+                                        dampingRatio = Spring.DampingRatioLowBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
+                                )
                             }
                         }
                     )
@@ -84,7 +92,13 @@ fun FitnessNavigationWrapperUI(
                 navInfo = navInfo,
                 onDrawerClicked = {
                     scope.launch {
-                        drawerState.open()
+                        drawerState.animateTo(
+                            DrawerValue.Open,
+                            anim = spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
                     }
                 }
             )
