@@ -49,22 +49,20 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
+import hu.bme.aut.thesis.freshfitness.ui.util.exercises.MusclesAndEquipments
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseFilter(
-    difficultyFilter: String,
-    muscleFilter: String,
-    equipmentFilter: String,
-    allMuscles: List<MuscleGroup>,
-    allEquipments: List<Equipment>,
+    filters: ExerciseFilters,
+    musclesAndEquipments: MusclesAndEquipments,
     onApplyFilters: (difficulty: String, muscle: String, equipment: String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var localDifficultyFilter: String by remember { mutableStateOf(difficultyFilter) }
-    var localMuscleFilter: String by remember { mutableStateOf(muscleFilter) }
-    var localEquipmentFilter: String by remember { mutableStateOf(equipmentFilter) }
+    var localDifficultyFilter: String by remember { mutableStateOf(filters.difficulty) }
+    var localMuscleFilter: String by remember { mutableStateOf(filters.muscle) }
+    var localEquipmentFilter: String by remember { mutableStateOf(filters.equipment) }
     ModalBottomSheet(
         modifier = Modifier
             .fillMaxHeight()
@@ -80,8 +78,7 @@ fun ExerciseFilter(
             equipmentFilter = localEquipmentFilter,
             onMuscleFilterChange = { muscle -> localMuscleFilter = if (localMuscleFilter != muscle) muscle else "" },
             onEquipmentFilterChange = { equipment -> localEquipmentFilter = if (localEquipmentFilter != equipment) equipment else "" },
-            allMuscles = allMuscles,
-            allEquipments = allEquipments,
+            musclesAndEquipments = musclesAndEquipments,
             onApplyFilters = { onApplyFilters(localDifficultyFilter, localMuscleFilter, localEquipmentFilter) },
             onDifficultyFilterChange = { localDifficultyFilter = if (localDifficultyFilter != it) it else "" }
         )
@@ -114,8 +111,7 @@ fun ExerciseFilterBody(
     equipmentFilter: String,
     onMuscleFilterChange: (String) -> Unit,
     onEquipmentFilterChange: (String) -> Unit,
-    allMuscles: List<MuscleGroup>,
-    allEquipments: List<Equipment>,
+    musclesAndEquipments: MusclesAndEquipments,
     onApplyFilters: () -> Unit,
     onDifficultyFilterChange: (String) -> Unit
 ) {
@@ -123,8 +119,8 @@ fun ExerciseFilterBody(
         modifier = Modifier.verticalScroll(rememberScrollState())
     ) {
         DifficultyFilter(difficultyFilter, listOf("Beginner", "Intermediate", "Advanced"), onDifficultyFilterChange)
-        MuscleFilter(muscleFilter = muscleFilter, onMuscleFilterChange = onMuscleFilterChange, allMuscles = allMuscles)
-        EquipmentFilter(equipmentFilter = equipmentFilter, onEquipmentFilterChange = onEquipmentFilterChange, allEquipments = allEquipments)
+        MuscleFilter(muscleFilter = muscleFilter, onMuscleFilterChange = onMuscleFilterChange, allMuscles = musclesAndEquipments.muscles)
+        EquipmentFilter(equipmentFilter = equipmentFilter, onEquipmentFilterChange = onEquipmentFilterChange, allEquipments = musclesAndEquipments.equipments)
         ExerciseFilterSubmit(onApplyFilters = onApplyFilters)
     }
 }

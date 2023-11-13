@@ -31,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,20 +48,26 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
-import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
-import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
+import hu.bme.aut.thesis.freshfitness.ui.screen.todo.UnderConstructionScreen
 import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilter
+import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilterChangers
+import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilters
+import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
+import hu.bme.aut.thesis.freshfitness.ui.util.exercises.MusclesAndEquipments
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.viewmodel.ExerciseBankViewModel
 
 @Composable
-fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
+fun ExerciseBankScreen(
+    contentType: FreshFitnessContentType,
+    viewModel: ExerciseBankViewModel = viewModel()
+) {
     ConnectivityStatus(
         availableContent = {
             viewModel.onNetworkAvailable()
@@ -89,21 +96,24 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
             BackOnlineNotification()
         }
 
+        val filters by viewModel.filters.collectAsState()
+        val filterChangers = ExerciseFilterChangers(
+            onNameFilter = { viewModel.saveNameFilter(it) },
+            clearNameFilter = { viewModel.clearNameFilter() },
+            onApplyNewFilters = { difficulty, muscle, equipment -> viewModel.saveOtherFilters(difficulty, muscle, equipment) }
+        )
+
         if (!viewModel.networkAvailable) {
             if (!viewModel.hasDataToShow)
                 NetworkUnavailable()
             else {
+                val musclesAndEquipments = MusclesAndEquipments(muscles = viewModel.muscleGroups, equipments = viewModel.equipments)
                 ExerciseListLoaded(
+                    contentType = contentType,
                     exercises = viewModel.filteredExercises,
-                    difficultyFilter = viewModel.difficultyFilter,
-                    nameFilter = viewModel.nameFilter,
-                    muscleFilter = viewModel.muscleFilter,
-                    equipmentFilter = viewModel.equipmentFilter,
-                    allMuscles = viewModel.muscleGroups,
-                    allEquipments = viewModel.equipments,
-                    onNameFilter = { viewModel.saveNameFilter(it) },
-                    clearNameFilter = { viewModel.clearNameFilter() },
-                    onApplyNewFilters = { difficulty, muscle, equipment -> viewModel.saveOtherFilters(difficulty, muscle, equipment) },
+                    filters = filters,
+                    musclesAndEquipments = musclesAndEquipments,
+                    filterChangers = filterChangers,
                     favourites = viewModel.favouriteExercises.map { it.id },
                     onClickHeart = { viewModel.heartExercise(it) }
                 )
@@ -111,21 +121,18 @@ fun ExerciseBankScreen(viewModel: ExerciseBankViewModel = viewModel()) {
         } else {
             if (viewModel.isLoading)
                 ExerciseListLoading()
-            else
+            else {
+                val musclesAndEquipments = MusclesAndEquipments(muscles = viewModel.muscleGroups, equipments = viewModel.equipments)
                 ExerciseListLoaded(
+                    contentType = contentType,
                     exercises = viewModel.filteredExercises,
-                    difficultyFilter = viewModel.difficultyFilter,
-                    nameFilter = viewModel.nameFilter,
-                    muscleFilter = viewModel.muscleFilter,
-                    equipmentFilter = viewModel.equipmentFilter,
-                    allMuscles = viewModel.muscleGroups,
-                    allEquipments = viewModel.equipments,
-                    onNameFilter = { viewModel.saveNameFilter(it) },
-                    clearNameFilter = { viewModel.clearNameFilter() },
-                    onApplyNewFilters = { difficulty, muscle, equipment -> viewModel.saveOtherFilters(difficulty, muscle, equipment) },
+                    filters = filters,
+                    musclesAndEquipments = musclesAndEquipments,
+                    filterChangers = filterChangers,
                     favourites = viewModel.favouriteExercises.map { it.id },
                     onClickHeart = { viewModel.heartExercise(it) }
                 )
+            }
         }
     }
 }
@@ -137,47 +144,117 @@ fun ExerciseListLoading() {
 
 @Composable
 fun ExerciseListLoaded(
+    contentType: FreshFitnessContentType,
     exercises: List<Exercise>,
-    difficultyFilter: String,
-    nameFilter: String,
-    muscleFilter: String,
-    equipmentFilter: String,
-    allMuscles: List<MuscleGroup>,
-    allEquipments: List<Equipment>,
-    onNameFilter: (String) -> Unit,
-    clearNameFilter: () -> Unit,
-    onApplyNewFilters: (difficulty: String, muscle: String, equipment: String) -> Unit,
+    filters: ExerciseFilters,
+    musclesAndEquipments: MusclesAndEquipments,
+    filterChangers: ExerciseFilterChangers,
     favourites: List<Int>,
     onClickHeart: (Exercise) -> Unit
 ) {
-    var showDetailsOfExercise by remember { mutableStateOf(false) }
-    var showFilterBottomSheet by remember { mutableStateOf(false) }
-    var detailedExercise: Exercise? by remember { mutableStateOf(null) }
-    ExerciseListHeader(onFilterIconClick = { showFilterBottomSheet = true })
-    ExerciseNameFilter(nameFilter, onNameFilter, clearNameFilter)
+    var showDetailsOfExercise: Boolean by remember { mutableStateOf(false) }
+    var showFilterBottomSheet: Boolean by remember { mutableStateOf(false) }
+    var detailedExercise: Exercise by remember { mutableStateOf(exercises.first()) }
+
+    val onChooseExercise: (Exercise) -> Unit = {
+        detailedExercise = it
+        showDetailsOfExercise = true
+    }
+
+    when (contentType) {
+        FreshFitnessContentType.LIST_ONLY -> {
+            ExerciseListLoadedList(
+                exercises = exercises,
+                filters = filters,
+                musclesAndEquipments = musclesAndEquipments,
+                filterChangers = filterChangers,
+                favourites = favourites,
+                onClickHeart = onClickHeart,
+                showFilterBottomSheet = showFilterBottomSheet,
+                changeShowFilterBottomSheet = { showFilterBottomSheet = it },
+                onChooseExercise = onChooseExercise
+            )
+            if (showDetailsOfExercise)
+                DetailedExercise(exercise = detailedExercise, onDismiss = { showDetailsOfExercise = false })
+        }
+        FreshFitnessContentType.LIST_AND_DETAIL -> {
+            ExerciseListLoadedListAndDetail(
+                exercises = exercises,
+                filters = filters,
+                musclesAndEquipments = musclesAndEquipments,
+                filterChangers = filterChangers,
+                favourites = favourites,
+                onClickHeart = onClickHeart,
+                showFilterBottomSheet = showFilterBottomSheet,
+                changeShowFilterBottomSheet = { showFilterBottomSheet = it },
+                onChooseExercise = onChooseExercise
+            )
+        }
+    }
+}
+
+@Composable
+fun ExerciseListLoadedList(
+    exercises: List<Exercise>,
+    filters: ExerciseFilters,
+    musclesAndEquipments: MusclesAndEquipments,
+    filterChangers: ExerciseFilterChangers,
+    favourites: List<Int>,
+    onClickHeart: (Exercise) -> Unit,
+    showFilterBottomSheet: Boolean,
+    changeShowFilterBottomSheet: (Boolean) -> Unit,
+    onChooseExercise: (Exercise) -> Unit,
+) {
+    ExerciseListHeader(onFilterIconClick = { changeShowFilterBottomSheet(true) })
+    ExerciseNameFilter(filters.name, filterChangers.onNameFilter, filterChangers.clearNameFilter)
     ExerciseList(
         exercises = exercises,
-        onChooseExercise = {
-            detailedExercise = it
-            showDetailsOfExercise = true
-        },
+        onChooseExercise = onChooseExercise,
         favourites = favourites,
         onClickHeart = onClickHeart
     )
-    if (showDetailsOfExercise)
-        detailedExercise?.let { DetailedExercise(exercise = it, onDismiss = { showDetailsOfExercise = false }) }
     if (showFilterBottomSheet) {
         ExerciseFilter(
-            difficultyFilter = difficultyFilter,
-            muscleFilter = muscleFilter,
-            equipmentFilter = equipmentFilter,
-            allMuscles = allMuscles,
-            allEquipments = allEquipments,
+            filters = filters,
+            musclesAndEquipments = musclesAndEquipments,
             onApplyFilters = { difficulty, muscle, equipment ->
-                onApplyNewFilters(difficulty, muscle, equipment)
-                showFilterBottomSheet = false },
-            onDismiss = { showFilterBottomSheet = false }
+                filterChangers.onApplyNewFilters(difficulty, muscle, equipment)
+                changeShowFilterBottomSheet(false) },
+            onDismiss = { changeShowFilterBottomSheet(false) }
         )
+    }
+}
+
+@Composable
+fun ExerciseListLoadedListAndDetail(
+    modifier: Modifier = Modifier,
+    exercises: List<Exercise>,
+    filters: ExerciseFilters,
+    musclesAndEquipments: MusclesAndEquipments,
+    filterChangers: ExerciseFilterChangers,
+    favourites: List<Int>,
+    onClickHeart: (Exercise) -> Unit,
+    showFilterBottomSheet: Boolean,
+    changeShowFilterBottomSheet: (Boolean) -> Unit,
+    onChooseExercise: (Exercise) -> Unit
+) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = modifier.weight(1f)) {
+            ExerciseListLoadedList(
+                exercises = exercises,
+                filters = filters,
+                musclesAndEquipments = musclesAndEquipments,
+                filterChangers = filterChangers,
+                favourites = favourites,
+                onClickHeart = onClickHeart,
+                showFilterBottomSheet = showFilterBottomSheet,
+                changeShowFilterBottomSheet = changeShowFilterBottomSheet,
+                onChooseExercise = onChooseExercise
+            )
+        }
+        Column(modifier = modifier.weight(1f)) {
+            UnderConstructionScreen()
+        }
     }
 }
 

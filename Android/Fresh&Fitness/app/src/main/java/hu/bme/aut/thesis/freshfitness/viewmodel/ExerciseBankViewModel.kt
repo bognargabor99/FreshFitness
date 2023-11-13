@@ -14,8 +14,13 @@ import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.model.workout.UnitOfMeasure
 import hu.bme.aut.thesis.freshfitness.repository.FavouriteExercisesRepository
+import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ExerciseBankViewModel : ViewModel() {
@@ -34,10 +39,9 @@ class ExerciseBankViewModel : ViewModel() {
     var favouriteExercises = mutableStateListOf<Exercise>()
     var filteredExercises = mutableStateListOf<Exercise>()
     private var difficulties = mutableStateListOf<String>()
-    var difficultyFilter: String by mutableStateOf("")
-    var nameFilter: String by mutableStateOf("")
-    var muscleFilter: String by mutableStateOf("")
-    var equipmentFilter: String by mutableStateOf("")
+
+    private var _filters = MutableStateFlow(ExerciseFilters())
+    val filters: StateFlow<ExerciseFilters> = _filters.asStateFlow()
 
     // Determining which kind of screen to show
     var isLoading by mutableStateOf(true)
@@ -58,13 +62,13 @@ class ExerciseBankViewModel : ViewModel() {
 
     private fun applyFilters() {
         val tempFilteredExercises = exercises.filter {
-            it.difficulty.lowercase().contains(this.difficultyFilter.lowercase()) &&
-            it.name.lowercase().contains(this.nameFilter.lowercase()) &&
+            it.difficulty.lowercase().contains(this._filters.value.difficulty.lowercase()) &&
+            it.name.lowercase().contains(this._filters.value.name.lowercase()) &&
             (
-                    (if (it.equipment != null) it.equipment!!.name.lowercase().contains(this.equipmentFilter.lowercase()) else false) ||
-                    (if (it.alternateEquipment != null) it.alternateEquipment!!.name.lowercase().contains(this.equipmentFilter.lowercase()) else false)
+                    (if (it.equipment != null) it.equipment!!.name.lowercase().contains(this._filters.value.equipment.lowercase()) else false) ||
+                    (if (it.alternateEquipment != null) it.alternateEquipment!!.name.lowercase().contains(this._filters.value.equipment.lowercase()) else false)
             ) &&
-            if (it.muscleGroup != null) it.muscleGroup!!.name.lowercase().contains(this.muscleFilter.lowercase()) else false
+            if (it.muscleGroup != null) it.muscleGroup!!.name.lowercase().contains(this._filters.value.muscle.lowercase()) else false
 
         }
         filteredExercises.clear()
@@ -72,19 +76,28 @@ class ExerciseBankViewModel : ViewModel() {
     }
 
     fun saveNameFilter(newNameFilter: String) {
-        this.nameFilter = newNameFilter
+        this._filters.update { currentFilters ->
+            currentFilters.copy(name = newNameFilter)
+        }
         applyFilters()
     }
 
     fun saveOtherFilters(newDifficultyFilter: String, newMuscleFilter: String, newEquipmentFilter: String) {
-        this.difficultyFilter = newDifficultyFilter
-        this.muscleFilter = newMuscleFilter
-        this.equipmentFilter = newEquipmentFilter
+        this._filters.update { currentFilters ->
+            currentFilters.copy(
+                difficulty = newDifficultyFilter,
+                muscle = newMuscleFilter,
+                equipment = newEquipmentFilter
+            )
+        }
+
         applyFilters()
     }
 
     fun clearNameFilter() {
-        this.nameFilter = ""
+        this._filters.update { currentFilters ->
+            currentFilters.copy(name = "")
+        }
         applyFilters()
     }
 

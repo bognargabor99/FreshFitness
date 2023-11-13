@@ -183,7 +183,7 @@ fun FreshFitnessNavigationHost(
             ViewWorkoutsScreen(contentType = contentType)
         }
         composable(route = ExerciseBank.route) {
-            ExerciseBankScreen()
+            ExerciseBankScreen(contentType = contentType)
         }
     }
 }
