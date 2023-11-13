@@ -49,8 +49,12 @@ import hu.bme.aut.thesis.freshfitness.ui.screen.workout.ViewWorkoutsScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutScreen
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 import hu.bme.aut.thesis.freshfitness.ui.util.DevicePosture
+import hu.bme.aut.thesis.freshfitness.ui.util.Exercises
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessNavigationType
+import hu.bme.aut.thesis.freshfitness.ui.util.Places
+import hu.bme.aut.thesis.freshfitness.ui.util.Planning
+import hu.bme.aut.thesis.freshfitness.ui.util.Running
 import hu.bme.aut.thesis.freshfitness.ui.util.isBookPosture
 import hu.bme.aut.thesis.freshfitness.ui.util.isSeparating
 import kotlinx.coroutines.flow.SharingStarted
@@ -143,6 +147,7 @@ fun FreshFitnessNavigationHost(
     contentType: FreshFitnessContentType,
     modifier: Modifier = Modifier,
 ) {
+    setWorkoutOnClickListeners(navController)
     NavHost(
         modifier = modifier,
         navController = navController,
@@ -152,15 +157,10 @@ fun FreshFitnessNavigationHost(
             ProfileScreen()
         }
         composable(route = Workout.route) {
-            WorkoutScreen(
-                onNavigateNearbyGyms = { navController.navigate(NearbyGyms.route) },
-                onNavigateRunning = { navController.navigate(TrackRunning.route) },
-                onNavigateWorkoutPlanning = { navController.navigate(WorkoutPlanning.route) },
-                onNavigateExerciseBank = { navController.navigate(ExerciseBank.route) }
-            )
+            WorkoutScreen(contentType = contentType)
         }
         composable(route = Social.route) {
-            SocialScreen()
+            SocialScreen(contentType = contentType)
         }
         composable(
             route = Progress.routeWithArgs,
@@ -186,6 +186,13 @@ fun FreshFitnessNavigationHost(
             ExerciseBankScreen()
         }
     }
+}
+
+fun setWorkoutOnClickListeners(navController: NavHostController) {
+    Running.onClick = { navController.navigate(TrackRunning.route) }
+    Places.onClick = { navController.navigate(NearbyGyms.route) }
+    Planning.onClick = { navController.navigate(WorkoutPlanning.route) }
+    Exercises.onClick = { navController.navigate(ExerciseBank.route) }
 }
 
 fun NavHostController.navigateSingleTopTo(route: String) =

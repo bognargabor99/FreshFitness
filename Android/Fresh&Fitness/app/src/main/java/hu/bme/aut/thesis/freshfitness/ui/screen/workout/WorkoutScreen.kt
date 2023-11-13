@@ -1,13 +1,18 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
-import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,57 +29,75 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
+import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
+import hu.bme.aut.thesis.freshfitness.ui.util.WorkoutScreenUtil
+import hu.bme.aut.thesis.freshfitness.ui.util.workoutTabs
 
 @Composable
 fun WorkoutScreen(
-    onNavigateRunning: () -> Unit = {},
-    onNavigateNearbyGyms: () -> Unit = {},
-    onNavigateWorkoutPlanning: () -> Unit = {},
-    onNavigateExerciseBank: () -> Unit = {}
+    contentType: FreshFitnessContentType,
+    tabs: List<WorkoutScreenUtil> = workoutTabs
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        item {
-            ImageWithTextOverlay(
-                painter = painterResource(R.drawable.workout_running),
-                contentDescription = "Go running",
-                text = stringResource(R.string.go_for_a_run),
-                onClick = {
-                    Log.i("fresh_fitness_workout", "Clicked Start running")
-                    onNavigateRunning()
-                }
-            )
+    when (contentType) {
+        FreshFitnessContentType.LIST_ONLY -> {
+            WorkoutScreenListOnly(tabs = tabs)
         }
-        item {
-            ImageWithTextOverlay(
-                painter = painterResource(R.drawable.workout_places),
-                contentDescription = "Find nearby gyms",
-                text = stringResource(R.string.gyms_nearby),
-                onClick = {
-                    Log.i("fresh_fitness_workout", "Clicked gyms near you")
-                    onNavigateNearbyGyms()
-                }
-            )
+        FreshFitnessContentType.LIST_AND_DETAIL -> {
+            WorkoutScreenListAndDetail(tabs = tabs)
         }
-        item {
-            ImageWithTextOverlay(
-                painter = painterResource(R.drawable.workout_planning),
-                contentDescription = "Planning a workout",
-                text = stringResource(R.string.workout_planning),
-                onClick = onNavigateWorkoutPlanning
-            )
-        }
+    }
+}
 
-        item {
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun WorkoutScreenListOnly(
+    tabs: List<WorkoutScreenUtil>
+) {
+    LazyVerticalStaggeredGrid(
+        modifier = Modifier.fillMaxSize(),
+        columns = StaggeredGridCells.Adaptive(minSize = 240.dp), // adaptive size
+        verticalItemSpacing = 16.dp,
+        horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
+        contentPadding = PaddingValues(all = 10.dp)
+    ) {
+        items(tabs.size) {
             ImageWithTextOverlay(
-                painter = painterResource(R.drawable.workout_exercise_bank),
-                contentDescription = "View exercise bank",
-                text = stringResource(R.string.exercise_bank),
-                onClick = onNavigateExerciseBank
+                painter = painterResource(tabs[it].drawableId),
+                contentDescription = null,
+                text = stringResource(tabs[it].textId),
+                onClick = tabs[it].onClick
             )
+        }
+    }
+}
+
+@Composable
+fun WorkoutScreenListAndDetail(
+    tabs: List<WorkoutScreenUtil>
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(12.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
+
+    ) {
+        listOf(tabs.take(2), tabs.takeLast(2)).forEach {
+            Row(
+                modifier = Modifier.fillMaxWidth(1f).weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                it.forEachIndexed { index, it ->
+                    ImageWithTextOverlay(
+                        modifier = Modifier.fillMaxWidth((index.toFloat() + 1f) / 2f),
+                        painter = painterResource(it.drawableId),
+                        contentDescription = null,
+                        text = stringResource(it.textId),
+                        onClick = it.onClick
+                    )
+                }
+            }
         }
     }
 }
@@ -88,17 +111,22 @@ fun ImageWithTextOverlay(
     onClick: () -> Unit
 ) {
     Box(
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-        contentAlignment = Alignment.BottomStart,
+        modifier = modifier,
+        contentAlignment = Alignment.BottomStart
     ) {
         Image(
-            modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onClick() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onClick() },
             painter = painter,
             contentDescription = contentDescription,
             contentScale = ContentScale.FillWidth,
         )
         Text(
-            modifier = Modifier.padding(6.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(6.dp)
+                .fillMaxWidth(),
             text = text,
             textAlign = TextAlign.Center,
             lineHeight = 32.sp,
@@ -109,13 +137,32 @@ fun ImageWithTextOverlay(
     }
 }
 
-@Preview
+@Preview(
+    showBackground = true,
+    heightDp = 640,
+    widthDp = 480
+)
 @Composable
-fun WorkoutScreenPreview() {
+fun WorkoutScreenListOnlyPreview() {
     FreshFitnessTheme {
         WorkoutScreen(
-            onNavigateNearbyGyms = {},
-            onNavigateRunning = {}
+            contentType = FreshFitnessContentType.LIST_ONLY,
+            tabs = workoutTabs
+        )
+    }
+}
+
+@Preview(
+    showBackground = true,
+    heightDp = 800,
+    widthDp = 1000
+)
+@Composable
+fun WorkoutScreenListAndDetailPreview() {
+    FreshFitnessTheme {
+        WorkoutScreen(
+            contentType = FreshFitnessContentType.LIST_AND_DETAIL,
+            tabs = workoutTabs
         )
     }
 }
