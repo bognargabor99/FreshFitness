@@ -67,15 +67,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberPermissionState
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
+import hu.bme.aut.thesis.freshfitness.model.state.WorkoutPlanState
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.parseDateToString
 import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
+import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.TargetDatePicker
@@ -87,7 +90,10 @@ import java.util.Locale
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel(factory = ViewWorkoutsViewModel.factory)) {
+fun ViewWorkoutsScreen(
+    contentType: FreshFitnessContentType,
+    viewModel: ViewWorkoutsViewModel = viewModel(factory = ViewWorkoutsViewModel.factory)
+) {
     ConnectivityStatus(
         availableContent = {
             viewModel.onNetworkAvailable()
@@ -118,7 +124,7 @@ fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel(factory = Vi
     val workoutPlanState by viewModel.workoutPlanState.collectAsState()
     var planWorkout by rememberSaveable { mutableStateOf(false) }
     var showDetailsOfWorkout by rememberSaveable { mutableStateOf(false) }
-    var detailedWorkout: Workout? by rememberSaveable { mutableStateOf(null) }
+    var detailedWorkout: Workout? by remember { mutableStateOf(null) }
     val onWorkoutClick: (Workout) -> Unit = {
         detailedWorkout = it
         showDetailsOfWorkout = true
@@ -134,43 +140,88 @@ fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel(factory = Vi
         onPermissionResult = { permissionGranted = it }
     )
 
-    if (showDetailsOfWorkout) {
-        val onDismiss: () -> Unit = {
-            showDetailsOfWorkout = false
-            detailedWorkout = null
+    val onDismissShowDetails: () -> Unit = {
+        showDetailsOfWorkout = false
+    }
+    val onSaveWorkout: () -> Unit = { showDateChooser = true }
+    val onPlanWorkout: () -> Unit = { planWorkout = true }
+    val context = LocalContext.current
+
+    when (contentType) {
+        FreshFitnessContentType.LIST_ONLY -> {
+            if ((viewModel.planningWorkout && viewModel.plannedWorkout != null) || planWorkout) {
+                PlanWorkoutListOnly(
+                    planWorkoutChange = { planWorkout = it },
+                    workoutPlanState = workoutPlanState,
+                    planWorkout = planWorkout,
+                    viewModel = viewModel
+                )
+            } else {
+                ViewWorkoutsScreenListOnly(
+                    showDetailsOfWorkout = showDetailsOfWorkout,
+                    detailedWorkout = detailedWorkout,
+                    onDismissShowDetails = onDismissShowDetails,
+                    permissionState = permission,
+                    onSaveWorkout = onSaveWorkout,
+                    onWorkoutClick = onWorkoutClick,
+                    onPlanWorkout = onPlanWorkout,
+                    viewModel = viewModel
+                )
+            }
         }
+        FreshFitnessContentType.LIST_AND_DETAIL -> {
+
+        }
+    }
+
+    if (showDateChooser) {
+        TargetDatePicker(
+            selectedDate = chosenDate,
+            onSelectDate = { date ->
+                chosenDate = date
+                showDateChooser = false
+                showTimePicker = true
+            },
+            onDismiss = { showDateChooser = false }
+        )
+    }
+    if (showTimePicker) {
+        TargetTimePicker(
+            onDismiss = { showTimePicker = false },
+            onSelectTime = { h, m ->
+                showTimePicker = false
+                viewModel.saveWorkout(context = context, workout = detailedWorkout!!, dateToSave = chosenDate, hour = h, minute = m)
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun ViewWorkoutsScreenListOnly(
+    showDetailsOfWorkout: Boolean,
+    detailedWorkout: Workout?,
+    onDismissShowDetails: () -> Unit,
+    permissionState: PermissionState,
+    onSaveWorkout: () -> Unit,
+    onWorkoutClick: (Workout) -> Unit,
+    onPlanWorkout: () -> Unit,
+    viewModel: ViewWorkoutsViewModel
+) {
+    if (showDetailsOfWorkout) {
         val context = LocalContext.current
         LaunchedEffect(true) {
-            permission.launchPermissionRequest()
+            permissionState.launchPermissionRequest()
         }
         DetailedWorkout(
             workout = detailedWorkout!!,
-            onDismiss = onDismiss,
-            isSaved = viewModel.savedWorkouts.any { it.id == detailedWorkout!!.id },
-            onSave = { showDateChooser = true },
-            onDelete = { viewModel.deleteSavedWorkout(detailedWorkout!!, context) },
+            onDismiss = onDismissShowDetails,
+            isSaved = viewModel.savedWorkouts.any { it.id == detailedWorkout.id },
+            onSave = onSaveWorkout,
+            onDelete = { viewModel.deleteSavedWorkout(detailedWorkout, context) },
             saveEnabled = true,
         )
-        if (showDateChooser) {
-            TargetDatePicker(
-                selectedDate = chosenDate,
-                onSelectDate = { date ->
-                    chosenDate = date
-                    showDateChooser = false
-                    showTimePicker = true
-                },
-                onDismiss = { showDateChooser = false }
-            )
-        }
-        if (showTimePicker) {
-            TargetTimePicker(
-                onDismiss = { showTimePicker = false },
-                onSelectTime = { h, m ->
-                    showTimePicker = false
-                    viewModel.saveWorkout(context = context, workout = detailedWorkout!!, dateToSave = chosenDate, hour = h, minute = m)
-                }
-            )
-        }
+        
     }
     else {
         Column(
@@ -181,47 +232,56 @@ fun ViewWorkoutsScreen(viewModel: ViewWorkoutsViewModel = viewModel(factory = Vi
                     NetworkUnavailable()
                 }
                 else {
-                    WorkoutsLoaded(canCreateWorkout = false, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = { planWorkout = true })
+                    WorkoutsLoaded(canCreateWorkout = false, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = onPlanWorkout)
                 }
             }
             else {
                 if (viewModel.isLoading) {
                     ViewWorkoutsLoading()
                 }
-                else if (viewModel.planningWorkout && viewModel.plannedWorkout != null) {
-                    WorkoutPlanReviewScreen(
-                        workout = viewModel.plannedWorkout as Workout,
-                        onNewPlan = { viewModel.createWorkoutPlan() },
-                        onAccept = {
-                            planWorkout = false
-                            viewModel.createWorkout()
-                        },
-                        onCancel = {
-                            planWorkout = false
-                            viewModel.cancelWorkoutCreation()
-                        })
-                }
-                else if (planWorkout) {
-                    PlanWorkoutScreen(
-                        workoutPlanState = workoutPlanState,
-                        allMuscles = viewModel.muscleGroups,
-                        allDifficulties = viewModel.allDifficulties,
-                        allEquipmentTypes = viewModel.allEquipmentTypes,
-                        onSetCountChange = viewModel::onSetCountChange,
-                        onDifficultyChange = viewModel::onDifficultyChange,
-                        onEquipmentTypeChange = viewModel::onEquipmentTypeChange,
-                        onMuscleChange = viewModel::onMuscleChange,
-                        onCreateWarmupChange = viewModel::onCreateWarmupChange,
-                        onTargetDateChange = viewModel::onTargetDateChange,
-                        isCreationEnabled = viewModel.isCreationEnabled(),
-                        onCreateWorkout = viewModel::createWorkoutPlan,
-                        onDismiss = { planWorkout = false })
-                }
                 else {
-                    WorkoutsLoaded(canCreateWorkout = viewModel.isLoggedIn, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = { planWorkout = true })
+                    WorkoutsLoaded(canCreateWorkout = viewModel.isLoggedIn, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = onPlanWorkout)
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PlanWorkoutListOnly(
+    planWorkoutChange: (Boolean) -> Unit,
+    workoutPlanState: WorkoutPlanState,
+    planWorkout: Boolean,
+    viewModel: ViewWorkoutsViewModel
+) {
+    if (viewModel.planningWorkout && viewModel.plannedWorkout != null) {
+        WorkoutPlanReviewScreen(
+            workout = viewModel.plannedWorkout as Workout,
+            onNewPlan = { viewModel.createWorkoutPlan() },
+            onAccept = {
+                planWorkoutChange(false)
+                viewModel.createWorkout()
+            },
+            onCancel = {
+                planWorkoutChange(false)
+                viewModel.cancelWorkoutCreation()
+            })
+    }
+    else if (planWorkout) {
+        PlanWorkoutScreen(
+            workoutPlanState = workoutPlanState,
+            allMuscles = viewModel.muscleGroups,
+            allDifficulties = viewModel.allDifficulties,
+            allEquipmentTypes = viewModel.allEquipmentTypes,
+            onSetCountChange = viewModel::onSetCountChange,
+            onDifficultyChange = viewModel::onDifficultyChange,
+            onEquipmentTypeChange = viewModel::onEquipmentTypeChange,
+            onMuscleChange = viewModel::onMuscleChange,
+            onCreateWarmupChange = viewModel::onCreateWarmupChange,
+            onTargetDateChange = viewModel::onTargetDateChange,
+            isCreationEnabled = viewModel.isCreationEnabled(),
+            onCreateWorkout = viewModel::createWorkoutPlan,
+            onDismiss = { planWorkoutChange(false) })
     }
 }
 

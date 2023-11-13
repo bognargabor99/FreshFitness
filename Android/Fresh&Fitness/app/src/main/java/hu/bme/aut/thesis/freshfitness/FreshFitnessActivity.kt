@@ -180,7 +180,7 @@ fun FreshFitnessNavigationHost(
             TrackRunningScreen()
         }
         composable(route = WorkoutPlanning.route) {
-            ViewWorkoutsScreen()
+            ViewWorkoutsScreen(contentType = contentType)
         }
         composable(route = ExerciseBank.route) {
             ExerciseBankScreen()
