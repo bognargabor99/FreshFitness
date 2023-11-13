@@ -57,6 +57,7 @@ import hu.bme.aut.thesis.freshfitness.getEquipmentsOfWorkout
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.model.workout.WorkoutExercise
+import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
 import hu.bme.aut.thesis.freshfitness.ui.util.NeededEquipmentsModal
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.ui.util.media.WorkoutCover
@@ -340,6 +341,11 @@ fun ExerciseGroupDivider(
                 .clip(shape = RoundedCornerShape(2.dp)),
             color = MaterialTheme.colorScheme.onBackground, thickness = 2.dp)
     }
+}
+
+@Composable
+fun DetailedWorkoutEmpty() {
+    EmptyScreen("No workout selected", "Click on a workout to view")
 }
 
 @Preview(showBackground = true)

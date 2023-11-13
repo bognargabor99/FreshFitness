@@ -40,6 +40,7 @@ import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.state.WorkoutPlanState
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.ui.util.DifficultyFilter
+import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
 import hu.bme.aut.thesis.freshfitness.ui.util.MuscleFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.NumberPicker
 import hu.bme.aut.thesis.freshfitness.ui.util.TargetDatePicker
@@ -203,6 +204,11 @@ fun DateChooser(selectedDate: String, onClick: () -> Unit) {
             Text(text = selectedDate, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
     }
+}
+
+@Composable
+fun PlannedWorkoutEmpty() {
+    EmptyScreen("No workout planned", "Create a plan to see here")
 }
 
 @Preview(showBackground = true)

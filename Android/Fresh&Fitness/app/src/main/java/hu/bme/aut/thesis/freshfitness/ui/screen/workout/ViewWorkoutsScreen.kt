@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -170,7 +172,23 @@ fun ViewWorkoutsScreen(
             }
         }
         FreshFitnessContentType.LIST_AND_DETAIL -> {
-
+            if ((viewModel.planningWorkout && viewModel.plannedWorkout != null) || planWorkout) {
+                PlanWorkoutListAndDetail(
+                    viewModel = viewModel,
+                    planWorkoutChange = { planWorkout = it },
+                    workoutPlanState = workoutPlanState
+                )
+            } else {
+                ViewWorkoutsScreenListAndDetail(
+                    modifier = Modifier.fillMaxSize(),
+                    permissionState = permission,
+                    detailedWorkout = detailedWorkout,
+                    viewModel = viewModel,
+                    onWorkoutClick = onWorkoutClick,
+                    onPlanWorkout = onPlanWorkout,
+                    onSaveWorkout = onSaveWorkout
+                )
+            }
         }
     }
 
@@ -247,6 +265,42 @@ fun ViewWorkoutsScreenListOnly(
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun ViewWorkoutsScreenListAndDetail(
+    modifier: Modifier = Modifier,
+    permissionState: PermissionState,
+    detailedWorkout: Workout?,
+    viewModel: ViewWorkoutsViewModel,
+    onWorkoutClick: (Workout) -> Unit,
+    onPlanWorkout: () -> Unit,
+    onSaveWorkout: () -> Unit
+) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = modifier.weight(1f)) {
+            WorkoutsLoaded(canCreateWorkout = viewModel.isLoggedIn, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = onPlanWorkout)
+        }
+        Column(modifier = modifier.weight(1f)) {
+            if (detailedWorkout != null) {
+                val context = LocalContext.current
+                LaunchedEffect(true) {
+                    permissionState.launchPermissionRequest()
+                }
+                DetailedWorkout(
+                    workout = detailedWorkout,
+                    onDismiss = { },
+                    isSaved = viewModel.savedWorkouts.any { it.id == detailedWorkout.id },
+                    onSave = onSaveWorkout,
+                    onDelete = { viewModel.deleteSavedWorkout(detailedWorkout, context) },
+                    saveEnabled = true,
+                )
+            } else {
+                DetailedWorkoutEmpty()
+            }
+        }
+    }
+}
+
 @Composable
 fun PlanWorkoutListOnly(
     planWorkoutChange: (Boolean) -> Unit,
@@ -282,6 +336,50 @@ fun PlanWorkoutListOnly(
             isCreationEnabled = viewModel.isCreationEnabled(),
             onCreateWorkout = viewModel::createWorkoutPlan,
             onDismiss = { planWorkoutChange(false) })
+    }
+}
+
+@Composable
+fun PlanWorkoutListAndDetail(
+    modifier: Modifier = Modifier,
+    viewModel: ViewWorkoutsViewModel,
+    workoutPlanState: WorkoutPlanState,
+    planWorkoutChange: (Boolean) -> Unit
+) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = modifier.weight(1f)) {
+            PlanWorkoutScreen(
+                workoutPlanState = workoutPlanState,
+                allMuscles = viewModel.muscleGroups,
+                allDifficulties = viewModel.allDifficulties,
+                allEquipmentTypes = viewModel.allEquipmentTypes,
+                onSetCountChange = viewModel::onSetCountChange,
+                onDifficultyChange = viewModel::onDifficultyChange,
+                onEquipmentTypeChange = viewModel::onEquipmentTypeChange,
+                onMuscleChange = viewModel::onMuscleChange,
+                onCreateWarmupChange = viewModel::onCreateWarmupChange,
+                onTargetDateChange = viewModel::onTargetDateChange,
+                isCreationEnabled = viewModel.isCreationEnabled(),
+                onCreateWorkout = viewModel::createWorkoutPlan,
+                onDismiss = { planWorkoutChange(false) })
+        }
+        Column(modifier = modifier.weight(1f)) {
+            if (viewModel.planningWorkout && viewModel.plannedWorkout != null) {
+                WorkoutPlanReviewScreen(
+                    workout = viewModel.plannedWorkout as Workout,
+                    onNewPlan = { viewModel.createWorkoutPlan() },
+                    onAccept = {
+                        planWorkoutChange(false)
+                        viewModel.createWorkout()
+                    },
+                    onCancel = {
+                        planWorkoutChange(false)
+                        viewModel.cancelWorkoutCreation()
+                    })
+            } else {
+                PlannedWorkoutEmpty()
+            }
+        }
     }
 }
 
@@ -385,7 +483,7 @@ fun WorkoutTitle(title: String, listShown: Boolean, onShowClick: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalTextApi::class)
+@OptIn(ExperimentalTextApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun WorkoutRow(
     modifier: Modifier = Modifier,
@@ -396,7 +494,7 @@ fun WorkoutRow(
         modifier = modifier
             .padding(4.dp)
             .fillMaxWidth()
-            .height(100.dp)
+            .heightIn(min = 100.dp, max = 110.dp)
             .clickable { onWorkoutClick(workout) }
             .clip(RoundedCornerShape(8.dp))
             .border(3.dp, MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(8.dp))
@@ -415,8 +513,8 @@ fun WorkoutRow(
             S3Image(
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .heightIn(min = 80.dp, max = 80.dp)
-                    .widthIn(min = 80.dp, max = 80.dp)
+                    .heightIn(min = 80.dp, max = 90.dp)
+                    .widthIn(min = 80.dp, max = 90.dp)
                     .clip(RoundedCornerShape(6.dp))
                     .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp)),
                 imageUri = "${BuildConfig.S3_IMAGES_BASE_URL}${workout.targetMuscle!!.imgKey}",
@@ -425,7 +523,8 @@ fun WorkoutRow(
             Column(
                 modifier = Modifier
                     .padding(bottom = 8.dp)
-                    .fillMaxHeight(),
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.7f),
                 verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
             ) {
                 Box(
@@ -442,8 +541,8 @@ fun WorkoutRow(
                         )
                     )
                 }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     WorkoutBadge(text = workout.difficulty, fontSize = 10.sp)
                     WorkoutBadge(text = "${workout.sets} sets", fontSize = 10.sp)
@@ -518,6 +617,7 @@ fun WorkoutBadge(
 ) {
     Box(
         modifier = modifier
+            .padding(vertical = 4.dp)
             .wrapContentSize()
             .background(backGroundColor, shape = RoundedCornerShape(8.dp))
             .padding(4.dp)

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -58,7 +59,8 @@ fun WorkoutCover(
                 contentDescription = "image: $name",
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .aspectRatio(4f / 3f),
+                    .aspectRatio(4f / 3f)
+                    .heightIn(max = 200.dp),
                 colorFilter = ColorFilter.colorMatrix(colorMatrix = ColorMatrix().apply { setToScale(0.8f,0.8f,0.8f,1f) }),
                 contentScale = ContentScale.Crop
             )
