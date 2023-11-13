@@ -14,7 +14,6 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -22,12 +21,11 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import hu.bme.aut.thesis.freshfitness.navigation.ExerciseBank
 import hu.bme.aut.thesis.freshfitness.navigation.FitnessBottomNavigation
+import hu.bme.aut.thesis.freshfitness.navigation.FitnessDestination
 import hu.bme.aut.thesis.freshfitness.navigation.FitnessNavigationWrapperUI
 import hu.bme.aut.thesis.freshfitness.navigation.FreshFitnessNavigationRail
 import hu.bme.aut.thesis.freshfitness.navigation.Home
@@ -39,7 +37,6 @@ import hu.bme.aut.thesis.freshfitness.navigation.Social
 import hu.bme.aut.thesis.freshfitness.navigation.TrackRunning
 import hu.bme.aut.thesis.freshfitness.navigation.Workout
 import hu.bme.aut.thesis.freshfitness.navigation.WorkoutPlanning
-import hu.bme.aut.thesis.freshfitness.navigation.freshFitnessBottomTabs
 import hu.bme.aut.thesis.freshfitness.navigation.getNavigationType
 import hu.bme.aut.thesis.freshfitness.ui.screen.home.HomeScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.profile.ProfileScreen
@@ -104,35 +101,8 @@ fun FreshFitnessApp(
     foldingDevicePosture: DevicePosture
 ) {
     FreshFitnessTheme {
-        val navController = rememberNavController()
-
-        val currentBackStack by navController.currentBackStackEntryAsState()
-        val currentDestination = currentBackStack?.destination
-
-        var currentScreen = freshFitnessBottomTabs.find {
-            val idx = currentDestination?.route?.indexOf("/") ?: currentDestination?.route?.lastIndex ?: 0
-            it.route == currentDestination?.route?.substring(0, if (idx == -1) 0 else idx)
-        } ?: Home
-
-        val navigationInfo = NavigationInfo(
-            allScreens = freshFitnessBottomTabs,
-            currentScreen = currentScreen,
-            onTabSelected = { newScreen ->
-                currentScreen = newScreen
-                if (newScreen is Progress)
-                    navController.navigateSingleTopTo(newScreen.routeWithArgs)
-                else
-                    navController.navigateSingleTopTo(newScreen.route)
-            }
-        )
-
         val navigationType = getNavigationType(windowSize, foldingDevicePosture)
-
-        FitnessNavigationWrapperUI(
-            navController = navController,
-            navInfo = navigationInfo,
-            navigationType = navigationType
-        )
+        FitnessNavigationWrapperUI(navigationType = navigationType)
     }
 }
 
@@ -141,23 +111,26 @@ fun FreshFitnessAppContent(
     navigationType: FreshFitnessNavigationType,
     navInfo: NavigationInfo,
     navController: NavHostController,
-    onDrawerClicked: () -> Unit = {}
+    onDrawerClicked: () -> Unit = {},
+    onTabSelected: (FitnessDestination) -> Unit
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
         AnimatedVisibility(visible = navigationType == FreshFitnessNavigationType.NAVIGATION_RAIL) {
             FreshFitnessNavigationRail(
                 navInfo = navInfo,
-                onDrawerClicked = onDrawerClicked
+                onDrawerClicked = onDrawerClicked,
+                onTabSelected = onTabSelected
             )
         }
         Column(modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.inverseOnSurface)
         ) {
+
             FreshFitnessNavigationHost(navController = navController, modifier = Modifier.weight(1f))
 
             AnimatedVisibility(visible = navigationType == FreshFitnessNavigationType.BOTTOM_NAVIGATION) {
-                FitnessBottomNavigation(navInfo = navInfo)
+                FitnessBottomNavigation(navInfo = navInfo, onTabSelected = onTabSelected)
             }
         }
     }

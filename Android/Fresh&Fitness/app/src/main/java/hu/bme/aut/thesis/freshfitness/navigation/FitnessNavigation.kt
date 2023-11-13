@@ -31,26 +31,54 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import hu.bme.aut.thesis.freshfitness.FreshFitnessAppContent
 import hu.bme.aut.thesis.freshfitness.R
+import hu.bme.aut.thesis.freshfitness.navigateSingleTopTo
 import hu.bme.aut.thesis.freshfitness.ui.util.DevicePosture
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessNavigationType
 import kotlinx.coroutines.launch
 
 @Composable
 fun FitnessNavigationWrapperUI(
-    navController: NavHostController,
     navigationType: FreshFitnessNavigationType,
-    navInfo: NavigationInfo
 ) {
+    val navController = rememberNavController()
+    val currentBackStack by navController.currentBackStackEntryAsState()
+    val currentDestination = currentBackStack?.destination
+
+    val currentScreen = freshFitnessBottomTabs.find {
+        val idx = currentDestination?.route?.indexOf("/") ?: currentDestination?.route?.lastIndex ?: 0
+        it.route == currentDestination?.route?.substring(0, if (idx == -1) 0 else idx)
+    } ?: Home
+
+    var navigationInfo by remember { mutableStateOf(NavigationInfo(
+        allScreens = freshFitnessBottomTabs,
+        currentScreen = currentScreen,
+    )) }
+
+    val onTabSelected: (FitnessDestination) -> Unit = { newScreen: FitnessDestination ->
+        navigationInfo = navigationInfo.copy(
+            currentScreen = newScreen
+        )
+        if (newScreen is Progress)
+            navController.navigateSingleTopTo(newScreen.routeWithArgs)
+        else
+            navController.navigateSingleTopTo(newScreen.route)
+    }
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -58,27 +86,22 @@ fun FitnessNavigationWrapperUI(
         PermanentNavigationDrawer(
             drawerContent = {
                 PermanentDrawerSheet {
-                    NavigationDrawerContent(navInfo = navInfo)
+                    NavigationDrawerContent(navInfo = navigationInfo, onTabSelected = onTabSelected)
                 }
             }
         ) {
-            FreshFitnessAppContent(navController = navController, navigationType = navigationType, navInfo = navInfo)
+            FreshFitnessAppContent(navController = navController, navigationType = navigationType, navInfo = navigationInfo, onTabSelected = onTabSelected)
         }
     } else {
         ModalNavigationDrawer(
             drawerContent = {
                 ModalDrawerSheet {
                     NavigationDrawerContent(
-                        navInfo = navInfo,
+                        navInfo = navigationInfo,
+                        onTabSelected = onTabSelected,
                         onDrawerClicked = {
                             scope.launch {
-                                drawerState.animateTo(
-                                    DrawerValue.Closed,
-                                    anim = spring(
-                                        dampingRatio = Spring.DampingRatioLowBouncy,
-                                        stiffness = Spring.StiffnessLow
-                                    )
-                                )
+                                drawerState.animateTo(DrawerValue.Closed, anim = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
                             }
                         }
                     )
@@ -89,18 +112,13 @@ fun FitnessNavigationWrapperUI(
             FreshFitnessAppContent(
                 navController = navController,
                 navigationType = navigationType,
-                navInfo = navInfo,
+                navInfo = navigationInfo,
                 onDrawerClicked = {
                     scope.launch {
-                        drawerState.animateTo(
-                            DrawerValue.Open,
-                            anim = spring(
-                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        )
+                        drawerState.animateTo(DrawerValue.Open, anim = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
                     }
-                }
+                },
+                onTabSelected = onTabSelected
             )
         }
     }
@@ -110,6 +128,7 @@ fun FitnessNavigationWrapperUI(
 fun FitnessBottomNavigation(
     modifier: Modifier = Modifier,
     navInfo: NavigationInfo,
+    onTabSelected: (FitnessDestination) -> Unit
 ) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.background,
@@ -127,9 +146,7 @@ fun FitnessBottomNavigation(
                     Text(destination.route.replaceFirstChar { c -> c.uppercaseChar() })
                 },
                 selected = navInfo.currentScreen == destination,
-                onClick = {
-                    navInfo.onTabSelected(destination)
-                }
+                onClick = { onTabSelected(destination) }
             )
         }
     }
@@ -138,7 +155,8 @@ fun FitnessBottomNavigation(
 @Composable
 fun FreshFitnessNavigationRail(
     onDrawerClicked: () -> Unit = {},
-    navInfo: NavigationInfo
+    navInfo: NavigationInfo,
+    onTabSelected: (FitnessDestination) -> Unit
 ) {
     NavigationRail(modifier = Modifier.fillMaxHeight()) {
         NavigationRailItem(
@@ -149,10 +167,10 @@ fun FreshFitnessNavigationRail(
         navInfo.allScreens.forEach { destination ->
             NavigationRailItem(
                 selected = navInfo.currentScreen == destination,
-                //label = { Text(destination.route.replaceFirstChar { c -> c.uppercaseChar() }) },
+                label = { Text(destination.route.replaceFirstChar { c -> c.uppercaseChar() }) },
                 icon =  { Icon(imageVector = destination.icon, contentDescription = destination.route.replaceFirstChar { c -> c.uppercaseChar() } + " screen") },
                 onClick = {
-                    navInfo.onTabSelected(destination)
+                    onTabSelected(destination)
                     onDrawerClicked()
                 }
             )
@@ -164,7 +182,8 @@ fun FreshFitnessNavigationRail(
 fun NavigationDrawerContent(
     modifier: Modifier = Modifier,
     onDrawerClicked: () -> Unit = {},
-    navInfo: NavigationInfo
+    navInfo: NavigationInfo,
+    onTabSelected: (FitnessDestination) -> Unit
 ) {
     Column(
         modifier
@@ -200,7 +219,7 @@ fun NavigationDrawerContent(
                 icon = { Icon(imageVector = destination.icon, contentDescription = destination.route.replaceFirstChar { c -> c.uppercaseChar() } + " screen") },
                 colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent),
                 onClick = {
-                    navInfo.onTabSelected(destination)
+                    onTabSelected(destination)
                     onDrawerClicked()
                 }
             )
@@ -214,9 +233,9 @@ fun NavigationDrawerContentPreview() {
     NavigationDrawerContent(
         navInfo = NavigationInfo(
             allScreens = listOf(Home, Workout, Social, Progress, Profile),
-            currentScreen = Home,
-            onTabSelected = {}
-        )
+            currentScreen = Home
+        ),
+        onTabSelected = {}
     )
 }
 
@@ -226,9 +245,9 @@ fun FreshFitnessNavigationRailPreview() {
     FreshFitnessNavigationRail(
         navInfo = NavigationInfo(
             allScreens = listOf(Home, Workout, Social, Progress, Profile),
-            currentScreen = Home,
-            onTabSelected = {}
-        )
+            currentScreen = Home
+        ),
+        onTabSelected = {}
     )
 }
 

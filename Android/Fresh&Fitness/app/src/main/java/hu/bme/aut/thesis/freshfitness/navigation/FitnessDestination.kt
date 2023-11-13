@@ -58,8 +58,7 @@ object Progress : FitnessDestination {
 
 data class NavigationInfo(
     val allScreens: List<FitnessDestination>,
-    var onTabSelected: (FitnessDestination) -> Unit,
-    var currentScreen: FitnessDestination
+    val currentScreen: FitnessDestination
 )
 
 val freshFitnessBottomTabs = listOf(Home, Workout, Social, Progress, Profile)
