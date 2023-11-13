@@ -57,4 +57,5 @@
     <string name="loading_workout">Loading workout…</string>
     <string name="no_workouts_scheduled">No workouts scheduled for today</string>
     <string name="view_workout">View workout</string>
+    <string name="navigation_drawer">Navigation drawer</string>
 </resources>

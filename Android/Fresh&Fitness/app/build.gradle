@@ -105,6 +105,10 @@ dependencies {
     // Calendar composable
     implementation 'com.kizitonwose.calendar:compose:2.3.0'
 
+    // AdaptiveUI
+    implementation "androidx.compose.material3:material3-window-size-class:1.1.2"
+    implementation 'androidx.window:window:1.1.0'
+
     // Room
     def room_version = "2.5.2"
     implementation "androidx.room:room-runtime:$room_version"
