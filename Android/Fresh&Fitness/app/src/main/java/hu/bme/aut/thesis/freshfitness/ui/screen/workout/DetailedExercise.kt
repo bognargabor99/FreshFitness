@@ -45,7 +45,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailedExercise(
+fun DetailedExerciseBottomSheet(
     exercise: Exercise,
     onDismiss: () -> Unit
 ) {
@@ -57,28 +57,35 @@ fun DetailedExercise(
         onDismissRequest = onDismiss,
         dragHandle = { }
     ) {
+        DetailedExercise(exercise = exercise)
+    }
+}
+
+@Composable
+fun DetailedExercise(
+    exercise: Exercise,
+) {
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+    ) {
+        ExerciseMedia(exercise.media)
         Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
+            modifier = Modifier.padding(16.dp)
         ) {
-            ExerciseMedia(exercise.media)
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                DetailedExerciseTitle(title = exercise.name)
-                DetailedExerciseBadges(exercise)
-                DetailedExerciseDetails(details = exercise.details)
-                exercise.equipment?.let {
-                    if (it.imgKey.isNotBlank()) {
-                        FilterTitle(title = stringResource(id = R.string.equipments))
-                        DetailedExerciseEquipment(it)
-                    }
+            DetailedExerciseTitle(title = exercise.name)
+            DetailedExerciseBadges(exercise)
+            DetailedExerciseDetails(details = exercise.details)
+            exercise.equipment?.let {
+                if (it.imgKey.isNotBlank()) {
+                    FilterTitle(title = stringResource(id = R.string.equipments))
+                    DetailedExerciseEquipment(it)
                 }
-                exercise.alternateEquipment?.let {
-                    if (it.imgKey.isNotBlank()) {
-                        FilterTitle(title = stringResource(id = R.string.alternative_equipment))
-                        DetailedExerciseEquipment(it)
-                    }
+            }
+            exercise.alternateEquipment?.let {
+                if (it.imgKey.isNotBlank()) {
+                    FilterTitle(title = stringResource(id = R.string.alternative_equipment))
+                    DetailedExerciseEquipment(it)
                 }
             }
         }

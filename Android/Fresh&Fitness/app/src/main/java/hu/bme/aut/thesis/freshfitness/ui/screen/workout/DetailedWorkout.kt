@@ -108,7 +108,7 @@ fun DetailedWorkout(
         )
     }
     if (showDetailsOfExercise)
-        detailedExercise?.let { DetailedExercise(exercise = it, onDismiss = { showDetailsOfExercise = false }) }
+        detailedExercise?.let { DetailedExerciseBottomSheet(exercise = it, onDismiss = { showDetailsOfExercise = false }) }
     if (equipments.any() && showEquipmentModal) {
         NeededEquipmentsModal(equipments = equipments, onDismiss = { showEquipmentModal = false })
     }

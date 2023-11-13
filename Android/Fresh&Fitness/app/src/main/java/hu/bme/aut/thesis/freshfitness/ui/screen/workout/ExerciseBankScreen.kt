@@ -50,7 +50,6 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
-import hu.bme.aut.thesis.freshfitness.ui.screen.todo.UnderConstructionScreen
 import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilter
@@ -175,7 +174,7 @@ fun ExerciseListLoaded(
                 onChooseExercise = onChooseExercise
             )
             if (showDetailsOfExercise)
-                DetailedExercise(exercise = detailedExercise, onDismiss = { showDetailsOfExercise = false })
+                DetailedExerciseBottomSheet(exercise = detailedExercise, onDismiss = { showDetailsOfExercise = false })
         }
         FreshFitnessContentType.LIST_AND_DETAIL -> {
             ExerciseListLoadedListAndDetail(
@@ -187,7 +186,8 @@ fun ExerciseListLoaded(
                 onClickHeart = onClickHeart,
                 showFilterBottomSheet = showFilterBottomSheet,
                 changeShowFilterBottomSheet = { showFilterBottomSheet = it },
-                onChooseExercise = onChooseExercise
+                onChooseExercise = onChooseExercise,
+                detailedExercise = detailedExercise
             )
         }
     }
@@ -236,7 +236,8 @@ fun ExerciseListLoadedListAndDetail(
     onClickHeart: (Exercise) -> Unit,
     showFilterBottomSheet: Boolean,
     changeShowFilterBottomSheet: (Boolean) -> Unit,
-    onChooseExercise: (Exercise) -> Unit
+    onChooseExercise: (Exercise) -> Unit,
+    detailedExercise: Exercise
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(modifier = modifier.weight(1f)) {
@@ -253,7 +254,7 @@ fun ExerciseListLoadedListAndDetail(
             )
         }
         Column(modifier = modifier.weight(1f)) {
-            UnderConstructionScreen()
+            DetailedExercise(exercise = detailedExercise)
         }
     }
 }
