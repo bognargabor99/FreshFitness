@@ -61,13 +61,13 @@ fun FitnessNavigationWrapperUI(
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentDestination = currentBackStack?.destination
 
-    val currentScreen = freshFitnessBottomTabs.find {
+    val currentScreen = freshFitnessTabs.find {
         val idx = currentDestination?.route?.indexOf("/") ?: currentDestination?.route?.lastIndex ?: 0
         it.route == currentDestination?.route?.substring(0, if (idx == -1) 0 else idx)
     } ?: Home
 
     var navigationInfo by remember { mutableStateOf(NavigationInfo(
-        allScreens = freshFitnessBottomTabs,
+        allScreens = freshFitnessTabs,
         currentScreen = currentScreen,
     )) }
 

@@ -61,7 +61,7 @@ data class NavigationInfo(
     val currentScreen: FitnessDestination
 )
 
-val freshFitnessBottomTabs = listOf(Home, Workout, Social, Progress, Profile)
+val freshFitnessTabs = listOf(Home, Workout, Social, Progress, Profile)
 
 /**
  * Sub screens
