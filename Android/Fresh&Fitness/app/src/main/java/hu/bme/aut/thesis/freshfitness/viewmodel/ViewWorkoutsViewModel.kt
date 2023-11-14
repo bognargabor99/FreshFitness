@@ -2,6 +2,7 @@ package hu.bme.aut.thesis.freshfitness.viewmodel
 
 import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
 import android.provider.CalendarContract
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -217,7 +218,10 @@ class ViewWorkoutsViewModel : ViewModel() {
         val zdt = ZonedDateTime.of(start, ZoneId.systemDefault())
         Log.d("fresh_fitness_workout_save", "Saving workout to calendar...")
         val eventId = insertEventToCalendar(workout, zdt.toInstant().toEpochMilli(), context)
-        workout.calendarEventId = eventId
+        if (eventId != null){
+            workout.calendarEventId = eventId
+            addRemindersToCalendarEvent(eventId = eventId, context = context)
+        }
         Log.d("fresh_fitness_workout_save", "Calendar event ID is $eventId")
         viewModelScope.launch {
             workoutsRepository.insertWorkout(workout = workout)
@@ -244,22 +248,37 @@ class ViewWorkoutsViewModel : ViewModel() {
         }
     }
 
-    private fun insertEventToCalendar(workout: Workout, start: Long, context: Context): Int {
+    private fun insertEventToCalendar(workout: Workout, start: Long, context: Context): Int? =
         try {
             val values = ContentValues()
             values.put(CalendarContract.Events.DTSTART, start)
             values.put(CalendarContract.Events.DURATION, "PT1H")
             values.put(CalendarContract.Events.TITLE, "${workout.targetMuscle?.name} workout")
-            values.put(CalendarContract.Events.DESCRIPTION, getWorkoutDescription(workout))
+            values.put(CalendarContract.Events.DESCRIPTION, getWorkoutDescription(workout, start))
             values.put(CalendarContract.Events.CALENDAR_ID, 1)
             values.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
             val uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
             Log.d("add_workout_to_calendar", "Uri of the new event: $uri")
-            return uri?.toString()?.substring(uri.toString().lastIndexOf("/") + 1)?.toInt() ?: 0
-
+            uri?.toString()?.substring(uri.toString().lastIndexOf("/") + 1)?.toInt()
         } catch (e: SecurityException) {
             e.printStackTrace()
-            return 0
+            null
+        }
+
+    private fun addRemindersToCalendarEvent(eventId: Int, context: Context) {
+        var values = ContentValues().apply {
+            put(CalendarContract.Reminders.MINUTES, 30)
+            put(CalendarContract.Reminders.EVENT_ID, eventId)
+            put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT)
+        }
+        val uri: Uri? = context.contentResolver.insert(CalendarContract.Reminders.CONTENT_URI, values)
+        if (uri != null) {
+            values = ContentValues().apply {
+                put(CalendarContract.Reminders.MINUTES, 120)
+                put(CalendarContract.Reminders.EVENT_ID, eventId)
+                put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT)
+            }
+            context.contentResolver.insert(CalendarContract.Reminders.CONTENT_URI, values)
         }
     }
 

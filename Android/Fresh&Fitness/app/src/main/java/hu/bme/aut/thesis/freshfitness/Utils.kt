@@ -19,8 +19,10 @@ import java.io.File
 import java.nio.charset.Charset
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Base64
 import java.util.Date
@@ -120,8 +122,15 @@ fun getEquipmentsOfWorkout(workout: Workout): MutableList<Equipment> {
         .toMutableList()
 }
 
-fun getWorkoutDescription(workout: Workout): String {
+fun getWorkoutDescription(workout: Workout, start: Long): String {
+    val date = Instant
+        .ofEpochMilli(start)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
     val description = StringBuilder()
+    description.appendLine("https://hu.bme.aut.thesis.freshfitness/$date").appendLine()
     if (workout.warmupExercises.any()) {
         description.appendLine("Warmup")
         workout.warmupExercises.sortedBy { it.sequenceNum }.forEach { description.appendLine("\t${it.sequenceNum}. ${it.exercise?.name}") }

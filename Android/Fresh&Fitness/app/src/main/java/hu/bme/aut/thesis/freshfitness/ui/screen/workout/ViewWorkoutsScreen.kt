@@ -494,7 +494,7 @@ fun WorkoutRow(
         modifier = modifier
             .padding(4.dp)
             .fillMaxWidth()
-            .heightIn(min = 100.dp, max = 110.dp)
+            .heightIn(min = 100.dp, max = 100.dp)
             .clickable { onWorkoutClick(workout) }
             .clip(RoundedCornerShape(8.dp))
             .border(3.dp, MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(8.dp))
@@ -507,14 +507,14 @@ fun WorkoutRow(
             contentDescription = null)
         Row(
             modifier = modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.Start),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start),
             verticalAlignment = Alignment.CenterVertically
         ) {
             S3Image(
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .heightIn(min = 80.dp, max = 90.dp)
-                    .widthIn(min = 80.dp, max = 90.dp)
+                    .heightIn(min = 80.dp, max = 80.dp)
+                    .widthIn(min = 80.dp, max = 80.dp)
                     .clip(RoundedCornerShape(6.dp))
                     .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp)),
                 imageUri = "${BuildConfig.S3_IMAGES_BASE_URL}${workout.targetMuscle!!.imgKey}",
@@ -524,8 +524,8 @@ fun WorkoutRow(
                 modifier = Modifier
                     .padding(bottom = 8.dp)
                     .fillMaxHeight()
-                    .fillMaxWidth(0.7f),
-                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
+                    .fillMaxWidth(0.75f),
+                verticalArrangement = Arrangement.Center
             ) {
                 Box(
                     modifier = Modifier.wrapContentSize()
@@ -543,6 +543,7 @@ fun WorkoutRow(
                 }
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     WorkoutBadge(text = workout.difficulty, fontSize = 10.sp)
                     WorkoutBadge(text = "${workout.sets} sets", fontSize = 10.sp)
