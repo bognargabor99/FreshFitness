@@ -168,7 +168,7 @@ fun FreshFitnessNavigationHost(
             deepLinks = Schedule.deepLinks
         ) { navBackStackEntry ->
             val dateArg = navBackStackEntry.arguments?.getString(Schedule.accountTypeArg) ?: ""
-            ScheduleScreen(date = dateArg)
+            ScheduleScreen(date = dateArg, contentType = contentType)
         }
         composable(route = Home.route) {
             HomeScreen()

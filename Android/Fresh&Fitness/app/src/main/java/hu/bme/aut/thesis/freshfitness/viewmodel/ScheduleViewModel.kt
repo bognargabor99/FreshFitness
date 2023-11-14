@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +14,8 @@ import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.model.workout.UnitOfMeasure
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.repository.WorkoutsRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ScheduleViewModel : ViewModel() {
@@ -27,7 +30,12 @@ class ScheduleViewModel : ViewModel() {
 
     var savedWorkoutsFetched by mutableStateOf(false)
     var hasDataToShow by mutableStateOf(false)
-    var isLoading by mutableStateOf(false)
+    var isLoading by mutableStateOf(true)
+
+    // network availability
+    var networkAvailable by mutableStateOf(true)
+    private var wasNetworkUnavailableBefore by mutableStateOf(false)
+    var showBackOnline by mutableStateOf(false)
 
     fun initScreen() {
         getSavedWorkouts()
@@ -120,5 +128,24 @@ class ScheduleViewModel : ViewModel() {
         }
 
         this.savedWorkouts.forEach(connectWorkoutExerciseData)
+    }
+
+    fun onNetworkAvailable() {
+        Log.d("network_connectivity", "Internet available")
+        this.networkAvailable = true
+        if (this.wasNetworkUnavailableBefore) {
+            this.showBackOnline = true
+            viewModelScope.launch(Dispatchers.IO) {
+                delay(3000)
+                this@ScheduleViewModel.showBackOnline = false
+                this@ScheduleViewModel.wasNetworkUnavailableBefore = false
+            }
+        }
+    }
+
+    fun onNetworkUnavailable() {
+        Log.d("network_connectivity", "Internet not available")
+        this.networkAvailable = false
+        this.wasNetworkUnavailableBefore = true
     }
 }
