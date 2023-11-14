@@ -493,6 +493,7 @@ fun FullScreenDay(
     selection: LocalDate,
     onClick: (LocalDate) -> Unit
 ) {
+    val isInMonth: Boolean = day.position == DayPosition.MonthDate
     Box(
         modifier = Modifier
             .aspectRatio(3f / 4f),
@@ -504,23 +505,25 @@ fun FullScreenDay(
                 .aspectRatio(1f / 1f)
                 .clip(CircleShape)
                 .clickable(
-                    enabled = day.position == DayPosition.MonthDate,
+                    enabled = isInMonth,
                     onClick = { onClick(day.date) },
                 )
-                .background(color = if (selection == day.date) MaterialTheme.colorScheme.inversePrimary else Color.Transparent, shape = CircleShape)
+                .background(color = if (isInMonth && selection == day.date) MaterialTheme.colorScheme.inversePrimary else Color.Transparent, shape = CircleShape)
                 .border(
                     width = 0.dp,
-                    color = if (today == day.date) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    color = if (isInMonth && today == day.date) MaterialTheme.colorScheme.primary else Color.Transparent,
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = day.date.dayOfMonth.toString(),
-                color = if (day.position == DayPosition.MonthDate) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-            )
+            if (isInMonth) {
+                Text(
+                    text = day.date.dayOfMonth.toString(),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (isInMonth) 1f else 0.5f),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
         }
     }
 }
