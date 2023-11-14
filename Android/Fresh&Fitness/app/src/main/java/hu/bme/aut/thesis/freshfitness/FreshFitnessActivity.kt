@@ -151,7 +151,7 @@ fun FreshFitnessNavigationHost(
     NavHost(
         modifier = modifier,
         navController = navController,
-        startDestination = Home.route
+        startDestination = Profile.route
     ) {
         composable(route = Profile.route) {
             ProfileScreen()

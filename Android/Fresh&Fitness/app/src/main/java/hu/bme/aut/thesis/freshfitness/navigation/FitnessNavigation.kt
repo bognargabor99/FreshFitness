@@ -64,7 +64,7 @@ fun FitnessNavigationWrapperUI(
     val currentScreen = freshFitnessTabs.find {
         val idx = currentDestination?.route?.indexOf("/") ?: currentDestination?.route?.lastIndex ?: 0
         it.route == currentDestination?.route?.substring(0, if (idx == -1) 0 else idx)
-    } ?: Home
+    } ?: Profile
 
     var navigationInfo by remember { mutableStateOf(NavigationInfo(
         allScreens = freshFitnessTabs,
@@ -198,7 +198,7 @@ fun NavigationDrawerContent(
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -235,8 +235,8 @@ fun NavigationDrawerContent(
 fun NavigationDrawerContentPreview() {
     NavigationDrawerContent(
         navInfo = NavigationInfo(
-            allScreens = listOf(Home, Workout, Social, Schedule, Profile),
-            currentScreen = Home
+            allScreens = freshFitnessTabs,
+            currentScreen = Profile
         ),
         onTabSelected = {}
     )
@@ -247,8 +247,8 @@ fun NavigationDrawerContentPreview() {
 fun FreshFitnessNavigationRailPreview() {
     FreshFitnessNavigationRail(
         navInfo = NavigationInfo(
-            allScreens = listOf(Home, Workout, Social, Schedule, Profile),
-            currentScreen = Home
+            allScreens = freshFitnessTabs,
+            currentScreen = Profile
         ),
         onTabSelected = {}
     )
