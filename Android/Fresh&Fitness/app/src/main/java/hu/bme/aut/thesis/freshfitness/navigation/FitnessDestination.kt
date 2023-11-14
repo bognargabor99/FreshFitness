@@ -1,11 +1,11 @@
 package hu.bme.aut.thesis.freshfitness.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -41,9 +41,9 @@ object Social : FitnessDestination {
     override val route = "social"
 }
 
-object Progress : FitnessDestination {
-    override val icon = Icons.Default.BarChart
-    override val route = "progress"
+object Schedule : FitnessDestination {
+    override val icon = Icons.Default.Schedule
+    override val route = "schedule"
     const val accountTypeArg = "date"
     val routeWithArgs = "$route/{$accountTypeArg}"
     val arguments = listOf(
@@ -61,7 +61,7 @@ data class NavigationInfo(
     val currentScreen: FitnessDestination
 )
 
-val freshFitnessTabs = listOf(Home, Workout, Social, Progress, Profile)
+val freshFitnessTabs = listOf(Home, Workout, Social, Schedule, Profile)
 
 /**
  * Sub screens

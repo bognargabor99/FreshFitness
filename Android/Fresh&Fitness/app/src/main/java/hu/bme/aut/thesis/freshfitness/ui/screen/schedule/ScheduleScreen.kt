@@ -1,4 +1,4 @@
-package hu.bme.aut.thesis.freshfitness.ui.screen.progress
+package hu.bme.aut.thesis.freshfitness.ui.screen.schedule
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -76,7 +76,7 @@ import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.Day
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.getWeekPageTitle
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.rememberFirstVisibleWeekAfterScroll
-import hu.bme.aut.thesis.freshfitness.viewmodel.ProgressViewModel
+import hu.bme.aut.thesis.freshfitness.viewmodel.ScheduleViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit.DAYS
@@ -85,9 +85,9 @@ import java.util.Locale
 import kotlin.math.absoluteValue
 
 @Composable
-fun ProgressScreen(
+fun ScheduleScreen(
     date: String = LocalDate.now().toString(),
-    viewModel: ProgressViewModel = viewModel()
+    viewModel: ScheduleViewModel = viewModel()
 ) {
     LaunchedEffect(key1 = false) {
         if (viewModel.exercises.isEmpty())
@@ -98,7 +98,7 @@ fun ProgressScreen(
     var detailedWorkout: Workout? by rememberSaveable { mutableStateOf(null) }
 
     if (!viewModel.savedWorkoutsFetched) {
-        ProgressScreenLoading()
+        ScheduleScreenLoading()
     }
     else {
         if (showDetailsOfWorkout) {
@@ -111,7 +111,7 @@ fun ProgressScreen(
                 })
         }
         else {
-            ProgressScreenLoaded(
+            ScheduleScreenLoaded(
                 date = if (isValidDate(date)) date else LocalDate.now().toString(),
                 savedWorkouts = viewModel.savedWorkouts,
                 viewEnabled = viewModel.hasDataToShow,
@@ -126,13 +126,13 @@ fun ProgressScreen(
 }
 
 @Composable
-fun ProgressScreenLoading() {
+fun ScheduleScreenLoading() {
     ScreenLoading(loadingText = stringResource(R.string.fetching_data))
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ProgressScreenLoaded(
+fun ScheduleScreenLoaded(
     date: String,
     savedWorkouts: List<Workout>,
     viewEnabled: Boolean,

@@ -32,7 +32,7 @@ import hu.bme.aut.thesis.freshfitness.navigation.Home
 import hu.bme.aut.thesis.freshfitness.navigation.NavigationInfo
 import hu.bme.aut.thesis.freshfitness.navigation.NearbyGyms
 import hu.bme.aut.thesis.freshfitness.navigation.Profile
-import hu.bme.aut.thesis.freshfitness.navigation.Progress
+import hu.bme.aut.thesis.freshfitness.navigation.Schedule
 import hu.bme.aut.thesis.freshfitness.navigation.Social
 import hu.bme.aut.thesis.freshfitness.navigation.TrackRunning
 import hu.bme.aut.thesis.freshfitness.navigation.Workout
@@ -40,7 +40,7 @@ import hu.bme.aut.thesis.freshfitness.navigation.WorkoutPlanning
 import hu.bme.aut.thesis.freshfitness.navigation.getNavigationAndContentType
 import hu.bme.aut.thesis.freshfitness.ui.screen.home.HomeScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.profile.ProfileScreen
-import hu.bme.aut.thesis.freshfitness.ui.screen.progress.ProgressScreen
+import hu.bme.aut.thesis.freshfitness.ui.screen.schedule.ScheduleScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.social.SocialScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.ExerciseBankScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.NearbyGymsScreen
@@ -163,12 +163,12 @@ fun FreshFitnessNavigationHost(
             SocialScreen(contentType = contentType)
         }
         composable(
-            route = Progress.routeWithArgs,
-            arguments = Progress.arguments,
-            deepLinks = Progress.deepLinks
+            route = Schedule.routeWithArgs,
+            arguments = Schedule.arguments,
+            deepLinks = Schedule.deepLinks
         ) { navBackStackEntry ->
-            val dateArg = navBackStackEntry.arguments?.getString(Progress.accountTypeArg) ?: ""
-            ProgressScreen(date = dateArg)
+            val dateArg = navBackStackEntry.arguments?.getString(Schedule.accountTypeArg) ?: ""
+            ScheduleScreen(date = dateArg)
         }
         composable(route = Home.route) {
             HomeScreen()

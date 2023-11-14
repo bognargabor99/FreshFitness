@@ -75,7 +75,7 @@ fun FitnessNavigationWrapperUI(
         navigationInfo = navigationInfo.copy(
             currentScreen = newScreen
         )
-        if (newScreen is Progress)
+        if (newScreen is Schedule)
             navController.navigateSingleTopTo(newScreen.routeWithArgs)
         else
             navController.navigateSingleTopTo(newScreen.route)
@@ -235,7 +235,7 @@ fun NavigationDrawerContent(
 fun NavigationDrawerContentPreview() {
     NavigationDrawerContent(
         navInfo = NavigationInfo(
-            allScreens = listOf(Home, Workout, Social, Progress, Profile),
+            allScreens = listOf(Home, Workout, Social, Schedule, Profile),
             currentScreen = Home
         ),
         onTabSelected = {}
@@ -247,7 +247,7 @@ fun NavigationDrawerContentPreview() {
 fun FreshFitnessNavigationRailPreview() {
     FreshFitnessNavigationRail(
         navInfo = NavigationInfo(
-            allScreens = listOf(Home, Workout, Social, Progress, Profile),
+            allScreens = listOf(Home, Workout, Social, Schedule, Profile),
             currentScreen = Home
         ),
         onTabSelected = {}

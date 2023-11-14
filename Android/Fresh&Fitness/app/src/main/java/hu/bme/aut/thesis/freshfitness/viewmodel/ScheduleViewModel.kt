@@ -15,7 +15,7 @@ import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.repository.WorkoutsRepository
 import kotlinx.coroutines.launch
 
-class ProgressViewModel : ViewModel() {
+class ScheduleViewModel : ViewModel() {
     private var workoutsRepository = WorkoutsRepository(FreshFitnessApplication.runningDatabase.workoutsDao())
 
     var exercises = mutableListOf<Exercise>()
