@@ -121,7 +121,14 @@ fun FitnessNavigationWrapperUI(
                         drawerState.animateTo(DrawerValue.Open, anim = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
                     }
                 },
-                onTabSelected = onTabSelected
+                onTabSelected = {
+                    onTabSelected(it)
+                    if (drawerState.isOpen) {
+                        scope.launch {
+                            drawerState.animateTo(DrawerValue.Closed, anim = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
+                        }
+                    }
+                }
             )
         }
     }
@@ -174,7 +181,6 @@ fun FreshFitnessNavigationRail(
                 icon =  { Icon(imageVector = destination.icon, contentDescription = destination.route.replaceFirstChar { c -> c.uppercaseChar() } + " screen") },
                 onClick = {
                     onTabSelected(destination)
-                    onDrawerClicked()
                 }
             )
         }
