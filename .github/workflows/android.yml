@@ -23,4 +23,4 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x ./Android/Fresh\&\Fitness/gradlew
     - name: Build with Gradle
-      run: ./Android/Fresh\&\Fitness/gradlew build --info
+      run: gradle build --b ./Android/Fresh\&\Fitness/build.gradle
