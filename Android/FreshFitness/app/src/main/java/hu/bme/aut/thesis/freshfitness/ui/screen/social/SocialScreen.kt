@@ -99,6 +99,7 @@ import hu.bme.aut.thesis.freshfitness.createImageFile
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToTimeSince
+import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
@@ -107,6 +108,7 @@ import kotlin.math.round
 
 @Composable
 fun SocialScreen(
+    contentType: FreshFitnessContentType,
     viewModel: SocialFeedViewModel = viewModel(factory = SocialFeedViewModel.factory)
 ) {
     LaunchedEffect(key1 = false) {
