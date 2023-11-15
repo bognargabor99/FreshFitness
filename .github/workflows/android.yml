@@ -22,5 +22,18 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x ./Android/Fresh\&\Fitness/gradlew
+    
+    - name: Touch local.properties
+      run: touch ./Android/Fresh\&\Fitness/local.properties
+    
+    - name: Add Api Key
+      run: echo "MAPS_API_KEY=\"\"" >> ./Android/Fresh\&\Fitness/local.properties
+
+    - name: Touch key.properties
+      run: touch ./Android/Fresh\&\Fitness/key.properties
+    
+    - name: Add base URL for S3
+      run: echo "S3_IMAGES_BASE_URL=\"\"" >> ./Android/Fresh\&\Fitness/key.properties
+    
     - name: Build with Gradle
       run: gradle build --b ./Android/Fresh\&\Fitness/build.gradle
