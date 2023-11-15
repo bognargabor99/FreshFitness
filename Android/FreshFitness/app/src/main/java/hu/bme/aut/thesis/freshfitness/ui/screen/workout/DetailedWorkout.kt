@@ -89,7 +89,6 @@ fun DetailedWorkout(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
-            .clickable { onDismiss() }
     ) {
         DetailedWorkoutHeader(
             workout = workout,

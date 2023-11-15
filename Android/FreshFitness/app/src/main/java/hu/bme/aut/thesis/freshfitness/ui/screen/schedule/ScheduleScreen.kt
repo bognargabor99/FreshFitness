@@ -151,28 +151,23 @@ fun ScheduleScreen(
             ScheduleScreenLoading()
         }
         else {
-            if (showDetailsOfWorkout) {
-                DetailedWorkout(
-                    workout = detailedWorkout!!,
-                    saveEnabled = false,
-                    onDismiss = {
-                        showDetailsOfWorkout = false
-                        detailedWorkout = null
-                    })
-            }
-            else {
-                ScheduleScreenLoaded(
-                    date = if (isValidDate(date)) date else LocalDate.now().toString(),
-                    savedWorkouts = viewModel.savedWorkouts,
-                    viewEnabled = viewModel.hasDataToShow,
-                    onRefresh = { viewModel.getSavedWorkouts() },
-                    onClickWorkout = {
-                        showDetailsOfWorkout = true
-                        detailedWorkout = it
-                    },
-                    contentType = contentType
-                )
-            }
+            ScheduleScreenLoaded(
+                showDetailsOfWorkout = showDetailsOfWorkout,
+                detailedWorkout = detailedWorkout,
+                date = if (isValidDate(date)) date else LocalDate.now().toString(),
+                savedWorkouts = viewModel.savedWorkouts,
+                viewEnabled = viewModel.hasDataToShow,
+                onRefresh = { viewModel.getSavedWorkouts() },
+                onClickWorkout = {
+                    showDetailsOfWorkout = true
+                    detailedWorkout = it
+                },
+                onDismissShowWorkout = {
+                    showDetailsOfWorkout = false
+                    detailedWorkout = null
+                },
+                contentType = contentType
+            )
         }
     }
 }
@@ -184,11 +179,14 @@ fun ScheduleScreenLoading() {
 
 @Composable
 fun ScheduleScreenLoaded(
+    showDetailsOfWorkout: Boolean,
+    detailedWorkout: Workout?,
     date: String,
     savedWorkouts: List<Workout>,
     viewEnabled: Boolean,
     onRefresh: () -> Unit,
     onClickWorkout: (Workout) -> Unit,
+    onDismissShowWorkout: () -> Unit,
     contentType: FreshFitnessContentType
 ) {
     val currentDate = remember { LocalDate.now() }
@@ -203,10 +201,13 @@ fun ScheduleScreenLoaded(
             FreshFitnessContentType.LIST_ONLY -> {
                 ScheduleScreenLoadedListOnly(
                     scope = coroutineScope,
+                    showDetailsOfWorkout = showDetailsOfWorkout,
+                    detailedWorkout = detailedWorkout,
                     savedWorkouts = savedWorkouts,
                     viewEnabled = viewEnabled,
                     onRefresh = onRefresh,
                     onClickWorkout = onClickWorkout,
+                    onDismissShowWorkout = onDismissShowWorkout,
                     currentDate = currentDate,
                     selection = selection,
                     changeSelection = { selection = it }
@@ -214,10 +215,13 @@ fun ScheduleScreenLoaded(
             }
             FreshFitnessContentType.LIST_AND_DETAIL -> {
                 ScheduleScreenLoadedListAndDetail(
+                    showDetailsOfWorkout = showDetailsOfWorkout,
+                    detailedWorkout = detailedWorkout,
                     savedWorkouts = savedWorkouts,
                     viewEnabled = viewEnabled,
                     onRefresh = onRefresh,
                     onClickWorkout = onClickWorkout,
+                    onDismissShowWorkout = onDismissShowWorkout,
                     selection = selection,
                     changeSelection = { selection = it }
                 )
@@ -230,10 +234,13 @@ fun ScheduleScreenLoaded(
 @Composable
 fun ScheduleScreenLoadedListOnly(
     scope: CoroutineScope,
+    showDetailsOfWorkout: Boolean,
+    detailedWorkout: Workout?,
     savedWorkouts: List<Workout>,
     viewEnabled: Boolean,
     onRefresh: () -> Unit,
     onClickWorkout: (Workout) -> Unit,
+    onDismissShowWorkout: () -> Unit,
     currentDate: LocalDate,
     selection: LocalDate,
     changeSelection: (LocalDate) -> Unit
@@ -246,62 +253,37 @@ fun ScheduleScreenLoadedListOnly(
         endDate = endDate,
         firstVisibleWeekDate = selection,
     )
-
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect { page ->
-            changeSelection(currentDate.plusDays((page - (currentDate.dayOfWeek.value - 1)).toLong()))
-            weekCalendarState.animateScrollToWeek(selection)
-        }
+    if (showDetailsOfWorkout) {
+        DetailedWorkout(
+            workout = detailedWorkout!!,
+            saveEnabled = false,
+            onDismiss = onDismissShowWorkout
+        )
     }
-    UpperWeekCalendar(
-        state = weekCalendarState,
-        selection = selection,
-        onSelectionChange = { clicked ->
-            if (selection != clicked) { changeSelection(clicked) }
-            scope.launch {
-                pagerState.animateScrollToPage(DAYS.between(startDate, clicked).absoluteValue.toInt())
-            } },
-        onRefresh = onRefresh
-    )
-    HorizontalPager(
-        state = pagerState,
-        pageCount = 14,
-        beyondBoundsPageCount = 2
-    ) {
-        val viewedDate = currentDate.plusDays((it - (currentDate.dayOfWeek.value - 1)).toLong())
-        val w = savedWorkouts.singleOrNull { sw -> sw.savedToDate.take(10) == viewedDate.toString() }
-        if (w != null) {
-            DayContent(
-                workout = w,
-                viewEnabled = viewEnabled,
-                onClick = { onClickWorkout(w) }
-            )
-        } else {
-            NoWorkoutsForTheDay()
+    else {
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.currentPage }.collect { page ->
+                changeSelection(currentDate.plusDays((page - (currentDate.dayOfWeek.value - 1)).toLong()))
+                weekCalendarState.animateScrollToWeek(selection)
+            }
         }
-    }
-}
-
-@Composable
-fun ScheduleScreenLoadedListAndDetail(
-    modifier: Modifier = Modifier,
-    savedWorkouts: List<Workout>,
-    viewEnabled: Boolean,
-    onRefresh: () -> Unit,
-    onClickWorkout: (Workout) -> Unit,
-    selection: LocalDate,
-    changeSelection: (LocalDate) -> Unit
-) {
-    Row(modifier = modifier) {
-        Column(modifier = modifier.weight(1f)) {
-            FullScreenCalendar(
-                onRefresh = onRefresh,
-                selection = selection,
-                changeSelection = changeSelection
-            )
-        }
-        Column(modifier = modifier.weight(1f)) {
-            val w = savedWorkouts.singleOrNull { sw -> sw.savedToDate.take(10) == selection.toString() }
+        UpperWeekCalendar(
+            state = weekCalendarState,
+            selection = selection,
+            onSelectionChange = { clicked ->
+                if (selection != clicked) { changeSelection(clicked) }
+                scope.launch {
+                    pagerState.animateScrollToPage(DAYS.between(startDate, clicked).absoluteValue.toInt())
+                } },
+            onRefresh = onRefresh
+        )
+        HorizontalPager(
+            state = pagerState,
+            pageCount = 14,
+            beyondBoundsPageCount = 2
+        ) {
+            val viewedDate = currentDate.plusDays((it - (currentDate.dayOfWeek.value - 1)).toLong())
+            val w = savedWorkouts.singleOrNull { sw -> sw.savedToDate.take(10) == viewedDate.toString() }
             if (w != null) {
                 DayContent(
                     workout = w,
@@ -310,6 +292,54 @@ fun ScheduleScreenLoadedListAndDetail(
                 )
             } else {
                 NoWorkoutsForTheDay()
+            }
+        }
+    }
+}
+
+@Composable
+fun ScheduleScreenLoadedListAndDetail(
+    showDetailsOfWorkout: Boolean,
+    detailedWorkout: Workout?,
+    modifier: Modifier = Modifier,
+    savedWorkouts: List<Workout>,
+    viewEnabled: Boolean,
+    onRefresh: () -> Unit,
+    onClickWorkout: (Workout) -> Unit,
+    onDismissShowWorkout: () -> Unit,
+    selection: LocalDate,
+    changeSelection: (LocalDate) -> Unit
+) {
+    Row(modifier = modifier) {
+        Column(modifier = modifier.weight(1f)) {
+            FullScreenCalendar(
+                onRefresh = onRefresh,
+                selection = selection,
+                changeSelection = {
+                    onDismissShowWorkout()
+                    changeSelection(it)
+                }
+            )
+        }
+        Column(modifier = modifier.weight(1f)) {
+            if (showDetailsOfWorkout) {
+                DetailedWorkout(
+                    workout = detailedWorkout!!,
+                    saveEnabled = false,
+                    onDismiss = onDismissShowWorkout
+                )
+            }
+            else {
+                val w = savedWorkouts.singleOrNull { sw -> sw.savedToDate.take(10) == selection.toString() }
+                if (w != null) {
+                    DayContent(
+                        workout = w,
+                        viewEnabled = viewEnabled,
+                        onClick = { onClickWorkout(w) }
+                    )
+                } else {
+                    NoWorkoutsForTheDay()
+                }
             }
         }
     }
@@ -519,7 +549,7 @@ fun FullScreenDay(
             if (isInMonth) {
                 Text(
                     text = day.date.dayOfMonth.toString(),
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (isInMonth) 1f else 0.5f),
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                 )
