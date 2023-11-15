@@ -27,13 +27,13 @@ jobs:
       run: touch ./Android/FreshFitness/local.properties
     
     - name: Add Api Key
-      run: echo "MAPS_API_KEY=\"\"" >> ./Android/FreshFitness/local.properties
+      run: echo "MAPS_API_KEY=\"12345678\"" >> ./Android/FreshFitness/local.properties
 
     - name: Touch key.properties
       run: touch ./Android/FreshFitness/key.properties
     
     - name: Add base URL for S3
-      run: echo "S3_IMAGES_BASE_URL=\"\"" >> ./Android/FreshFitness/key.properties
+      run: echo "S3_IMAGES_BASE_URL=\"12345678\"" >> ./Android/FreshFitness/key.properties
     
     - name: Build with Gradle
-      run: ./Android/FreshFitness/gradlew build
+      run: (cd ./Android/FreshFitness && ./gradlew build)
