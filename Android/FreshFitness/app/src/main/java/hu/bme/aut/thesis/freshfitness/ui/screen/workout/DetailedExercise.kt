@@ -1,13 +1,22 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
@@ -22,6 +31,10 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -42,6 +55,7 @@ import hu.bme.aut.thesis.freshfitness.ui.util.FilterTitle
 import hu.bme.aut.thesis.freshfitness.ui.util.media.ExerciseMedia
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import java.util.Locale
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,8 +119,7 @@ fun DetailedExerciseTitle(title: String) {
 @Composable
 fun DetailedExerciseBadges(exercise: Exercise) {
     FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        maxItemsInEachRow = 3
+        modifier = Modifier.fillMaxWidth()
     ) {
         ExerciseBadge(exercise.difficulty)
         exercise.muscleGroup?.name?.let { ExerciseBadge(it) }
@@ -172,8 +185,146 @@ fun ExerciseBadge(text: String) {
     }
 }
 
+@Composable
+fun LoadingDetailedExercise() {
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                0.7f at 500
+            },
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+    Column {
+        LoadingExerciseMedia(alpha)
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            LoadingExerciseTitle(alpha)
+            LoadingExerciseBadges(alpha)
+            LoadingExerciseDetails(alpha)
+            LoadingExerciseEquipments(alpha)
+        }
+    }
+}
+
+@Composable
+fun LoadingExerciseMedia(alpha: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.Gray.copy(alpha = alpha))
+    )
+}
+
+@Composable
+fun LoadingExerciseTitle(alpha: Float) {
+    val titleLength by remember { mutableStateOf(Random.nextFloat() * 0.5f + 0.5f) }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(titleLength)
+            .height(28.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.Gray.copy(alpha = alpha))
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun LoadingExerciseBadges(alpha: Float) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        repeat(2) { LoadingExerciseBadge(alpha = alpha) }
+    }
+}
+
+@Composable
+fun LoadingExerciseBadge(alpha: Float) {
+    val badgeLength by remember { mutableStateOf(Random.nextInt(80, 120)) }
+    Box(
+        modifier = Modifier
+            .widthIn(min = badgeLength.dp, max = badgeLength.dp)
+            .heightIn(min = 22.dp, max = 22.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.Gray.copy(alpha = alpha), shape = RoundedCornerShape(8.dp))
+    )
+}
+
+@Composable
+fun LoadingExerciseDetails(alpha: Float) {
+    val rows by remember { mutableStateOf(List(8) { Random.nextFloat() * 0.5f + 0.5f }) }
+    Column(
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        rows.forEach { length ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(length)
+                    .heightIn(18.dp, 18.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.Gray.copy(alpha = alpha))
+            )
+        }
+    }
+}
+
+@Composable
+fun LoadingExerciseEquipments(alpha: Float) {
+    Box(modifier = Modifier
+        .padding(vertical = 4.dp)
+        .fillMaxWidth(0.3f)
+        .heightIn(14.dp)
+        .background(Color.Gray.copy(alpha = alpha))
+    )
+    ElevatedCard(
+        modifier = Modifier
+            .padding(horizontal = 4.dp, vertical = 12.dp)
+            .widthIn(min = 140.dp, max = 140.dp)
+            .border(
+                width = 2.dp,
+                color = Color.Gray.copy(alpha = alpha),
+                shape = RoundedCornerShape(12.dp)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f / 1f)
+                .background(Color.Gray.copy(alpha = alpha))
+        )
+        listOf(0.75f, 0.4f).forEach {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(it)
+                    .heightIn(16.dp, 16.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .padding(vertical = 4.dp)
+                    .background(Color.Gray.copy(alpha = alpha))
+                    .align(Alignment.CenterHorizontally)
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun ExerciseBadgePreview() {
     ExerciseBadge(text = "demo")
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoadingDetailedExercisePreview() {
+    LoadingDetailedExercise()
 }

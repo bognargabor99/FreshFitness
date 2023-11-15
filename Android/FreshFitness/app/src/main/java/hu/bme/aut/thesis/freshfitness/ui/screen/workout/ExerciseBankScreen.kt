@@ -1,8 +1,14 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -27,6 +34,7 @@ import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -57,10 +66,10 @@ import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilterChangers
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilters
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
-import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.exercises.MusclesAndEquipments
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.viewmodel.ExerciseBankViewModel
+import kotlin.random.Random
 
 @Composable
 fun ExerciseBankScreen(
@@ -119,7 +128,7 @@ fun ExerciseBankScreen(
             }
         } else {
             if (viewModel.isLoading)
-                ExerciseListLoading()
+                ExerciseListLoading(contentType = contentType)
             else {
                 val musclesAndEquipments = MusclesAndEquipments(muscles = viewModel.muscleGroups, equipments = viewModel.equipments)
                 ExerciseListLoaded(
@@ -137,8 +146,66 @@ fun ExerciseBankScreen(
 }
 
 @Composable
-fun ExerciseListLoading() {
-    ScreenLoading(loadingText = stringResource(id = R.string.fetching_exercises))
+fun ExerciseListLoading(
+    contentType: FreshFitnessContentType
+) {
+    when (contentType) {
+        FreshFitnessContentType.LIST_ONLY -> {
+            ExerciseListLoadingListOnly()
+        }
+        FreshFitnessContentType.LIST_AND_DETAIL -> {
+            ExerciseListLoadingListAndDetail()
+        }
+    }
+}
+
+@Composable
+fun ExerciseListLoadingListOnly() {
+    Column {
+        ExerciseListHeader(filterEnabled = false)
+        ExerciseNameFilter(
+            enabled = false,
+            nameFilter = "",
+            onNameFilter = {},
+            clearNameFilter = {})
+        LoadingExerciseList()
+    }
+}
+
+@Composable
+fun ExerciseListLoadingListAndDetail(
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = modifier.weight(1f)) {
+            ExerciseListLoadingListOnly()
+        }
+        Column(modifier = modifier.weight(1f)) {
+            LoadingDetailedExercise()
+        }
+    }
+}
+
+@Composable
+fun LoadingExerciseList() {
+    Column(
+        modifier = Modifier
+            .padding(12.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .border(1.dp, Color.Gray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
+    ) {
+        (1..20).forEach {
+            LoadingExerciseRow()
+            if (it < 20)
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .width(1.dp),
+                    thickness = 1.dp,
+                    color = Color.Gray.copy(alpha = 0.5f)
+                )
+        }
+    }
 }
 
 @Composable
@@ -162,7 +229,7 @@ fun ExerciseListLoaded(
 
     when (contentType) {
         FreshFitnessContentType.LIST_ONLY -> {
-            ExerciseListLoadedList(
+            ExerciseListLoadedListOnly(
                 exercises = exercises,
                 filters = filters,
                 musclesAndEquipments = musclesAndEquipments,
@@ -194,7 +261,7 @@ fun ExerciseListLoaded(
 }
 
 @Composable
-fun ExerciseListLoadedList(
+fun ExerciseListLoadedListOnly(
     exercises: List<Exercise>,
     filters: ExerciseFilters,
     musclesAndEquipments: MusclesAndEquipments,
@@ -206,7 +273,11 @@ fun ExerciseListLoadedList(
     onChooseExercise: (Exercise) -> Unit,
 ) {
     ExerciseListHeader(onFilterIconClick = { changeShowFilterBottomSheet(true) })
-    ExerciseNameFilter(filters.name, filterChangers.onNameFilter, filterChangers.clearNameFilter)
+    ExerciseNameFilter(
+        nameFilter = filters.name,
+        onNameFilter = filterChangers.onNameFilter,
+        clearNameFilter = filterChangers.clearNameFilter
+    )
     ExerciseList(
         exercises = exercises,
         onChooseExercise = onChooseExercise,
@@ -241,7 +312,7 @@ fun ExerciseListLoadedListAndDetail(
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(modifier = modifier.weight(1f)) {
-            ExerciseListLoadedList(
+            ExerciseListLoadedListOnly(
                 exercises = exercises,
                 filters = filters,
                 musclesAndEquipments = musclesAndEquipments,
@@ -261,7 +332,8 @@ fun ExerciseListLoadedListAndDetail(
 
 @Composable
 fun ExerciseListHeader(
-    onFilterIconClick: () -> Unit
+    onFilterIconClick: () -> Unit = { },
+    filterEnabled: Boolean = true
 ) {
     Box(
         modifier = Modifier
@@ -272,19 +344,20 @@ fun ExerciseListHeader(
     ) {
         Text(modifier = Modifier.fillMaxWidth(), text = stringResource(R.string.exercises), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 20.sp)
         IconButton(onClick = onFilterIconClick) {
-            Icon(imageVector = Icons.Filled.FilterAlt, contentDescription = null)
+            Icon(imageVector = Icons.Filled.FilterAlt, tint = if (filterEnabled) MaterialTheme.colorScheme.onBackground else Color.Transparent, contentDescription = null)
         }
     }
 }
 
 @Composable
-fun ExerciseNameFilter(nameFilter: String, onNameFilter: (String) -> Unit, clearNameFilter: () -> Unit) {
+fun ExerciseNameFilter(enabled: Boolean = true, nameFilter: String, onNameFilter: (String) -> Unit, clearNameFilter: () -> Unit) {
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
         value = nameFilter,
         onValueChange = onNameFilter,
+        enabled = enabled,
         singleLine = true,
         placeholder = { Text(stringResource(R.string.name_with_dots)) },
         shape = RoundedCornerShape(20.dp),
@@ -368,4 +441,69 @@ fun ExerciseRow(
             }
         }
     }
+}
+
+@Composable
+fun LoadingExerciseRow() {
+    val length by remember { mutableStateOf(Random.nextFloat() * 0.3f + 0.3f) }
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                0.7f at 500
+            },
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .size(60.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color.Gray.copy(alpha = alpha)),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(length)
+                .heightIn(14.dp, 14.dp)
+                .background(Color.Gray.copy(alpha = alpha))
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(enabled = false, onClick = { }) {
+                Icon(imageVector = Icons.Filled.Favorite, tint = Color.Gray.copy(alpha = alpha), contentDescription = null)
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoadingExerciseRowPreview() {
+    LoadingExerciseRow()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExerciseListLoadingListOnlyPreview() {
+    ExerciseListLoading(contentType = FreshFitnessContentType.LIST_ONLY)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExerciseListLoadingListAndDetailPreview() {
+    ExerciseListLoading(contentType = FreshFitnessContentType.LIST_AND_DETAIL)
 }
