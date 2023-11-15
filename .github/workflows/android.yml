@@ -36,4 +36,4 @@ jobs:
       run: echo "S3_IMAGES_BASE_URL=\"\"" >> ./Android/FreshFitness/key.properties
     
     - name: Build with Gradle
-      run: ./Android/FreshFitness/gradlew build
+      run: (cd ./Android/FreshFitness && ./gradlew build)
