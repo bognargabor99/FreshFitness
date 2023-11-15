@@ -21,19 +21,19 @@ jobs:
         cache: gradle
 
     - name: Grant execute permission for gradlew
-      run: chmod +x ./Android/Fresh\&\Fitness/gradlew
+      run: chmod +x ./Android/FreshFitness/gradlew
     
     - name: Touch local.properties
-      run: touch ./Android/Fresh\&\Fitness/local.properties
+      run: touch ./Android/FreshFitness/local.properties
     
     - name: Add Api Key
-      run: echo "MAPS_API_KEY=\"\"" >> ./Android/Fresh\&\Fitness/local.properties
+      run: echo "MAPS_API_KEY=\"\"" >> ./Android/FreshFitness/local.properties
 
     - name: Touch key.properties
-      run: touch ./Android/Fresh\&\Fitness/key.properties
+      run: touch ./Android/FreshFitness/key.properties
     
     - name: Add base URL for S3
-      run: echo "S3_IMAGES_BASE_URL=\"\"" >> ./Android/Fresh\&\Fitness/key.properties
+      run: echo "S3_IMAGES_BASE_URL=\"\"" >> ./Android/FreshFitness/key.properties
     
     - name: Build with Gradle
-      run: ./Android/Fresh\&\Fitness/gradlew build
+      run: ./Android/FreshFitness/gradlew build
