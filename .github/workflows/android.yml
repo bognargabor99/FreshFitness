@@ -21,8 +21,6 @@ jobs:
         cache: gradle
 
     - name: Grant execute permission for gradlew
-      run: chmod +x Android/Fresh\&Fitness/gradlew
-    - name: Log folder structure
-      run: ls -R
+      run: chmod +x ./Android/Fresh\&Fitness/gradlew
     - name: Build with Gradle
-      run: Android/Fresh\&Fitness/gradlew build
+      run: ./Android/Fresh\&Fitness/gradlew build --info
