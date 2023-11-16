@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <style name="Theme.FreshFitness.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FFFFFAFE</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/freshfitness_logo_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.FreshFitness</item>
+    </style>
     <style name="Theme.FreshFitness" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

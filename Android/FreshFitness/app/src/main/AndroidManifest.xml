@@ -34,7 +34,7 @@
         <activity
             android:name=".FreshFitnessActivity"
             android:exported="true"
-            android:theme="@style/Theme.FreshFitness">
+            android:theme="@style/Theme.FreshFitness.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
