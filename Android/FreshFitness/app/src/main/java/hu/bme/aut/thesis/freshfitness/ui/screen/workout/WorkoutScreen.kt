@@ -6,19 +6,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
@@ -56,13 +55,11 @@ fun WorkoutScreenListOnly(
 ) {
     LazyVerticalStaggeredGrid(
         modifier = Modifier.fillMaxSize(),
-        columns = StaggeredGridCells.Adaptive(minSize = 240.dp), // adaptive size
-        verticalItemSpacing = 16.dp,
-        horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
-        contentPadding = PaddingValues(all = 10.dp)
+        columns = StaggeredGridCells.Adaptive(minSize = 240.dp),
     ) {
         items(tabs.size) {
             ImageWithTextOverlay(
+                modifier = Modifier.aspectRatio(4f / 3f),
                 painter = painterResource(tabs[it].drawableId),
                 contentDescription = null,
                 text = stringResource(tabs[it].textId),
@@ -77,7 +74,7 @@ fun WorkoutScreenListAndDetail(
     tabs: List<WorkoutScreenUtil>
 ) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(12.dp),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
 
@@ -85,12 +82,12 @@ fun WorkoutScreenListAndDetail(
         listOf(tabs.take(2), tabs.takeLast(2)).forEach {
             Row(
                 modifier = Modifier.fillMaxWidth(1f).weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 it.forEachIndexed { index, it ->
                     ImageWithTextOverlay(
-                        modifier = Modifier.fillMaxWidth((index.toFloat() + 1f) / 2f),
+                        modifier = Modifier.fillMaxWidth((index.toFloat() + 1f) / 2f).fillMaxHeight(),
                         painter = painterResource(it.drawableId),
                         contentDescription = null,
                         text = stringResource(it.textId),
@@ -116,12 +113,11 @@ fun ImageWithTextOverlay(
     ) {
         Image(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .fillMaxSize()
                 .clickable { onClick() },
             painter = painter,
             contentDescription = contentDescription,
-            contentScale = ContentScale.FillWidth,
+            contentScale = ContentScale.Crop,
         )
         Text(
             modifier = Modifier
