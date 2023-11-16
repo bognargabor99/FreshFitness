@@ -186,19 +186,7 @@ fun ExerciseBadge(text: String) {
 }
 
 @Composable
-fun LoadingDetailedExercise() {
-    val infiniteTransition = rememberInfiniteTransition(label = "")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                durationMillis = 1000
-                0.7f at 500
-            },
-            repeatMode = RepeatMode.Reverse
-        ), label = ""
-    )
+fun LoadingDetailedExercise(alpha: Float) {
     Column {
         LoadingExerciseMedia(alpha)
         Column(
@@ -326,5 +314,17 @@ fun ExerciseBadgePreview() {
 @Preview(showBackground = true)
 @Composable
 fun LoadingDetailedExercisePreview() {
-    LoadingDetailedExercise()
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                0.7f at 500
+            },
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+    LoadingDetailedExercise(alpha)
 }

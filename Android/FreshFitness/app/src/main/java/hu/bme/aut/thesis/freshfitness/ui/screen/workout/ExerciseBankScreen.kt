@@ -149,18 +149,30 @@ fun ExerciseBankScreen(
 fun ExerciseListLoading(
     contentType: FreshFitnessContentType
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                0.7f at 500
+            },
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
     when (contentType) {
         FreshFitnessContentType.LIST_ONLY -> {
-            ExerciseListLoadingListOnly()
+            ExerciseListLoadingListOnly(alpha)
         }
         FreshFitnessContentType.LIST_AND_DETAIL -> {
-            ExerciseListLoadingListAndDetail()
+            ExerciseListLoadingListAndDetail(alpha)
         }
     }
 }
 
 @Composable
-fun ExerciseListLoadingListOnly() {
+fun ExerciseListLoadingListOnly(alpha: Float) {
     Column {
         ExerciseListHeader(filterEnabled = false)
         ExerciseNameFilter(
@@ -168,26 +180,24 @@ fun ExerciseListLoadingListOnly() {
             nameFilter = "",
             onNameFilter = {},
             clearNameFilter = {})
-        LoadingExerciseList()
+        LoadingExerciseList(alpha)
     }
 }
 
 @Composable
-fun ExerciseListLoadingListAndDetail(
-    modifier: Modifier = Modifier
-) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Column(modifier = modifier.weight(1f)) {
-            ExerciseListLoadingListOnly()
+fun ExerciseListLoadingListAndDetail(alpha: Float) {
+    Row(modifier = Modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.weight(1f)) {
+            ExerciseListLoadingListOnly(alpha)
         }
-        Column(modifier = modifier.weight(1f)) {
-            LoadingDetailedExercise()
+        Column(modifier = Modifier.weight(1f)) {
+            LoadingDetailedExercise(alpha)
         }
     }
 }
 
 @Composable
-fun LoadingExerciseList() {
+fun LoadingExerciseList(alpha: Float) {
     Column(
         modifier = Modifier
             .padding(12.dp)
@@ -195,7 +205,7 @@ fun LoadingExerciseList() {
             .border(1.dp, Color.Gray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
     ) {
         (1..20).forEach {
-            LoadingExerciseRow()
+            LoadingExerciseRow(alpha)
             if (it < 20)
                 Divider(
                     modifier = Modifier
@@ -342,7 +352,7 @@ fun ExerciseListHeader(
             .wrapContentHeight(),
         contentAlignment = Alignment.CenterEnd
     ) {
-        Text(modifier = Modifier.fillMaxWidth(), text = stringResource(R.string.exercises), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text(modifier = Modifier.fillMaxWidth(), text = stringResource(R.string.exercises), color = if (filterEnabled) MaterialTheme.colorScheme.onBackground else Color.Transparent, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 20.sp)
         IconButton(onClick = onFilterIconClick) {
             Icon(imageVector = Icons.Filled.FilterAlt, tint = if (filterEnabled) MaterialTheme.colorScheme.onBackground else Color.Transparent, contentDescription = null)
         }
@@ -444,21 +454,8 @@ fun ExerciseRow(
 }
 
 @Composable
-fun LoadingExerciseRow() {
+fun LoadingExerciseRow(alpha: Float) {
     val length by remember { mutableStateOf(Random.nextFloat() * 0.3f + 0.3f) }
-    val infiniteTransition = rememberInfiniteTransition(label = "")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                durationMillis = 1000
-                0.7f at 500
-            },
-            repeatMode = RepeatMode.Reverse
-        ), label = ""
-    )
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -493,7 +490,19 @@ fun LoadingExerciseRow() {
 @Preview(showBackground = true)
 @Composable
 fun LoadingExerciseRowPreview() {
-    LoadingExerciseRow()
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                0.7f at 500
+            },
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+    LoadingExerciseRow(alpha)
 }
 
 @Preview(showBackground = true)

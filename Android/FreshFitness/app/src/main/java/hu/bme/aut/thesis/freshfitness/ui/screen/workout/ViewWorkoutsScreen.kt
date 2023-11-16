@@ -2,6 +2,11 @@ package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
 import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
@@ -20,6 +25,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
@@ -82,13 +89,13 @@ import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
-import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.TargetDatePicker
 import hu.bme.aut.thesis.freshfitness.ui.util.TargetTimePicker
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.viewmodel.ViewWorkoutsViewModel
 import java.time.LocalDate
 import java.util.Locale
+import kotlin.random.Random
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -255,7 +262,7 @@ fun ViewWorkoutsScreenListOnly(
             }
             else {
                 if (viewModel.isLoading) {
-                    ViewWorkoutsLoading()
+                    ViewWorkoutsLoading(FreshFitnessContentType.LIST_ONLY)
                 }
                 else {
                     WorkoutsLoaded(canCreateWorkout = viewModel.isLoggedIn, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = onPlanWorkout)
@@ -276,26 +283,31 @@ fun ViewWorkoutsScreenListAndDetail(
     onPlanWorkout: () -> Unit,
     onSaveWorkout: () -> Unit
 ) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Column(modifier = modifier.weight(1f)) {
-            WorkoutsLoaded(canCreateWorkout = viewModel.isLoggedIn, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = onPlanWorkout)
-        }
-        Column(modifier = modifier.weight(1f)) {
-            if (detailedWorkout != null) {
-                val context = LocalContext.current
-                LaunchedEffect(true) {
-                    permissionState.launchPermissionRequest()
+    if (viewModel.isLoading) {
+        ViewWorkoutsLoading(contentType = FreshFitnessContentType.LIST_AND_DETAIL)
+    }
+    else {
+        Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = modifier.weight(1f)) {
+                WorkoutsLoaded(canCreateWorkout = viewModel.isLoggedIn, communityWorkouts = viewModel.communityWorkouts, userWorkouts = viewModel.userWorkouts, onWorkoutClick = onWorkoutClick, onPlanWorkout = onPlanWorkout)
+            }
+            Column(modifier = modifier.weight(1f)) {
+                if (detailedWorkout != null) {
+                    val context = LocalContext.current
+                    LaunchedEffect(true) {
+                        permissionState.launchPermissionRequest()
+                    }
+                    DetailedWorkout(
+                        workout = detailedWorkout,
+                        onDismiss = { },
+                        isSaved = viewModel.savedWorkouts.any { it.id == detailedWorkout.id },
+                        onSave = onSaveWorkout,
+                        onDelete = { viewModel.deleteSavedWorkout(detailedWorkout, context) },
+                        saveEnabled = true,
+                    )
+                } else {
+                    DetailedWorkoutEmpty()
                 }
-                DetailedWorkout(
-                    workout = detailedWorkout,
-                    onDismiss = { },
-                    isSaved = viewModel.savedWorkouts.any { it.id == detailedWorkout.id },
-                    onSave = onSaveWorkout,
-                    onDelete = { viewModel.deleteSavedWorkout(detailedWorkout, context) },
-                    saveEnabled = true,
-                )
-            } else {
-                DetailedWorkoutEmpty()
             }
         }
     }
@@ -385,6 +397,7 @@ fun PlanWorkoutListAndDetail(
 
 @Composable
 fun ViewWorkoutsScreenHeader(
+    loading: Boolean = false,
     canCreateWorkout: Boolean,
     onClickAdd: () -> Unit
 ) {
@@ -395,17 +408,53 @@ fun ViewWorkoutsScreenHeader(
             .wrapContentHeight(),
         contentAlignment = Alignment.CenterEnd
     ) {
-        Text(modifier = Modifier.fillMaxWidth(), text = stringResource(R.string.workouts), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text(modifier = Modifier.fillMaxWidth(), text = stringResource(R.string.workouts), color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 20.sp)
         if (canCreateWorkout)
             IconButton(onClick = onClickAdd) {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+                Icon(imageVector = Icons.Filled.Add, tint = if (!loading) MaterialTheme.colorScheme.onBackground else Color.Transparent, contentDescription = null)
             }
     }
 }
 
 @Composable
-fun ViewWorkoutsLoading() {
-    ScreenLoading(loadingText = stringResource(id = R.string.fetching_workouts))
+fun ViewWorkoutsLoading(contentType: FreshFitnessContentType) {
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                0.49f at 500
+            },
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+    when (contentType) {
+        FreshFitnessContentType.LIST_ONLY -> {
+            LoadingWorkoutListListOnly(alpha = alpha)
+        }
+        FreshFitnessContentType.LIST_AND_DETAIL -> {
+            LoadingWorkoutListListAndDetail(alpha = alpha)
+        }
+    }
+}
+
+@Composable
+fun LoadingWorkoutListListOnly(alpha: Float) {
+    LoadingWorkoutList(alpha = alpha)
+}
+
+@Composable
+fun LoadingWorkoutListListAndDetail(alpha: Float) {
+    Row(modifier = Modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.weight(1f)) {
+            LoadingWorkoutList(alpha = alpha)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            LoadingDetailedWorkout(alpha)
+        }
+    }
 }
 
 @Composable
@@ -581,6 +630,112 @@ fun WorkoutRow(
 }
 
 @Composable
+fun LoadingWorkoutList(alpha: Float) {
+    Column {
+        ViewWorkoutsScreenHeader(loading = true, canCreateWorkout = true, onClickAdd = { })
+        Column {
+            repeat(2) {
+                LoadingWorkoutListTitle(alpha = alpha)
+                repeat(3) {
+                    LoadingWorkoutRow(alpha = alpha)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingWorkoutListTitle(alpha: Float) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth(0.4f)
+                .heightIn(18.dp, 18.dp)
+                .background(Color.Gray.copy(alpha = alpha), RoundedCornerShape(6.dp))
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun LoadingWorkoutRow(alpha: Float) {
+    val length by remember { mutableStateOf(Random.nextFloat() * 0.3f + 0.4f) }
+    Box(
+        modifier = Modifier
+            .padding(4.dp)
+            .fillMaxWidth()
+            .heightIn(min = 100.dp, max = 100.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, Color.Gray.copy(alpha = alpha), shape = RoundedCornerShape(8.dp))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .sizeIn(80.dp, 80.dp, 80.dp, 80.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color.Gray.copy(alpha = alpha), RoundedCornerShape(6.dp)),
+            )
+            Column(
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.75f),
+                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(length)
+                        .heightIn(18.dp, 18.dp)
+                        .background(Color.Gray.copy(alpha = alpha), RoundedCornerShape(4.dp))
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    repeat(3) { LoadingWorkoutBadge(alpha) }
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .heightIn(14.dp, 14.dp)
+                        .padding(end = 4.dp)
+                        .background(Color.Gray.copy(alpha = alpha), RoundedCornerShape(4.dp))
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingWorkoutBadge(alpha: Float) {
+    val length by remember { mutableStateOf(Random.nextInt(50, 70)) }
+    Box(
+        modifier = Modifier
+            .padding(vertical = 4.dp)
+            .width(length.dp)
+            .height(14.dp)
+            .background(Color.Gray.copy(alpha = alpha), shape = RoundedCornerShape(8.dp))
+            .padding(4.dp)
+            .clip(RoundedCornerShape(8.dp))
+    )
+}
+
+@Composable
 fun WorkoutShowMoreOrLess(showMore: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
@@ -673,7 +828,6 @@ fun WorkoutRowPreview() {
             date = "2023-10-31T00:00:00.000Z".take(16),
             owner = "community",
             equipmentTypes = "gym",
-            //warmupExercises = mutableListOf(WorkoutExercise(exerciseId = 1, sequenceNum = 1, isWarmup = 1, amount = 30))
         ),
         onWorkoutClick = { }
     )
@@ -683,4 +837,34 @@ fun WorkoutRowPreview() {
 @Composable
 fun NoWorkoutsBannerPreview() {
     NoWorkoutsBanner()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoadingWorkoutRowPreview() {
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                0.49f at 500
+            },
+            repeatMode = RepeatMode.Reverse
+        ), label = ""
+    )
+    LoadingWorkoutRow(alpha)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoadingWorkoutListListOnlyPreview() {
+    ViewWorkoutsLoading(FreshFitnessContentType.LIST_ONLY)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoadingWorkoutListListAndDetailPreview() {
+    ViewWorkoutsLoading(FreshFitnessContentType.LIST_AND_DETAIL)
 }

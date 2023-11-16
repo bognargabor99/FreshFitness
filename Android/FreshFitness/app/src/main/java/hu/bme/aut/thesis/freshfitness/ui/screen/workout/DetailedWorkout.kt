@@ -6,9 +6,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,6 +64,7 @@ import hu.bme.aut.thesis.freshfitness.ui.util.NeededEquipmentsModal
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.ui.util.media.WorkoutCover
 import java.util.Locale
+import kotlin.random.Random
 
 @Composable
 fun DetailedWorkout(
@@ -345,6 +348,188 @@ fun ExerciseGroupDivider(
 @Composable
 fun DetailedWorkoutEmpty() {
     EmptyScreen("No workout selected", "Click on a workout to view")
+}
+
+@Composable
+fun LoadingDetailedWorkout(alpha: Float) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LoadingDetailedWorkoutHeader(alpha = alpha)
+        LoadingDetailedWorkoutBody(alpha = alpha)
+    }
+}
+
+@Composable
+fun LoadingDetailedWorkoutHeader(alpha: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.LightGray.copy(alpha = alpha)),
+        contentAlignment = Alignment.BottomStart
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            repeat(3) {
+                LoadingDetailedWorkoutHeaderBadge(alpha)
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingDetailedWorkoutHeaderBadge(alpha: Float) {
+    val badgeLength by remember { mutableStateOf(Random.nextInt(60, 100)) }
+    Box(
+        modifier = Modifier
+            .widthIn(min = badgeLength.dp, max = badgeLength.dp)
+            .heightIn(min = 18.dp, max = 18.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color.Gray.copy(alpha = alpha), shape = RoundedCornerShape(6.dp))
+    )
+}
+
+@Composable
+fun LoadingDetailedWorkoutBody(alpha: Float) {
+    Column(
+        modifier = Modifier.padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        LoadingWorkoutOverview(alpha = alpha)
+        LoadingWorkoutExerciseList(alpha = alpha, count = 3)
+        LoadingExerciseGroupDivider(alpha = alpha)
+        LoadingWorkoutExerciseList(alpha = alpha, count = 6)
+    }
+}
+
+@Composable
+fun LoadingWorkoutOverview(alpha: Float) {
+    Column(
+        modifier = Modifier
+            .height(120.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .border(2.dp, Color.Gray.copy(alpha = alpha), RoundedCornerShape(20.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        LoadingWorkoutOverViewRow(modifier = Modifier.weight(1f), alpha = alpha)
+        LoadingWorkoutOverViewRow(modifier = Modifier.weight(1f), alpha = alpha)
+        LoadingWorkoutOverViewRow(modifier = Modifier.weight(1f), alpha = alpha)
+    }
+}
+
+@Composable
+fun LoadingWorkoutOverViewRow(
+    modifier: Modifier = Modifier,
+    alpha: Float
+) {
+    val boxLengths by remember { mutableStateOf(listOf(Random.nextInt(100, 140), Random.nextInt(50, 80))) }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        boxLengths.forEach {
+            Box(
+                modifier = Modifier
+                    .widthIn(it.dp, it.dp)
+                    .heightIn(18.dp, 18.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color.Gray.copy(alpha = alpha))
+            )
+        }
+    }
+}
+
+@Composable
+fun LoadingExerciseGroupDivider(alpha: Float) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+        Divider(
+            modifier = Modifier
+                .weight(1f)
+                .align(Alignment.CenterVertically)
+                .padding(start = 4.dp)
+                .clip(shape = RoundedCornerShape(2.dp)),
+            color = Color.Gray.copy(alpha = alpha), thickness = 2.dp)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(0.2f)
+                .heightIn(16.dp, 16.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color.Gray.copy(alpha = alpha)),
+        )
+        Divider(
+            modifier = Modifier
+                .weight(1f)
+                .align(Alignment.CenterVertically)
+                .padding(end = 4.dp)
+                .clip(shape = RoundedCornerShape(2.dp)),
+            color = Color.Gray.copy(alpha = alpha), thickness = 2.dp)
+    }
+}
+
+@Composable
+fun LoadingWorkoutExerciseList(alpha: Float, count: Int = 3) {
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .border(2.dp, Color.Gray.copy(alpha = alpha), RoundedCornerShape(20.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Box(modifier = Modifier
+            .padding(8.dp)
+            .widthIn(70.dp, 70.dp)
+            .heightIn(20.dp, 20.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color.Gray.copy(alpha = alpha))
+            .padding(bottom = 6.dp))
+        repeat(count) {
+            LoadingWorkoutExerciseRow(alpha = alpha)
+        }
+    }
+}
+
+@Composable
+fun LoadingWorkoutExerciseRow(alpha: Float) {
+    val textLength by remember { mutableStateOf(Random.nextInt(120, 160)) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp),
+            //.background(Color.LightGray.copy(alpha = alpha))
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .heightIn(min = 60.dp, max = 60.dp)
+                .widthIn(min = 60.dp, max = 60.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color.Gray.copy(alpha = alpha), RoundedCornerShape(6.dp)),
+        )
+
+        Column {
+            Box(
+                modifier = Modifier
+                    .widthIn(textLength.dp)
+                    .heightIn(20.dp, 20.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color.Gray.copy(alpha))
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                repeat(2) {
+                    LoadingWorkoutBadge(alpha = alpha)
+                }
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true)
