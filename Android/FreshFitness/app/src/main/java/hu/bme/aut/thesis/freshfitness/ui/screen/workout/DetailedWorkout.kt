@@ -70,9 +70,10 @@ import kotlin.random.Random
 fun DetailedWorkout(
     workout: Workout,
     saveEnabled: Boolean,
+    deleteEnabled: Boolean,
     isSaved: Boolean = false,
     onSave: () -> Unit = { },
-    onDelete: () -> Unit = { },
+    onDelete: (Workout) -> Unit,
     onDismiss: () -> Unit
 ) {
     var showEquipmentModal by remember { mutableStateOf(false) }
@@ -96,9 +97,10 @@ fun DetailedWorkout(
         DetailedWorkoutHeader(
             workout = workout,
             saveEnabled = saveEnabled,
+            deleteEnabled = deleteEnabled,
             isSaved = isSaved,
             onSave = onSave,
-            onDelete = onDelete
+            onDelete = { onDelete(workout) }
         )
         DetailedWorkoutBody(
             workout = workout,
@@ -120,6 +122,7 @@ fun DetailedWorkout(
 fun DetailedWorkoutHeader(
     workout: Workout,
     saveEnabled: Boolean,
+    deleteEnabled: Boolean,
     isSaved: Boolean,
     onSave: () -> Unit,
     onDelete: () -> Unit,
@@ -127,6 +130,7 @@ fun DetailedWorkoutHeader(
     WorkoutCover(
         name = workout.targetMuscle!!.name,
         saveEnabled = saveEnabled,
+        deleteEnabled = deleteEnabled,
         imageRes = getWorkoutBackground(workout),
         isSaved = isSaved,
         onSave = onSave,

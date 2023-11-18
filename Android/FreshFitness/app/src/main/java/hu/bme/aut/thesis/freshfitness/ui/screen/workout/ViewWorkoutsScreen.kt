@@ -245,6 +245,7 @@ fun ViewWorkoutsScreenListOnly(
             onSave = onSaveWorkout,
             onDelete = { viewModel.deleteSavedWorkout(detailedWorkout, context) },
             saveEnabled = true,
+            deleteEnabled = true
         )
         
     }
@@ -304,6 +305,7 @@ fun ViewWorkoutsScreenListAndDetail(
                         onSave = onSaveWorkout,
                         onDelete = { viewModel.deleteSavedWorkout(detailedWorkout, context) },
                         saveEnabled = true,
+                        deleteEnabled = true
                     )
                 } else {
                     DetailedWorkoutEmpty()

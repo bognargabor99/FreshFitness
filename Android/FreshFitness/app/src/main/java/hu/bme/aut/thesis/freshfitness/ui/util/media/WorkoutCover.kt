@@ -45,6 +45,7 @@ import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutBadge
 fun WorkoutCover(
     name: String,
     saveEnabled: Boolean,
+    deleteEnabled: Boolean,
     isSaved: Boolean,
     onSave: () -> Unit,
     onDelete: () -> Unit,
@@ -93,12 +94,19 @@ fun WorkoutCover(
                     )
                     content()
                 }
-                if (saveEnabled)
+                if (!isSaved && saveEnabled)
                     IconButton(
-                        onClick = { if (!isSaved) onSave() else onDelete() },
+                        onClick = onSave,
                         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.background)
                     ) {
-                        Icon(imageVector = if (!isSaved) Icons.Filled.SaveAlt else Icons.Filled.Delete, contentDescription = null)
+                        Icon(imageVector = Icons.Filled.SaveAlt, contentDescription = null)
+                    }
+                if (isSaved && deleteEnabled)
+                    IconButton(
+                        onClick = onDelete,
+                        colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.background)
+                    ) {
+                        Icon(imageVector = Icons.Filled.Delete, contentDescription = null)
                     }
             }
         }
@@ -108,7 +116,7 @@ fun WorkoutCover(
 @Preview(showBackground = true)
 @Composable
 fun CoverPreview() {
-    WorkoutCover(name = "Chest & Triceps", imageRes = R.drawable.calisthenics, saveEnabled = true, isSaved = false, onSave = { }, onDelete = { }) {
+    WorkoutCover(name = "Chest & Triceps", imageRes = R.drawable.calisthenics, saveEnabled = true, deleteEnabled = true, isSaved = false, onSave = { }, onDelete = { }) {
         WorkoutBadge(
             text = "3 sets",
             backGroundColor = MaterialTheme.colorScheme.background,

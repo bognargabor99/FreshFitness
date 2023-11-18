@@ -231,8 +231,8 @@ class ViewWorkoutsViewModel : ViewModel() {
     }
 
     fun deleteSavedWorkout(workout: Workout, context: Context) {
-        val eventId = this.savedWorkouts.singleOrNull { it.id == workout.id }?.calendarEventId
-        if (eventId != null) {
+        val eventId = workout.calendarEventId
+        if (eventId != -1) {
             try {
                 Log.d("fresh_fitness_workout_delete", "Deleting calendar event with id $eventId")
                 context.contentResolver.delete(CalendarContract.Events.CONTENT_URI, CalendarContract.Events._ID+"=${eventId}", null)

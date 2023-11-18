@@ -1,5 +1,7 @@
 package hu.bme.aut.thesis.freshfitness.viewmodel
 
+import android.content.Context
+import android.provider.CalendarContract
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,6 +87,24 @@ class ScheduleViewModel : ViewModel() {
             this.units = it.toMutableList()
             updateDataAvailability()
         })
+    }
+
+    fun deleteSavedWorkout(workout: Workout, context: Context) {
+        val eventId = workout.calendarEventId
+        if (eventId != -1) {
+            try {
+                Log.d("fresh_fitness_workout_delete", "Deleting calendar event with id $eventId")
+                context.contentResolver.delete(CalendarContract.Events.CONTENT_URI, CalendarContract.Events._ID+"=${eventId}", null)
+                Log.d("fresh_fitness_workout_delete", "Deleted calendar event with id $eventId")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        viewModelScope.launch {
+            workoutsRepository.deleteWorkout(workout)
+        }.invokeOnCompletion {
+            getSavedWorkouts()
+        }
     }
 
     private fun updateDataAvailability() {

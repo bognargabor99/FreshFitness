@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -116,6 +117,7 @@ fun ScheduleScreen(
     contentType: FreshFitnessContentType,
     viewModel: ScheduleViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     ConnectivityStatus(
         availableContent = {
             viewModel.onNetworkAvailable()
@@ -129,6 +131,11 @@ fun ScheduleScreen(
 
     var showDetailsOfWorkout by rememberSaveable { mutableStateOf(false) }
     var detailedWorkout: Workout? by rememberSaveable { mutableStateOf(null) }
+    val onDismissShowWorkout: () -> Unit = {
+        showDetailsOfWorkout = false
+        detailedWorkout = null
+    }
+
 
     Column {
         AnimatedVisibility(
@@ -157,15 +164,16 @@ fun ScheduleScreen(
                 date = if (isValidDate(date)) date else LocalDate.now().toString(),
                 savedWorkouts = viewModel.savedWorkouts,
                 viewEnabled = viewModel.hasDataToShow,
-                onRefresh = { viewModel.getSavedWorkouts() },
+                onRefresh = viewModel::getSavedWorkouts,
                 onClickWorkout = {
                     showDetailsOfWorkout = true
                     detailedWorkout = it
                 },
-                onDismissShowWorkout = {
-                    showDetailsOfWorkout = false
-                    detailedWorkout = null
-                },
+                onDelete = {
+                    onDismissShowWorkout()
+                    viewModel.deleteSavedWorkout(it, context)
+                           },
+                onDismissShowWorkout = onDismissShowWorkout,
                 contentType = contentType
             )
         }
@@ -186,6 +194,7 @@ fun ScheduleScreenLoaded(
     viewEnabled: Boolean,
     onRefresh: () -> Unit,
     onClickWorkout: (Workout) -> Unit,
+    onDelete: (Workout) -> Unit,
     onDismissShowWorkout: () -> Unit,
     contentType: FreshFitnessContentType
 ) {
@@ -208,6 +217,7 @@ fun ScheduleScreenLoaded(
                     onRefresh = onRefresh,
                     onClickWorkout = onClickWorkout,
                     onDismissShowWorkout = onDismissShowWorkout,
+                    onDelete = onDelete,
                     currentDate = currentDate,
                     selection = selection,
                     changeSelection = { selection = it }
@@ -222,6 +232,7 @@ fun ScheduleScreenLoaded(
                     onRefresh = onRefresh,
                     onClickWorkout = onClickWorkout,
                     onDismissShowWorkout = onDismissShowWorkout,
+                    onDelete = onDelete,
                     selection = selection,
                     changeSelection = { selection = it }
                 )
@@ -239,6 +250,7 @@ fun ScheduleScreenLoadedListOnly(
     savedWorkouts: List<Workout>,
     viewEnabled: Boolean,
     onRefresh: () -> Unit,
+    onDelete: (Workout) -> Unit,
     onClickWorkout: (Workout) -> Unit,
     onDismissShowWorkout: () -> Unit,
     currentDate: LocalDate,
@@ -257,6 +269,9 @@ fun ScheduleScreenLoadedListOnly(
         DetailedWorkout(
             workout = detailedWorkout!!,
             saveEnabled = false,
+            isSaved = true,
+            deleteEnabled = true,
+            onDelete = onDelete,
             onDismiss = onDismissShowWorkout
         )
     }
@@ -307,6 +322,7 @@ fun ScheduleScreenLoadedListAndDetail(
     onRefresh: () -> Unit,
     onClickWorkout: (Workout) -> Unit,
     onDismissShowWorkout: () -> Unit,
+    onDelete: (Workout) -> Unit,
     selection: LocalDate,
     changeSelection: (LocalDate) -> Unit
 ) {
@@ -326,6 +342,8 @@ fun ScheduleScreenLoadedListAndDetail(
                 DetailedWorkout(
                     workout = detailedWorkout!!,
                     saveEnabled = false,
+                    deleteEnabled = true,
+                    onDelete = onDelete,
                     onDismiss = onDismissShowWorkout
                 )
             }
@@ -538,7 +556,10 @@ fun FullScreenDay(
                     enabled = isInMonth,
                     onClick = { onClick(day.date) },
                 )
-                .background(color = if (isInMonth && selection == day.date) MaterialTheme.colorScheme.inversePrimary else Color.Transparent, shape = CircleShape)
+                .background(
+                    color = if (isInMonth && selection == day.date) MaterialTheme.colorScheme.inversePrimary else Color.Transparent,
+                    shape = CircleShape
+                )
                 .border(
                     width = 0.dp,
                     color = if (isInMonth && today == day.date) MaterialTheme.colorScheme.primary else Color.Transparent,
