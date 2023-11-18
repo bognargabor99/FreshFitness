@@ -172,7 +172,7 @@ fun DetailedWorkoutBody(
         }
         if (workout.exercises.any()) {
             ExerciseList(
-                title = "Workout",
+                title = "Workout (${workout.sets} rounds)",
                 exercises = workout.exercises.sortedBy { it.sequenceNum },
                 onClickExercise = onClickExercise
             )
@@ -262,7 +262,7 @@ fun ExerciseList(
     modifier: Modifier = Modifier,
     title: String,
     exercises: List<WorkoutExercise>,
-    onClickExercise: (Exercise) -> Unit// = { }
+    onClickExercise: (Exercise) -> Unit
 ) {
     Column(
         modifier = modifier
