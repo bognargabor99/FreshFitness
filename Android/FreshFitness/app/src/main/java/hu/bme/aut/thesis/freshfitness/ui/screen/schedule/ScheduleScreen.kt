@@ -125,7 +125,7 @@ fun ScheduleScreen(
                     viewModel.initScreen()
                 }
         },
-        unAvailableContent = { viewModel.onNetworkUnavailable() }
+        unAvailableContent = viewModel::onNetworkUnavailable
     )
 
     var showDetailsOfWorkout by rememberSaveable { mutableStateOf(false) }

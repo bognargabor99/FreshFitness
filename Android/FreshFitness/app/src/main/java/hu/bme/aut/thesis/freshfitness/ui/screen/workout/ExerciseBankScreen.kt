@@ -84,7 +84,7 @@ fun ExerciseBankScreen(
                     viewModel.fetchData()
                 }
         },
-        unAvailableContent = { viewModel.onNetworkUnavailable() }
+        unAvailableContent = viewModel::onNetworkUnavailable
     )
 
     Column {
@@ -123,7 +123,7 @@ fun ExerciseBankScreen(
                     musclesAndEquipments = musclesAndEquipments,
                     filterChangers = filterChangers,
                     favourites = viewModel.favouriteExercises.map { it.id },
-                    onClickHeart = { viewModel.heartExercise(it) }
+                    onClickHeart = viewModel::heartExercise
                 )
             }
         } else {
@@ -138,7 +138,7 @@ fun ExerciseBankScreen(
                     musclesAndEquipments = musclesAndEquipments,
                     filterChangers = filterChangers,
                     favourites = viewModel.favouriteExercises.map { it.id },
-                    onClickHeart = { viewModel.heartExercise(it) }
+                    onClickHeart = viewModel::heartExercise
                 )
             }
         }

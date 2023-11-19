@@ -7,7 +7,7 @@ import hu.bme.aut.thesis.freshfitness.model.ConnectionState
 @Composable
 fun ConnectivityStatus(
     availableContent: @Composable () -> Unit,
-    unAvailableContent: @Composable () -> Unit
+    unAvailableContent: () -> Unit
 ) {
     // This will cause re-composition on every network state change
     val connection by connectivityState()

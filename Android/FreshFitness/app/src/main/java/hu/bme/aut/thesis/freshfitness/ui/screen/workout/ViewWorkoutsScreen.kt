@@ -111,7 +111,7 @@ fun ViewWorkoutsScreen(
                     viewModel.initScreen()
             }
         },
-        unAvailableContent = { viewModel.onNetworkUnavailable() }
+        unAvailableContent = viewModel::onNetworkUnavailable
     )
 
     AnimatedVisibility(
