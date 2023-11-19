@@ -306,7 +306,7 @@ fun ScheduleScreenLoadedListOnly(
                     onClick = { onClickWorkout(w) }
                 )
             } else {
-                NoWorkoutsForTheDay()
+                NoWorkoutsForTheDay(selection.toString())
             }
         }
     }
@@ -356,7 +356,7 @@ fun ScheduleScreenLoadedListAndDetail(
                         onClick = { onClickWorkout(w) }
                     )
                 } else {
-                    NoWorkoutsForTheDay()
+                    NoWorkoutsForTheDay(selection.toString())
                 }
             }
         }
@@ -364,7 +364,9 @@ fun ScheduleScreenLoadedListAndDetail(
 }
 
 @Composable
-fun NoWorkoutsForTheDay() {
+fun NoWorkoutsForTheDay(
+    date: String
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -382,6 +384,7 @@ fun NoWorkoutsForTheDay() {
                     .size(150.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Text(text = date, fontSize = 18.sp)
             Text(text = stringResource(R.string.no_workouts_scheduled))
         }
     }
