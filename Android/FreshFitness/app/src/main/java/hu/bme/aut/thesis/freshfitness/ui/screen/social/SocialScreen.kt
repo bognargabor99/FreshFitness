@@ -102,6 +102,7 @@ import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToTimeSince
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
+import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
@@ -140,7 +141,8 @@ fun SocialScreen(
                 onShowPostOptions = viewModel::showPostOptions,
                 onImageClick = viewModel::showFullScreenImage,
                 canLoadMore = viewModel.lastFetchedCount != 0,
-                onLoadMore = viewModel::getNextPosts
+                onLoadMore = viewModel::loadMorePosts,
+                isLoadingMore = viewModel.isLoadingMore
             )
         }
         if (viewModel.showLikesDialog) {
@@ -224,7 +226,8 @@ fun LoadedSocialFeed(
     onShowPostOptions: (Int) -> Unit,
     onImageClick: (String) -> Unit,
     canLoadMore: Boolean,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
+    isLoadingMore: Boolean
 ) {
     Scaffold(
         floatingActionButton = { if (createPostEnabled) { NewPostFAB(onCreatePost) } },
@@ -253,7 +256,9 @@ fun LoadedSocialFeed(
                         onImageClick = onImageClick)
                 }
                 item {
-                    if (canLoadMore)
+                    if (isLoadingMore)
+                        InfiniteCircularProgressBar()
+                    else if (canLoadMore)
                         LoadMoreButton(onClick = onLoadMore)
                     else
                         EndOfFeedBanner()

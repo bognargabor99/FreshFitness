@@ -32,6 +32,7 @@ import java.util.UUID
 class SocialFeedViewModel : ViewModel() {
     val posts = mutableStateListOf<Post>()
     var isLoading by mutableStateOf(true)
+    var isLoadingMore by mutableStateOf(true)
     private var nextPage: Int = 0
     var lastFetchedCount by mutableStateOf(10)
 
@@ -338,6 +339,11 @@ class SocialFeedViewModel : ViewModel() {
         )
     }
 
+    fun loadMorePosts() {
+        isLoadingMore = true
+        getNextPosts()
+    }
+
     fun getNextPosts() {
         ApiService.getPosts(this.nextPage, this.userName, onSuccess = { newPosts ->
             val postsToAdd = mutableListOf<Post>()
@@ -365,6 +371,7 @@ class SocialFeedViewModel : ViewModel() {
             this.posts.addAll(postsToAdd)
             this.posts.sortByDescending { it.id }
             isLoading = false
+            isLoadingMore = false
             nextPage++
             lastFetchedCount = newPosts.size
             for (post in postsToAdd) {
