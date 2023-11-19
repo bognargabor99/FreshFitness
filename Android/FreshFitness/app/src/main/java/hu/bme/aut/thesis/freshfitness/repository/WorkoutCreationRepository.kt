@@ -49,9 +49,14 @@ class WorkoutCreationRepository(
         equipmentTypes = equipmentTypes.take(eqIdx + 1)
         difficulties = difficulties.take(difficultyIdx + 1)
         val exercises = this.exercises.filter {
-            it.muscleGroupId == workoutPlanState.muscleId &&
+            (
+                if (workoutPlanState.muscleId != 1)
+                    it.muscleGroupId == workoutPlanState.muscleId
+                else true
+            ) &&
             difficulties.contains(it.difficulty) &&
-            (equipmentTypes.contains(it.equipment!!.type) || if (it.alternateEquipment != null) equipmentTypes.contains(it.alternateEquipment!!.type) else false)
+            (equipmentTypes.contains(it.equipment!!.type) || if (it.alternateEquipment != null) equipmentTypes.contains(it.alternateEquipment!!.type) else false) &&
+            if (workoutPlanState.muscleId == 1) { !it.name.lowercase().contains("running") } else true
         }.shuffled().take(exerciseCount)
         return exercises.mapIndexed { index, it ->
             WorkoutExercise(
