@@ -58,4 +58,6 @@
     <string name="no_workouts_scheduled">No workouts scheduled</string>
     <string name="view_workout">View workout</string>
     <string name="navigation_drawer">Navigation drawer</string>
+    <string name="load_more">Load more…</string>
+    <string name="end_of_feed">You have reached the end of the feed</string>
 </resources>

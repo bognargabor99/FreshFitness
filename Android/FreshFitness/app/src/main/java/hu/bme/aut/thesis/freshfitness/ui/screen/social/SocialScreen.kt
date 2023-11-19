@@ -60,6 +60,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -77,6 +78,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -111,6 +113,7 @@ fun SocialScreen(
     contentType: FreshFitnessContentType,
     viewModel: SocialFeedViewModel = viewModel(factory = SocialFeedViewModel.factory)
 ) {
+    val context = LocalContext.current
     LaunchedEffect(key1 = false) {
         if (viewModel.posts.isEmpty())
             viewModel.initFeed()
@@ -135,7 +138,9 @@ fun SocialScreen(
                 onShowComments = viewModel::showComments,
                 onStartComment = viewModel::startCommenting,
                 onShowPostOptions = viewModel::showPostOptions,
-                onImageClick = viewModel::showFullScreenImage
+                onImageClick = viewModel::showFullScreenImage,
+                canLoadMore = viewModel.lastFetchedCount != 0,
+                onLoadMore = viewModel::getNextPosts
             )
         }
         if (viewModel.showLikesDialog) {
@@ -155,7 +160,7 @@ fun SocialScreen(
         if (viewModel.showCreatePostDialog) {
             CreatePostDialog(
                 postCreationButtonsEnabled = viewModel.postCreationButtonsEnabled,
-                onPost = { text, contentUri -> viewModel.createPost(text, contentUri) },
+                onPost = { text, contentUri -> viewModel.createPost(text, contentUri, context) },
                 onDismiss = viewModel::dismissCreatePostDialog
             )
         }
@@ -217,7 +222,9 @@ fun LoadedSocialFeed(
     onShowComments: (Int) -> Unit,
     onStartComment: (Int) -> Unit,
     onShowPostOptions: (Int) -> Unit,
-    onImageClick: (String) -> Unit
+    onImageClick: (String) -> Unit,
+    canLoadMore: Boolean,
+    onLoadMore: () -> Unit
 ) {
     Scaffold(
         floatingActionButton = { if (createPostEnabled) { NewPostFAB(onCreatePost) } },
@@ -225,7 +232,8 @@ fun LoadedSocialFeed(
     ) {
         if (posts.isNotEmpty()) {
             LazyColumn(
-                modifier = Modifier.padding(it)
+                modifier = Modifier.padding(it),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
                     Header(stringResource(R.string.newest_posts))
@@ -243,6 +251,12 @@ fun LoadedSocialFeed(
                         onStartComment = onStartComment,
                         onShowPostOptions = onShowPostOptions,
                         onImageClick = onImageClick)
+                }
+                item {
+                    if (canLoadMore)
+                        LoadMoreButton(onClick = onLoadMore)
+                    else
+                        EndOfFeedBanner()
                 }
             }
         } else {
@@ -265,6 +279,20 @@ fun LoadedSocialFeed(
             }
         }
     }
+}
+
+@Composable
+fun LoadMoreButton(
+    onClick: () -> Unit
+) {
+    TextButton(onClick = onClick) {
+        Text(text = stringResource(R.string.load_more))
+    }
+}
+
+@Composable
+fun EndOfFeedBanner() {
+    Text(text = stringResource(R.string.end_of_feed), fontStyle = FontStyle.Italic)
 }
 
 @Composable

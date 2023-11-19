@@ -29,10 +29,11 @@ import java.io.File
 import java.net.URLConnection
 import java.util.UUID
 
-class SocialFeedViewModel(val context: Context) : ViewModel() {
+class SocialFeedViewModel : ViewModel() {
     val posts = mutableStateListOf<Post>()
     var isLoading by mutableStateOf(true)
     private var nextPage: Int = 0
+    var lastFetchedCount by mutableStateOf(10)
 
     // For enabling user input
     var isLoggedIn by mutableStateOf(false)
@@ -263,7 +264,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         })
     }
 
-    fun createPost(text: String, contentUri: Uri?) {
+    fun createPost(text: String, contentUri: Uri?, context: Context) {
         this.postCreationButtonsEnabled = false
         this.showUploadState = true
         this.uploadText = "Processing file..."
@@ -288,33 +289,12 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                 mimeType = null
             }
         }
-        if (buffer != null && !mimeType.isNullOrBlank() && mimeType.startsWith("image/")) {
-            this.uploadText = "Uploading file..."
-            val f = File(context.filesDir, "tempFile.png")
-            f.writeBytes(buffer.toByteArray())
-            this.uploadFile(f, extension = mimeType.substring(6),
-                onFractionCompleted = { this.uploadState = it },
-                onSuccess = { location ->
-                    val createPostDto = CreatePostDto(
-                        details = text,
-                        username = this.userName,
-                        imageLocation = location
-                    )
-                    this.showUploadState = false
-                    this.uploadState = 0.0
-                    this.uploadText = ""
-                    this.showCreatePostDialog = false
-                    ApiService.createPost(createPostDto) { post ->
-                        this.posts.add(0, post)
-                    }
-                    f.delete()
-                    this.postCreationButtonsEnabled = true
-                })
-        } else {
+
+        val updatePosts: (String) -> Unit = { location ->
             val createPostDto = CreatePostDto(
                 details = text,
                 username = this.userName,
-                imageLocation = ""
+                imageLocation = location
             )
             this.showUploadState = false
             this.uploadState = 0.0
@@ -325,11 +305,26 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
             }
             this.postCreationButtonsEnabled = true
         }
+
+        if (buffer != null && !mimeType.isNullOrBlank() && mimeType.startsWith("image/")) {
+            this.uploadText = "Uploading file..."
+            val f = File(context.filesDir, "tempFile.png")
+            f.writeBytes(buffer.toByteArray())
+            this.uploadFile(f, extension = mimeType.substring(6),
+                onFractionCompleted = { this.uploadState = it },
+                onSuccess = { location ->
+                    f.delete()
+                    updatePosts(location)
+                })
+        } else {
+            updatePosts("")
+        }
     }
 
     private fun resetFeed() {
         posts.clear()
         nextPage = 0
+        isLoading = true
         getNextPosts()
     }
 
@@ -343,8 +338,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         )
     }
 
-    private fun getNextPosts() {
-        isLoading = true
+    fun getNextPosts() {
         ApiService.getPosts(this.nextPage, this.userName, onSuccess = { newPosts ->
             val postsToAdd = mutableListOf<Post>()
             newPosts.forEach { pagedPost ->
@@ -372,6 +366,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
             this.posts.sortByDescending { it.id }
             isLoading = false
             nextPage++
+            lastFetchedCount = newPosts.size
             for (post in postsToAdd) {
                 getCommentsForPost(post.id)
             }
@@ -381,7 +376,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
     companion object {
         val factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                SocialFeedViewModel (context = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Context)
+                SocialFeedViewModel()
             }
         }
     }
