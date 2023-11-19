@@ -128,14 +128,14 @@ fun SocialScreen(
                 posts = viewModel.posts,
                 userName = viewModel.userName,
                 createPostEnabled = viewModel.userName.isNotBlank(),
-                onCreatePost = { viewModel.floatingButtonClick() },
-                onLikePost = { viewModel.likePost(it) },
+                onCreatePost = viewModel::floatingButtonClick,
+                onLikePost = viewModel::likePost,
                 editEnabled = viewModel.isLoggedIn,
-                onShowLikes = { viewModel.showLikes(it.id) },
-                onShowComments = { viewModel.showComments(it.id) },
-                onStartComment = { viewModel.startCommenting(it.id) },
-                onShowPostOptions = { viewModel.showPostOptions(it.id) },
-                onImageClick = { viewModel.showFullScreenImage(it) }
+                onShowLikes = viewModel::showLikes,
+                onShowComments = viewModel::showComments,
+                onStartComment = viewModel::startCommenting,
+                onShowPostOptions = viewModel::showPostOptions,
+                onImageClick = viewModel::showFullScreenImage
             )
         }
         if (viewModel.showLikesDialog) {
@@ -156,15 +156,16 @@ fun SocialScreen(
             CreatePostDialog(
                 postCreationButtonsEnabled = viewModel.postCreationButtonsEnabled,
                 onPost = { text, contentUri -> viewModel.createPost(text, contentUri) },
-                onDismiss = { viewModel.dismissCreatePostDialog() })
+                onDismiss = viewModel::dismissCreatePostDialog
+            )
         }
         if (viewModel.showUploadState) {
             UploadStateAlert(text = viewModel.uploadText, fractionCompleted = viewModel.uploadState) { }
         }
         if (viewModel.showPostOptionsDialog) {
             OptionsDialog(
-                onDelete = { viewModel.showDeletePostAlert() },
-                onDismiss = { viewModel.dismissPostOptions()}
+                onDelete = viewModel::showDeletePostAlert,
+                onDismiss = viewModel::dismissPostOptions
                 )
         }
         if (viewModel.showCommentOptionsDialog) {
@@ -172,25 +173,28 @@ fun SocialScreen(
                 onDelete = {
                     viewModel.showCommentsDialog = false
                     viewModel.showDeleteCommentAlert() },
-                onDismiss = { viewModel.dismissCommentOptions()}
+                onDismiss = viewModel::dismissCommentOptions
             )
         }
         if (viewModel.showDeletePostAlert) {
             DeleteAlert(
                 what = "post",
-                onDelete = { viewModel.deletePost() },
-                onDismiss = { viewModel.dismissDeletePostAlert() })
+                onDelete = viewModel::deletePost,
+                onDismiss = viewModel::dismissDeletePostAlert
+            )
         }
         if (viewModel.showDeleteCommentAlert) {
             DeleteAlert(
                 what = "comment",
-                onDelete = { viewModel.deleteComment() },
-                onDismiss = { viewModel.dismissDeleteCommentAlert() })
+                onDelete = viewModel::deleteComment,
+                onDismiss = viewModel::dismissDeleteCommentAlert
+            )
         }
         if (viewModel.showImageFullScreen) {
             FullScreenImage(
                 imageUrl = viewModel.fullScreenImageLocation,
-                onDismiss = { viewModel.hideFullScreenImage() })
+                onDismiss = viewModel::hideFullScreenImage
+            )
         }
     }
 }
@@ -209,10 +213,10 @@ fun LoadedSocialFeed(
     onCreatePost: () -> Unit,
     onLikePost: (Post) -> Unit,
     editEnabled: Boolean,
-    onShowLikes: (Post) -> Unit,
-    onShowComments: (Post) -> Unit,
-    onStartComment: (Post) -> Unit,
-    onShowPostOptions: (Post) -> Unit,
+    onShowLikes: (Int) -> Unit,
+    onShowComments: (Int) -> Unit,
+    onStartComment: (Int) -> Unit,
+    onShowPostOptions: (Int) -> Unit,
     onImageClick: (String) -> Unit
 ) {
     Scaffold(
@@ -291,10 +295,10 @@ fun PostCard(
     userName: String,
     onLikePost: (Post) -> Unit = { },
     editEnabled: Boolean = false,
-    onShowLikes: (Post) -> Unit = { },
-    onShowComments: (Post) -> Unit = { },
-    onStartComment: (Post) -> Unit = { },
-    onShowPostOptions: (Post) -> Unit = { },
+    onShowLikes: (Int) -> Unit = { },
+    onShowComments: (Int) -> Unit = { },
+    onStartComment: (Int) -> Unit = { },
+    onShowPostOptions: (Int) -> Unit = { },
     onImageClick: (String) -> Unit = { }
 ) {
     val model = ImageRequest.Builder(LocalContext.current)
@@ -319,14 +323,15 @@ fun PostCard(
             .fillMaxWidth()
             .padding(vertical = 10.dp, horizontal = 16.dp)
             .combinedClickable(onLongClick = {
-                onShowPostOptions(post)
+                onShowPostOptions(post.id)
             }) { },
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
         )
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -341,12 +346,13 @@ fun PostCard(
                     fontWeight = FontWeight.Normal,
                     fontSize = 10.sp)
             }
-            Text(
-                modifier = Modifier.padding(vertical = 8.dp),
-                text = post.details,
-                fontWeight = FontWeight.Normal,
-                fontSize = 18.sp
-            )
+            if (post.details.isNotBlank()) {
+                Text(
+                    text = post.details,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 18.sp
+                )
+            }
             if (post.imageLocation.isNotBlank()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -375,14 +381,14 @@ fun PostCard(
                     )
                 }
                 Text(
-                    modifier = Modifier.clickable(enabled = post.likeCount > 0) { onShowLikes(post) },
+                    modifier = Modifier.clickable(enabled = post.likeCount > 0) { onShowLikes(post.id) },
                     text = if (post.likeCount == 1) "1 like" else "${post.likeCount} likes"
                 )
-                IconButton(enabled = editEnabled, onClick = { onStartComment(post) }) {
+                IconButton(enabled = editEnabled, onClick = { onStartComment(post.id) }) {
                     Icon(imageVector = Icons.Outlined.Chat, contentDescription = null)
                 }
                 Text(
-                    modifier = Modifier.clickable(enabled = post.commentCount > 0) { onShowComments(post) },
+                    modifier = Modifier.clickable(enabled = post.commentCount > 0) { onShowComments(post.id) },
                     text = if (post.commentCount == 1) "1 comment" else "${post.commentCount} comments"
                 )
             }
@@ -470,7 +476,7 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
 
     AlertDialog(
         modifier = Modifier.fillMaxWidth(),
-        onDismissRequest = { onDismiss() }
+        onDismissRequest = onDismiss
     ) {
         Surface(
             shape = MaterialTheme.shapes.large,
@@ -537,10 +543,10 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
                         .padding(6.dp),
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    Button(onClick = { onDismiss() }, enabled = postCreationButtonsEnabled) {
+                    Button(onClick = onDismiss, enabled = postCreationButtonsEnabled) {
                         Text(text = stringResource(R.string.cancel))
                     }
-                    Button(onClick = { onPost(text, photoUri) }, enabled = postCreationButtonsEnabled) {
+                    Button(onClick = {  if (text.isEmpty() && photoUri == null) onDismiss() else onPost(text, photoUri) }, enabled = postCreationButtonsEnabled) {
                         Text(text = stringResource(R.string.post))
                     }
                 }
@@ -776,8 +782,8 @@ fun OptionsDialog(
             ) {
                 Text(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .padding(vertical = 16.dp, horizontal = 16.dp)
+                        .fillMaxWidth()
                         .clickable { onDelete() },
                     text = stringResource(R.string.delete),
                     fontSize = 18.sp

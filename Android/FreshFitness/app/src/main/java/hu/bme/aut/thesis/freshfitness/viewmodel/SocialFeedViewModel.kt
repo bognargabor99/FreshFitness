@@ -267,7 +267,7 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
         this.postCreationButtonsEnabled = false
         this.showUploadState = true
         this.uploadText = "Processing file..."
-        var mimeType: String? = ""
+        var mimeType: String? = null
         var buffer: ByteArrayOutputStream? = null
         if (contentUri != null) {
             val file = context.contentResolver.openInputStream(contentUri)
@@ -285,18 +285,11 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                 Log.i("mime_type_detection", "MimeType detected: $mimeType")
             } catch (e: Exception) {
                 Log.e("mime_type_detection", "MimeType could not be determined", e)
+                mimeType = null
             }
         }
-        this.uploadText = "Uploading file..."
-        if (mimeType.isNullOrBlank() || !mimeType.startsWith("image/")) {
-            this.showUploadState = false
-            this.uploadState = 0.0
-            this.uploadText = ""
-            this.showCreatePostDialog = false
-            this.postCreationButtonsEnabled = true
-            return
-        }
-        if (buffer != null) {
+        if (buffer != null && !mimeType.isNullOrBlank() && mimeType.startsWith("image/")) {
+            this.uploadText = "Uploading file..."
             val f = File(context.filesDir, "tempFile.png")
             f.writeBytes(buffer.toByteArray())
             this.uploadFile(f, extension = mimeType.substring(6),
@@ -312,12 +305,25 @@ class SocialFeedViewModel(val context: Context) : ViewModel() {
                     this.uploadText = ""
                     this.showCreatePostDialog = false
                     ApiService.createPost(createPostDto) { post ->
-                        post.details
                         this.posts.add(0, post)
                     }
                     f.delete()
                     this.postCreationButtonsEnabled = true
                 })
+        } else {
+            val createPostDto = CreatePostDto(
+                details = text,
+                username = this.userName,
+                imageLocation = ""
+            )
+            this.showUploadState = false
+            this.uploadState = 0.0
+            this.uploadText = ""
+            this.showCreatePostDialog = false
+            ApiService.createPost(createPostDto) { post ->
+                this.posts.add(0, post)
+            }
+            this.postCreationButtonsEnabled = true
         }
     }
 
