@@ -101,7 +101,6 @@ import hu.bme.aut.thesis.freshfitness.ui.util.calendar.displayText
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.getWeekPageTitle
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.rememberFirstVisibleWeekAfterScroll
 import hu.bme.aut.thesis.freshfitness.viewmodel.ScheduleViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -198,18 +197,14 @@ fun ScheduleScreenLoaded(
     onDismissShowWorkout: () -> Unit,
     contentType: FreshFitnessContentType
 ) {
-    val currentDate = remember { LocalDate.now() }
-    var selection by remember { mutableStateOf(LocalDate.parse(date)) }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.25f)),
     ) {
-        val coroutineScope = rememberCoroutineScope()
         when (contentType) {
             FreshFitnessContentType.LIST_ONLY -> {
                 ScheduleScreenLoadedListOnly(
-                    scope = coroutineScope,
                     showDetailsOfWorkout = showDetailsOfWorkout,
                     detailedWorkout = detailedWorkout,
                     savedWorkouts = savedWorkouts,
@@ -218,9 +213,7 @@ fun ScheduleScreenLoaded(
                     onClickWorkout = onClickWorkout,
                     onDismissShowWorkout = onDismissShowWorkout,
                     onDelete = onDelete,
-                    currentDate = currentDate,
-                    selection = selection,
-                    changeSelection = { selection = it }
+                    initialDate = LocalDate.parse(date),
                 )
             }
             FreshFitnessContentType.LIST_AND_DETAIL -> {
@@ -233,8 +226,7 @@ fun ScheduleScreenLoaded(
                     onClickWorkout = onClickWorkout,
                     onDismissShowWorkout = onDismissShowWorkout,
                     onDelete = onDelete,
-                    selection = selection,
-                    changeSelection = { selection = it }
+                    initialDate = LocalDate.parse(date),
                 )
             }
         }
@@ -244,7 +236,6 @@ fun ScheduleScreenLoaded(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScheduleScreenLoadedListOnly(
-    scope: CoroutineScope,
     showDetailsOfWorkout: Boolean,
     detailedWorkout: Workout?,
     savedWorkouts: List<Workout>,
@@ -253,17 +244,21 @@ fun ScheduleScreenLoadedListOnly(
     onDelete: (Workout) -> Unit,
     onClickWorkout: (Workout) -> Unit,
     onDismissShowWorkout: () -> Unit,
-    currentDate: LocalDate,
-    selection: LocalDate,
-    changeSelection: (LocalDate) -> Unit
+    initialDate: LocalDate,
 ) {
+    val currentDate = remember { LocalDate.now() }
     val startDate = remember { currentDate.with(WeekFields.ISO.dayOfWeek(), 1) }
     val endDate = remember { currentDate.plusWeeks(1).with(WeekFields.ISO.dayOfWeek(), 7) }
+    var selection by remember { mutableStateOf(initialDate) }
+
+    val coroutineScope = rememberCoroutineScope()
+
     val pagerState = rememberPagerState(initialPage = DAYS.between(startDate, selection).absoluteValue.toInt())
     val weekCalendarState = rememberWeekCalendarState(
         startDate = startDate,
         endDate = endDate,
         firstVisibleWeekDate = selection,
+        firstDayOfWeek = DayOfWeek.MONDAY
     )
     if (showDetailsOfWorkout) {
         DetailedWorkout(
@@ -278,7 +273,7 @@ fun ScheduleScreenLoadedListOnly(
     else {
         LaunchedEffect(pagerState) {
             snapshotFlow { pagerState.currentPage }.collect { page ->
-                changeSelection(currentDate.plusDays((page - (currentDate.dayOfWeek.value - 1)).toLong()))
+                selection = currentDate.plusDays((page - (currentDate.dayOfWeek.value - 1)).toLong())
                 weekCalendarState.animateScrollToWeek(selection)
             }
         }
@@ -286,8 +281,8 @@ fun ScheduleScreenLoadedListOnly(
             state = weekCalendarState,
             selection = selection,
             onSelectionChange = { clicked ->
-                if (selection != clicked) { changeSelection(clicked) }
-                scope.launch {
+                if (selection != clicked) { selection = clicked }
+                coroutineScope.launch {
                     pagerState.animateScrollToPage(DAYS.between(startDate, clicked).absoluteValue.toInt())
                 } },
             onRefresh = onRefresh
@@ -323,9 +318,9 @@ fun ScheduleScreenLoadedListAndDetail(
     onClickWorkout: (Workout) -> Unit,
     onDismissShowWorkout: () -> Unit,
     onDelete: (Workout) -> Unit,
-    selection: LocalDate,
-    changeSelection: (LocalDate) -> Unit
+    initialDate: LocalDate
 ) {
+    var selection by remember { mutableStateOf(initialDate) }
     Row(modifier = modifier) {
         Column(modifier = modifier.weight(1f)) {
             FullScreenCalendar(
@@ -333,7 +328,7 @@ fun ScheduleScreenLoadedListAndDetail(
                 selection = selection,
                 changeSelection = {
                     onDismissShowWorkout()
-                    changeSelection(it)
+                    selection = it
                 }
             )
         }
@@ -428,7 +423,7 @@ fun FullScreenCalendar(
 ) {
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth }
-    val endMonth = remember { currentMonth.plusMonths(12) }
+    val endMonth = remember { currentMonth.plusMonths(2) }
     val today = remember { LocalDate.now() }
     val daysOfWeek = remember { daysOfWeek() }
     val state = rememberCalendarState(
