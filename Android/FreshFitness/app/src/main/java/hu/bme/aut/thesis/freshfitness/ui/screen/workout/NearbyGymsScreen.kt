@@ -20,18 +20,16 @@ import androidx.compose.material.icons.filled.Grade
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SheetValue
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberStandardBottomSheetState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,15 +70,16 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun NearbyGymsScreen(
-    viewModel: NearbyGymsViewModel = viewModel(factory = NearbyGymsViewModel.factory)
+    viewModel: NearbyGymsViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     RequireLocationPermissions {
-        LaunchedEffect(true) { viewModel.startLocationFlow() }
+        LaunchedEffect(true) { viewModel.startLocationFlow(context) }
 
         Column {
             NearbyGymsTopAppBar(
-                onRefresh = { viewModel.startLocationFlow() },
-                onLoadList = { viewModel.setShowSavedList() }
+                onRefresh = { viewModel.startLocationFlow(context) },
+                onLoadList = { viewModel.setShowSavedList(context) }
             )
             Divider()
             if (!viewModel.showSavedList) {
@@ -94,7 +93,7 @@ fun NearbyGymsScreen(
 
                     LocationEnabledState.DISABLED -> {
                         LocationDisabled {
-                            viewModel.startLocationFlow()
+                            viewModel.startLocationFlow(context)
                         }
                     }
 
@@ -102,7 +101,7 @@ fun NearbyGymsScreen(
                         LocationEnabledSearching(
                             radius = viewModel.radius,
                             onValueChange = { viewModel.changeRadius(it.toInt()) },
-                            onQuery = { viewModel.startLocationFlow() }
+                            onQuery = { viewModel.startLocationFlow(context) }
                         )
                     }
 
@@ -112,10 +111,10 @@ fun NearbyGymsScreen(
                             radius = viewModel.radius,
                             onRadiusChange = { viewModel.changeRadius(it.toInt()) },
                             gyms = viewModel.gyms,
-                            onSaveItem = { viewModel.savePlace(it) },
+                            onSaveItem = viewModel::savePlace,
                             onCheckSaved = { place -> viewModel.favouritePlaces.any { it.id == place.placeId }},
-                            onGoToPlace = { viewModel.showPlaceOnMap(it) },
-                            onHidePlace = { viewModel.hideMap() },
+                            onGoToPlace = viewModel::showPlaceOnMap,
+                            onHidePlace = viewModel::hideMap,
                             locationState = viewModel.showLocationState,
                             shownLocation = viewModel.shownLocation,
                             userLocation =  viewModel.currentLocation
@@ -128,10 +127,10 @@ fun NearbyGymsScreen(
                     radius = 0,
                     onRadiusChange = { },
                     gyms = viewModel.gyms,
-                    onSaveItem = { viewModel.savePlace(it) },
+                    onSaveItem = viewModel::savePlace,
                     onCheckSaved = { place -> viewModel.favouritePlaces.any { it.id == place.placeId }},
-                    onGoToPlace = { viewModel.showPlaceOnMap(it) },
-                    onHidePlace = { viewModel.hideMap() },
+                    onGoToPlace = viewModel::showPlaceOnMap,
+                    onHidePlace = viewModel::hideMap,
                     locationState = viewModel.showLocationState,
                     shownLocation = viewModel.shownLocation,
                     userLocation =  viewModel.currentLocation
@@ -179,8 +178,8 @@ fun LocationDisabled(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text = "To continue, please turn on device location and then try again")
-            Button(onClick = { onTryAgain() }) {
+            Text(text = "To continue, please turn on device location and then try again", textAlign = TextAlign.Center)
+            Button(onClick = onTryAgain) {
                 Text(text = "Try again")
             }
         }
@@ -193,9 +192,7 @@ fun TopAppBarActionButton(
     description: String,
     onClick: () -> Unit
 ) {
-    IconButton(onClick = {
-        onClick()
-    }) {
+    IconButton(onClick = onClick) {
         Icon(imageVector = imageVector, contentDescription = description)
     }
 }
@@ -215,59 +212,55 @@ fun GymListScreen(
     shownLocation: LatLng,
     userLocation: LatLng
 ) {
-    val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.Hidden, skipHiddenState = false, confirmValueChange = {
-        if (it == SheetValue.Hidden) {
-            onHidePlace()
-        }
-        true
-    })
-    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
     val scope = rememberCoroutineScope()
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetPeekHeight = 0.dp,
-        sheetContent = {
-            if (locationState is NearByGymShowLocationState.Show)
-                GoogleMapSheetContent(
-                    shownLocation = shownLocation,
-                    userLocation = userLocation
-                )
-        }) {
-        Column {
-            if (useDistanceFilter) {
-                DistanceFilter(
-                    radius = radius,
-                    onValueChange = onRadiusChange,
-                    onQuery = { }
-                )
-                Divider()
-            }
-            if (gyms.isEmpty())
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    text = "No gyms found",
-                    textAlign = TextAlign.Center
-                )
-            else
-                LazyColumn(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    items(gyms.size) { placeIndex ->
-                        NearByGymItem(
-                            place = gyms[placeIndex],
-                            onSaveItem = onSaveItem,
-                            saved = onCheckSaved(gyms[placeIndex]),
-                            onGo = {
-                                scope.launch {
-                                    onGoToPlace(gyms[placeIndex])
-                                    sheetState.expand()
-                                }
+
+    Column {
+        if (useDistanceFilter) {
+            DistanceFilter(
+                radius = radius,
+                onValueChange = onRadiusChange,
+                onQuery = { }
+            )
+            Divider()
+        }
+        if (gyms.isEmpty())
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                text = "No gyms found",
+                textAlign = TextAlign.Center
+            )
+        else
+            LazyColumn(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                items(gyms.size) { placeIndex ->
+                    NearByGymItem(
+                        place = gyms[placeIndex],
+                        onSaveItem = onSaveItem,
+                        saved = onCheckSaved(gyms[placeIndex]),
+                        onGo = {
+                            scope.launch {
+                                onGoToPlace(gyms[placeIndex])
                             }
-                        )
-                    }
+                        }
+                    )
                 }
+            }
+    }
+
+    if (locationState is NearByGymShowLocationState.Show) {
+        ModalBottomSheet(
+            modifier = Modifier,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            onDismissRequest = onHidePlace,
+            dragHandle = { }
+        ) {
+            GoogleMapSheetContent(
+                shownLocation = shownLocation,
+                userLocation = userLocation
+            )
         }
     }
 }
@@ -339,18 +332,18 @@ fun GoogleMapSheetContent(
     shownLocation: LatLng,
     userLocation: LatLng
 ) {
-    val cameraState = rememberCameraPositionState() {
+    val cameraState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(shownLocation, 13.5f)
     }
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.5f)
+            .fillMaxHeight(0.7f)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         GoogleMap(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(vertical = 12.dp),
             cameraPositionState = cameraState
         ) {
             Marker(

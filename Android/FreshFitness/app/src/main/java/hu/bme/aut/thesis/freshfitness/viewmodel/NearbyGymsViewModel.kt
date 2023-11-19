@@ -7,10 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
@@ -30,8 +27,8 @@ import hu.bme.aut.thesis.freshfitness.persistence.model.FavouritePlaceEntity
 import hu.bme.aut.thesis.freshfitness.repository.FavouritePlacesRepository
 import kotlinx.coroutines.launch
 
-class NearbyGymsViewModel(val context: Context) : ViewModel() {
-    private var fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+class NearbyGymsViewModel : ViewModel() {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     var currentLocation by mutableStateOf(com.google.android.gms.maps.model.LatLng(47.0, 19.0))
     private val repository = FavouritePlacesRepository(FreshFitnessApplication.runningDatabase.runningDao())
 
@@ -69,12 +66,12 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
                 .await()
             locationEnabled = LocationEnabledState.ENABLED_SEARCHING_FINISHED
             gyms = response.results.toList()
-        } catch (_: Exception) {
-
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    private fun checkLocationSettings(onLocationEnabled: () -> Unit, onFailure: () -> Unit) {
+    private fun checkLocationSettings(context: Context, onLocationEnabled: () -> Unit, onFailure: () -> Unit) {
         val client = LocationServices.getSettingsClient(context)
         client.checkLocationSettings(LocationSettingsRequest.Builder().setAlwaysShow(true).build())
             .addOnSuccessListener {
@@ -91,7 +88,9 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
     }
 
     @SuppressLint("MissingPermission")
-    fun queryLocation() {
+    fun queryLocation(context: Context) {
+        if (!this::fusedLocationClient.isInitialized)
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token)
             .addOnSuccessListener {
                 this.currentLocation = com.google.android.gms.maps.model.LatLng(it.latitude, it.longitude)
@@ -99,13 +98,14 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
             }
     }
 
-    fun startLocationFlow() {
+    fun startLocationFlow(context: Context) {
         locationEnabled = LocationEnabledState.UNKNOWN
         showSavedList = false
         checkLocationSettings(
+            context = context,
             onLocationEnabled = {
                 locationEnabled = LocationEnabledState.ENABLED_SEARCHING
-                queryLocation()
+                queryLocation(context)
             },
             onFailure = {
                 locationEnabled = LocationEnabledState.DISABLED
@@ -130,10 +130,10 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
         showLocationState = NearByGymShowLocationState.NotShow
     }
 
-    fun setShowSavedList() {
+    fun setShowSavedList(context: Context) {
         showSavedList = !showSavedList
         if (!showSavedList)
-            startLocationFlow()
+            startLocationFlow(context)
         else
             gyms = favouritePlaces.map { it.toPlacesSearchResult() }
     }
@@ -157,15 +157,6 @@ class NearbyGymsViewModel(val context: Context) : ViewModel() {
             }
         }.invokeOnCompletion {
             getPlaces()
-        }
-
-    }
-
-    companion object {
-        val factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                NearbyGymsViewModel (context = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Context)
-            }
         }
     }
 }
