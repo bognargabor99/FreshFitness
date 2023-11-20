@@ -197,7 +197,6 @@ fun TopAppBarActionButton(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GymListScreen(
     useDistanceFilter: Boolean,
@@ -251,17 +250,31 @@ fun GymListScreen(
     }
 
     if (locationState is NearByGymShowLocationState.Show) {
-        ModalBottomSheet(
-            modifier = Modifier,
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            onDismissRequest = onHidePlace,
-            dragHandle = { }
-        ) {
-            GoogleMapSheetContent(
-                shownLocation = shownLocation,
-                userLocation = userLocation
-            )
-        }
+        GoogleMapModalBottomSheet(
+            onHidePlace = onHidePlace,
+            shownLocation = shownLocation,
+            userLocation = userLocation
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GoogleMapModalBottomSheet(
+    onHidePlace: () -> Unit,
+    shownLocation: LatLng,
+    userLocation: LatLng
+) {
+    ModalBottomSheet(
+        modifier = Modifier,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        onDismissRequest = onHidePlace,
+        dragHandle = { }
+    ) {
+        GoogleMapSheetContent(
+            shownLocation = shownLocation,
+            userLocation = userLocation
+        )
     }
 }
 
@@ -343,7 +356,9 @@ fun GoogleMapSheetContent(
         contentAlignment = Alignment.Center
     ) {
         GoogleMap(
-            modifier = Modifier.fillMaxSize().padding(vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 12.dp),
             cameraPositionState = cameraState
         ) {
             Marker(
