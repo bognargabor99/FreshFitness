@@ -29,10 +29,13 @@ class FreshFitnessApplication : Application() {
         } catch (e: AmplifyException) {
             Log.e("amplify_init_config", " Could not configure Amplify: ${e.message}")
         }
-        runningDatabase = Room.databaseBuilder(
-            applicationContext,
-            RunningDatabase::class.java,
-            "fresh_fitness_database"
-        ).fallbackToDestructiveMigration().build()
+        runningDatabase = Room
+            .databaseBuilder(
+                context = applicationContext,
+                klass = RunningDatabase::class.java,
+                name = "fresh_fitness_database"
+            )
+            .createFromAsset("fresh_fitness_database.db")
+            .fallbackToDestructiveMigration().build()
     }
 }
