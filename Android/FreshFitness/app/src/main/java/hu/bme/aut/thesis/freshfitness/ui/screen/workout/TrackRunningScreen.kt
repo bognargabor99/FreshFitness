@@ -106,25 +106,27 @@ fun TrackRunningScreen(
         val screenshotState = rememberScreenshotState()
         val coroutineScope = rememberCoroutineScope()
         if (showRunOnMap) {
-            AnimatedVisibility(
-                visible = viewModel.runShared,
-                enter = slideInVertically(initialOffsetY = { -it }),
-                exit = slideOutVertically(targetOffsetY = { -it })
-            ) {
-                SharedRunNotification()
+            Column {
+                AnimatedVisibility(
+                    visible = viewModel.runShared,
+                    enter = slideInVertically(initialOffsetY = { -it }),
+                    exit = slideOutVertically(targetOffsetY = { -it })
+                ) {
+                    SharedRunNotification()
+                }
+                TrackedRun(
+                    run = shownRun!!,
+                    screenshotState = screenshotState,
+                    isLoggedIn = viewModel.isLoggedIn,
+                    onShare = {
+                        coroutineScope.launch {
+                            screenshotState.capture()
+                            showShareRunDialog = true
+                        }
+                    },
+                    onDismiss = { showRunOnMap = false }
+                )
             }
-            TrackedRun(
-                run = shownRun!!,
-                screenshotState = screenshotState,
-                isLoggedIn = viewModel.isLoggedIn,
-                onShare = {
-                    coroutineScope.launch {
-                        screenshotState.capture()
-                        showShareRunDialog = true
-                    }
-                },
-                onDismiss = { showRunOnMap = false }
-            )
             if (showShareRunDialog) {
                 val additionalShareText = shownRun?.let { getAdditionalShareText(it, context) } ?: "Can you bet me?"
                 OkCancelDialog(
@@ -200,7 +202,7 @@ fun TrackRunningScreen(
 fun getAdditionalShareText(run: RunWithCheckpoints, context: Context): String {
     return "I ran ${context.resources.getString(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100)} " +
             "in ${calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" }} minutes " +
-            "on ${SimpleDateFormat("MM.dd").format(Date(run.run.startTime))+"h"}\n" +
+            "on ${SimpleDateFormat("MM.dd").format(Date(run.run.startTime))}\n" +
             "Can you beat me?"
 }
 
