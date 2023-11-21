@@ -32,4 +32,4 @@ object Exercises : WorkoutScreenUtil {
     override var onClick: () -> Unit = { }
 }
 
-val workoutTabs = listOf(Running, Places, Exercises, Planning)
+val workoutTabs = listOf(Exercises, Planning, Places, Running)
