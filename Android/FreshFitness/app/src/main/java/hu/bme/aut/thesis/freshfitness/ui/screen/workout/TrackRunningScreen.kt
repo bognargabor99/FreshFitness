@@ -2,48 +2,57 @@ package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.icu.text.SimpleDateFormat
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.CameraPosition
@@ -58,83 +67,141 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.smarttoolfactory.screenshot.ScreenshotBox
+import com.smarttoolfactory.screenshot.ScreenshotState
+import com.smarttoolfactory.screenshot.rememberScreenshotState
 import hu.bme.aut.thesis.freshfitness.R
+import hu.bme.aut.thesis.freshfitness.calculateDistanceInMeters
+import hu.bme.aut.thesis.freshfitness.calculateElapsedTime
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
 import hu.bme.aut.thesis.freshfitness.service.TrackRunningService
 import hu.bme.aut.thesis.freshfitness.setCustomMapIcon
+import hu.bme.aut.thesis.freshfitness.ui.util.OkCancelDialog
 import hu.bme.aut.thesis.freshfitness.ui.util.RequireLocationPermissions
+import hu.bme.aut.thesis.freshfitness.ui.util.UploadStateAlert
 import hu.bme.aut.thesis.freshfitness.viewmodel.TrackRunningViewModel
+import kotlinx.coroutines.launch
 import java.util.Date
+import kotlin.math.round
 
+@SuppressLint("SimpleDateFormat")
 @Composable
 fun TrackRunningScreen(
     viewModel: TrackRunningViewModel = viewModel(factory = TrackRunningViewModel.factory)
 ) {
     RequireLocationPermissions {
-        val runs = viewModel.allRuns.observeAsState()
+        val runs by viewModel.allRuns.observeAsState()
         var showRunOnMap by remember { mutableStateOf(false) }
-        var shownCheckPoints by remember { mutableStateOf(listOf<RunCheckpointEntity>()) }
+        var shownRun: RunWithCheckpoints? by remember { mutableStateOf(null) }
+        var showShareRunDialog by remember { mutableStateOf(false) }
 
-        LaunchedEffect(key1 = true) {
+        LaunchedEffect(key1 = false) {
+            viewModel.getSession()
             viewModel.checkLocationState()
             viewModel.fetchRuns()
         }
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
-        ) {
-            val permissions = arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-            Button(
-                enabled = viewModel.locationSettingState,
-                onClick = {
-                    if (!TrackRunningService.isRunning) {
-                        if (permissions.all { ContextCompat.checkSelfPermission(viewModel.context, it) == PackageManager.PERMISSION_GRANTED })
-                            viewModel.startLocationTrackingService()
-                    } else {
-                        viewModel.stopLocationTrackingService()
-                    }
-                }) {
-                Text(text = stringResource(if (!TrackRunningService.isRunning) R.string.start else R.string.stop))
+        val context = LocalContext.current
+        val screenshotState = rememberScreenshotState()
+        val coroutineScope = rememberCoroutineScope()
+        if (showRunOnMap) {
+            AnimatedVisibility(
+                visible = viewModel.runShared,
+                enter = slideInVertically(initialOffsetY = { -it }),
+                exit = slideOutVertically(targetOffsetY = { -it })
+            ) {
+                SharedRunNotification()
             }
-
-            if (runs.value?.isNotEmpty() == true) {
-                LazyColumn(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.previous_runs),
-                            fontSize = MaterialTheme.typography.headlineMedium.fontSize
-                        )
+            TrackedRun(
+                run = shownRun!!,
+                screenshotState = screenshotState,
+                isLoggedIn = viewModel.isLoggedIn,
+                onShare = {
+                    coroutineScope.launch {
+                        screenshotState.capture()
+                        showShareRunDialog = true
                     }
-                    items(viewModel.allRuns.value?.size!!) {index ->
-                        viewModel.allRuns.value?.get(index)!!.run {
-                            RunListItem(
-                                run = this,
-                                onClick = {
-                                    shownCheckPoints = this.checkpoints
-                                    showRunOnMap = true
-                                          },
-                                onDelete = { viewModel.deleteRun(this.run.id) }
+                },
+                onDismiss = { showRunOnMap = false }
+            )
+            if (showShareRunDialog) {
+                val additionalShareText = shownRun?.let { getAdditionalShareText(it, context) } ?: "Can you bet me?"
+                OkCancelDialog(
+                    title = stringResource(R.string.sharing_run),
+                    subTitle = stringResource(R.string.are_you_sure_to_share_run),
+                    onDismiss = { showShareRunDialog = false },
+                    onOk = {
+                        screenshotState.bitmap?.let {
+                            viewModel.shareRun(context, it, additionalShareText)
+                        }
+                        showShareRunDialog = false
+                    }
+                )
+            }
+            if (viewModel.showUploadState) {
+                UploadStateAlert(text = stringResource(R.string.uploading_file), fractionCompleted = viewModel.uploadState) { }
+            }
+        }
+        else {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                val permissions = arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+                Button(
+                    enabled = viewModel.locationSettingState,
+                    onClick = {
+                        if (!TrackRunningService.isRunning) {
+                            if (permissions.all { ContextCompat.checkSelfPermission(viewModel.context, it) == PackageManager.PERMISSION_GRANTED })
+                                viewModel.startLocationTrackingService()
+                        } else {
+                            viewModel.stopLocationTrackingService()
+                        }
+                    }) {
+                    Text(text = stringResource(if (!TrackRunningService.isRunning) R.string.start else R.string.stop))
+                }
+
+                if (runs?.isNotEmpty() == true) {
+                    LazyColumn(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.previous_runs),
+                                fontSize = MaterialTheme.typography.headlineMedium.fontSize
                             )
+                        }
+                        items(viewModel.allRuns.value?.size!!) {index ->
+                            viewModel.allRuns.value?.get(index)!!.run {
+                                RunListItem(
+                                    run = this,
+                                    onClick = {
+                                        shownRun = this
+                                        showRunOnMap = true
+                                    },
+                                    onDelete = { viewModel.deleteRun(this.run.id) }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
-        if (showRunOnMap)
-            TrackedRunBottomSheet(
-                checkpoints = shownCheckPoints,
-                onDismiss = { showRunOnMap = false }
-            )
     }
+}
+
+@SuppressLint("SimpleDateFormat")
+fun getAdditionalShareText(run: RunWithCheckpoints, context: Context): String {
+    return "I ran ${context.resources.getString(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100)} " +
+            "in ${calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" }} minutes " +
+            "on ${SimpleDateFormat("MM.dd").format(Date(run.run.startTime))+"h"}\n" +
+            "Can you beat me?"
 }
 
 @SuppressLint("SimpleDateFormat")
@@ -172,57 +239,112 @@ fun RunListItem(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrackedRunBottomSheet(
-    checkpoints: List<RunCheckpointEntity>,
+fun TrackedRun(
+    run: RunWithCheckpoints,
+    screenshotState: ScreenshotState,
+    isLoggedIn: Boolean,
+    onShare: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(
-        modifier = Modifier.fillMaxHeight(0.6f),
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        onDismissRequest = onDismiss,
+    BackHandler(onBack = onDismiss)
+    Column (
+        modifier = Modifier
+            .fillMaxHeight()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TrackedRunMap(checkpoints = checkpoints)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100),
+                fontSize = 20.sp
+            )
+            Text(
+                text = calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" },
+                fontSize = 20.sp
+            )
+        }
+        TrackedRunMap(checkpoints = run.checkpoints, screenshotState = screenshotState)
+        if (isLoggedIn) {
+            Button(onClick = onShare) {
+                Text(text = stringResource(R.string.share))
+            }
+        }
     }
 }
 
 @Composable
-fun TrackedRunMap(checkpoints: List<RunCheckpointEntity>) {
+fun TrackedRunMap(
+    checkpoints: List<RunCheckpointEntity>,
+    screenshotState: ScreenshotState,
+) {
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(checkpoints.first().run { LatLng(this.latitude, this.longitude) }, 15f)
     }
     Box(
         modifier = Modifier
-            .requiredHeight(300.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .fillMaxWidth()
+            .aspectRatio(1f)
             .padding(6.dp)
-            .border(width = 1.dp, color = Color.LightGray, shape = RoundedCornerShape(14.dp))
+            .border(width = 1.dp, color = Color.LightGray)
     ) {
-        GoogleMap(
-            modifier = Modifier.matchParentSize(),
-            cameraPositionState = cameraPositionState,
-            uiSettings = MapUiSettings(compassEnabled = true, zoomControlsEnabled = false, mapToolbarEnabled = false)
-        ) {
-            Marker(
-                state = MarkerState(checkpoints.map { LatLng(it.latitude, it.longitude) }.first()),
-                icon = setCustomMapIcon(stringResource(R.string.start)),
-                zIndex = 50f
-            )
-            Polyline(
-                points = checkpoints.map { LatLng(it.latitude, it.longitude) },
-                color = Color(0, 150, 255),
-                jointType = JointType.DEFAULT,
-                pattern = listOf(Dash(20f), Gap(8f)),
-                startCap = RoundCap(),
-                endCap = RoundCap(),
-                width = 6f
-            )
-            Marker(
-                state = MarkerState(checkpoints.map { LatLng(it.latitude, it.longitude) }.last()),
-                icon = setCustomMapIcon(stringResource(R.string.end)),
-                zIndex = 49f
-            )
+        ScreenshotBox(screenshotState = screenshotState) {
+            GoogleMap(
+                modifier = Modifier
+                    .matchParentSize(),
+                cameraPositionState = cameraPositionState,
+                uiSettings = MapUiSettings(
+                    compassEnabled = false,
+                    zoomControlsEnabled = false,
+                    mapToolbarEnabled = false
+                )
+            ) {
+                Marker(
+                    state = MarkerState(checkpoints.map { LatLng(it.latitude, it.longitude) }
+                        .first()),
+                    icon = setCustomMapIcon(stringResource(R.string.start)),
+                    zIndex = 50f
+                )
+                Polyline(
+                    points = checkpoints.map { LatLng(it.latitude, it.longitude) },
+                    color = Color(0, 150, 255),
+                    jointType = JointType.DEFAULT,
+                    pattern = listOf(Dash(20f), Gap(8f)),
+                    startCap = RoundCap(),
+                    endCap = RoundCap(),
+                    width = 6f
+                )
+                Marker(
+                    state = MarkerState(checkpoints.map { LatLng(it.latitude, it.longitude) }
+                        .last()),
+                    icon = setCustomMapIcon(stringResource(R.string.end)),
+                    zIndex = 49f
+                )
+            }
         }
+    }
+}
+
+@Composable
+fun SharedRunNotification() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.Green.copy(green = 0.5f)),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Your run has been shared!\nCheck your social feed!",
+            textAlign = TextAlign.Center,
+            color = Color.White,
+            fontSize = 20.sp
+        )
     }
 }

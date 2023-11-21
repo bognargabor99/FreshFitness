@@ -99,6 +99,9 @@ dependencies {
     implementation "com.pierfrancescosoffritti.androidyoutubeplayer:chromecast-sender:0.29"
     implementation "com.pierfrancescosoffritti.androidyoutubeplayer:custom-ui:12.1.0"
 
+    // Take screenshots
+    implementation 'com.github.SmartToolFactory:Compose-Screenshot:1.0.3'
+
     // Maps & Places
     implementation 'com.google.maps.android:maps-compose:2.11.4'
     implementation 'com.google.android.gms:play-services-maps:18.2.0'

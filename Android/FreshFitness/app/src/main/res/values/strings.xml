@@ -60,4 +60,8 @@
     <string name="navigation_drawer">Navigation drawer</string>
     <string name="load_more">Load more…</string>
     <string name="end_of_feed">You have reached the end of the feed</string>
+    <string name="share">Share</string>
+    <string name="sharing_run">Sharing run</string>
+    <string name="are_you_sure_to_share_run">Are you sure you want to share this run?</string>
+    <string name="uploading_file">Uploading file…</string>
 </resources>

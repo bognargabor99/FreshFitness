@@ -22,15 +22,18 @@ import hu.bme.aut.thesis.freshfitness.model.social.CreatePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeleteCommentDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeletePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
+import hu.bme.aut.thesis.freshfitness.service.PostService
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URLConnection
-import java.util.UUID
 
 class SocialFeedViewModel : ViewModel() {
     val posts = mutableStateListOf<Post>()
+
+    val postService = PostService()
+
     var isLoading by mutableStateOf(true)
     var isLoadingMore by mutableStateOf(true)
     private var nextPage: Int = 0
@@ -311,7 +314,10 @@ class SocialFeedViewModel : ViewModel() {
             this.uploadText = "Uploading file..."
             val f = File(context.filesDir, "tempFile.png")
             f.writeBytes(buffer.toByteArray())
-            this.uploadFile(f, extension = mimeType.substring(6),
+            postService.uploadFile(
+                userName = this.userName,
+                file = f,
+                extension = mimeType.substring(6),
                 onFractionCompleted = { this.uploadState = it },
                 onSuccess = { location ->
                     f.delete()
@@ -327,16 +333,6 @@ class SocialFeedViewModel : ViewModel() {
         nextPage = 0
         isLoading = true
         getNextPosts()
-    }
-
-    private fun uploadFile(file: File, extension: String, onFractionCompleted: (Double) -> Unit, onSuccess: (String) -> Unit) {
-        val randomUuid = UUID.randomUUID()
-        StorageService.uploadFile(
-            key = "images/${this.userName}/$randomUuid.$extension",
-            file = file,
-            onFractionCompleted = onFractionCompleted,
-            onSuccess = onSuccess
-        )
     }
 
     fun loadMorePosts() {

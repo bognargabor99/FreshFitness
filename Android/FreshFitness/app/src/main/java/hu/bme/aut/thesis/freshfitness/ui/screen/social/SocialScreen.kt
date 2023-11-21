@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -45,7 +46,6 @@ import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,7 +54,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -71,7 +70,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -103,11 +101,12 @@ import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToTimeSince
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
+import hu.bme.aut.thesis.freshfitness.ui.util.OkCancelDialog
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
+import hu.bme.aut.thesis.freshfitness.ui.util.UploadStateAlert
 import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
 import java.util.Objects
-import kotlin.math.round
 
 @Composable
 fun SocialScreen(
@@ -122,7 +121,7 @@ fun SocialScreen(
     @Suppress("DEPRECATION")
     SwipeRefresh(
         state = rememberSwipeRefreshState(isRefreshing = false),
-        onRefresh = { viewModel.initFeed() }
+        onRefresh = viewModel::initFeed
     ) {
         if (viewModel.isLoading) {
             LoadingSocialFeed()
@@ -350,14 +349,15 @@ fun PostCard(
         .build()
 
     val painter = rememberAsyncImagePainter(model, imageLoader = imageLoader)
-
+    var showAllRows by remember { mutableStateOf(false) }
+    val maxLines by animateIntAsState(if (showAllRows) 10 else 1, label = "")
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 10.dp, horizontal = 16.dp)
             .combinedClickable(onLongClick = {
                 onShowPostOptions(post.id)
-            }) { },
+            }) { showAllRows = !showAllRows },
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
         )
@@ -383,7 +383,8 @@ fun PostCard(
                 Text(
                     text = post.details,
                     fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    maxLines = maxLines
                 )
             }
             if (post.imageLocation.isNotBlank()) {
@@ -749,48 +750,21 @@ fun AddCommentDialog(onComment: (String) -> Unit = { }, onDismiss: () -> Unit = 
                 }
             }
         }
-
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeleteAlert(
     what: String,
     onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss
-    ) {
-        Surface(
-            modifier = Modifier
-                .wrapContentHeight(),
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = AlertDialogDefaults.TonalElevation
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Delete $what", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-                Spacer(Modifier.height(6.dp))
-                Text("Do you really want to delete this $what?")
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Button(onClick = { onDismiss() }, colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent)) {
-                        Text(text = stringResource(id = R.string.cancel))
-                    }
-                    Button(onClick = { onDelete() }, colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent)) {
-                        Text(text = stringResource(id = R.string.ok))
-                    }
-                }
-            }
-        }
-    }
+    OkCancelDialog(
+        title = "Delete $what",
+        subTitle = "Do you really want to delete this $what?",
+        onOk = onDelete,
+        onDismiss = onDismiss
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -821,41 +795,6 @@ fun OptionsDialog(
                     text = stringResource(R.string.delete),
                     fontSize = 18.sp
                 )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun UploadStateAlert(text: String, fractionCompleted: Double, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss
-    ) {
-        Surface(
-            modifier = Modifier
-                .wrapContentHeight(),
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = AlertDialogDefaults.TonalElevation
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(text, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = fractionCompleted.toFloat(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp),
-                    strokeCap = StrokeCap.Round,
-                    trackColor = Color.LightGray
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("${round(fractionCompleted*100.0).toInt()}% completed", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
             }
         }
     }
@@ -919,12 +858,4 @@ fun CommentPreview() {
 @Composable
 fun DeleteAlertPreview() {
     DeleteAlert(what = "post", onDelete = { }, onDismiss = { })
-}
-
-@Preview(showBackground = true)
-@Composable
-fun UploadStateAlertPreview() {
-    UploadStateAlert(text = "Processing file...", fractionCompleted = 0.5) {
-
-    }
 }
