@@ -74,7 +74,7 @@ fun DetailedWorkout(
     isSaved: Boolean = false,
     onSave: () -> Unit = { },
     onDelete: (Workout) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: (() -> Unit)?
 ) {
     var showEquipmentModal by remember { mutableStateOf(false) }
     var showWarmup by remember { mutableStateOf(true) }
@@ -87,7 +87,8 @@ fun DetailedWorkout(
         detailedExercise = it
         showDetailsOfExercise = true
     }
-    BackHandler { onDismiss() }
+    if (onDismiss != null)
+        BackHandler { onDismiss() }
     Column(
         modifier = Modifier
             .fillMaxSize()
