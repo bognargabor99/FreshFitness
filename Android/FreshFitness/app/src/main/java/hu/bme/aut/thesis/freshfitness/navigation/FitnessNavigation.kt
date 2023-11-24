@@ -64,7 +64,7 @@ fun FitnessNavigationWrapperUI(
     val currentScreen = freshFitnessTabs.find {
         val idx = currentDestination?.route?.indexOf("/") ?: currentDestination?.route?.lastIndex ?: 0
         it.route == currentDestination?.route?.substring(0, if (idx == -1) 0 else idx)
-    } ?: Profile
+    } ?: Social
 
     var navigationInfo by remember { mutableStateOf(NavigationInfo(
         allScreens = freshFitnessTabs,
