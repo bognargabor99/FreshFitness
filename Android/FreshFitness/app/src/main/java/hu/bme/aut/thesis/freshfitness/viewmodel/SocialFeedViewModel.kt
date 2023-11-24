@@ -32,7 +32,7 @@ import java.net.URLConnection
 class SocialFeedViewModel : ViewModel() {
     val posts = mutableStateListOf<Post>()
 
-    val postService = PostService()
+    private val postService = PostService()
 
     var isLoading by mutableStateOf(true)
     var isLoadingMore by mutableStateOf(true)
@@ -340,8 +340,8 @@ class SocialFeedViewModel : ViewModel() {
         getNextPosts()
     }
 
-    fun getNextPosts() {
-        ApiService.getPosts(this.nextPage, this.userName, onSuccess = { newPosts ->
+    private fun getNextPosts() {
+        ApiService.getPosts(this.nextPage, onSuccess = { newPosts ->
             val postsToAdd = mutableListOf<Post>()
             newPosts.forEach { pagedPost ->
                 val index = postsToAdd.indexOfFirst { p -> p.id == pagedPost.id }

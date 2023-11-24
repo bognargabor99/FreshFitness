@@ -28,11 +28,10 @@ object ApiService {
      * Social feed
      * GET operations
      */
-    fun getPosts(nextPage: Int, userName: String, onSuccess: (List<PagedPostDto>) -> Unit, onError: () -> Unit = {}) {
+    fun getPosts(nextPage: Int, onSuccess: (List<PagedPostDto>) -> Unit, onError: () -> Unit = {}) {
         val options = RestOptions.builder()
             .addPath("/posts")
             .addQueryParameters(mapOf("page" to nextPage.toString()))
-            .addQueryParameters(mapOf("username" to userName))
             .build()
 
         Amplify.API.get(options,
