@@ -10,15 +10,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.amplifyframework.ui.authenticator.ui.Authenticator
 import hu.bme.aut.thesis.freshfitness.R
-import hu.bme.aut.thesis.freshfitness.viewmodel.AuthViewModel
 
 @Composable
-fun ProfileScreen(
-    viewModel: AuthViewModel = viewModel(factory = AuthViewModel.factory)
-) {
+fun ProfileScreen() {
     Authenticator(
         headerContent = {
             Image(
@@ -30,13 +26,7 @@ fun ProfileScreen(
             )
         }
     ) {
-        LoggedInScreen(
-            onLaunch = {
-                viewModel.setIsAdmin()
-                       },
-            isAdmin = viewModel.isAdmin,
-            onLogOut = { viewModel.signOut() }
-        )
+        LoggedInScreen()
     }
 }
 

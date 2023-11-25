@@ -29,16 +29,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.bme.aut.thesis.freshfitness.R
+import hu.bme.aut.thesis.freshfitness.viewmodel.AuthViewModel
 
 @Composable
-fun LoggedInScreen(
-    onLaunch: () -> Unit,
-    isAdmin: Boolean,
-    onLogOut: () -> Unit
-) {
+fun LoggedInScreen(viewModel: AuthViewModel = viewModel()) {
     LaunchedEffect(key1 = false) {
-        onLaunch()
+        viewModel.setIsAdmin()
     }
     Box {
         Column(
@@ -49,10 +47,10 @@ fun LoggedInScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ProfileImage()
-            ProfileInfo(isAdmin)
+            ProfileInfo(viewModel.isAdmin)
         }
         IconButton(
-            onClick = onLogOut,
+            onClick = viewModel::signOut,
             modifier = Modifier
                 .align(Alignment.TopEnd)
         ) {
