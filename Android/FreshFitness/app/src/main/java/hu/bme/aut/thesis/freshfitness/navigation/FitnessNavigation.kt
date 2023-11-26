@@ -71,10 +71,15 @@ fun FitnessNavigationWrapperUI(
         currentScreen = currentScreen,
     )) }
 
-    val onTabSelected: (FitnessDestination) -> Unit = { newScreen: FitnessDestination ->
+    navController.addOnDestinationChangedListener { _, destination, _ ->
         navigationInfo = navigationInfo.copy(
-            currentScreen = newScreen
+            currentScreen = freshFitnessTabs.singleOrNull {
+                it.route.takeWhile { c -> c != '/' } == destination.route?.takeWhile { c -> c != '/' }
+            } ?: Workout
         )
+    }
+
+    val onTabSelected: (FitnessDestination) -> Unit = { newScreen: FitnessDestination ->
         if (newScreen is Schedule)
             navController.navigateSingleTopTo(newScreen.routeWithArgs)
         else
