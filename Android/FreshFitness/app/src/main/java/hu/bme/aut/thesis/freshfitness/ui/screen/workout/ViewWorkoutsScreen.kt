@@ -202,6 +202,7 @@ fun ViewWorkoutsScreen(
     if (showDateChooser) {
         TargetDatePicker(
             selectedDate = chosenDate,
+            blockedDates = viewModel.getBlockedDates(),
             onSelectDate = { date ->
                 chosenDate = date
                 showDateChooser = false

@@ -16,6 +16,9 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -34,12 +37,17 @@ import java.util.Date
 fun TargetDatePicker(
     selectedDate: String,
     onSelectDate: (String) -> Unit,
+    blockedDates: List<String> = listOf(),
     onDismiss: () -> Unit
 ) {
     val state = rememberDatePickerState()
-    state.setSelection(SimpleDateFormat("yyyy-MM-dd").parse(selectedDate)?.time?.plus((1000 * 60 * 60)))
-    val dateValidator: (Long) -> Boolean = {
-        Date(Date().time - 1000 * 60 * 60 * 24).before(Date(it))
+    val simpleDateFormat by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd")) }
+    state.setSelection(simpleDateFormat.parse(selectedDate)?.time?.plus((1000 * 60 * 60)))
+    val dateValidator: (Long) -> Boolean = { checkedDate ->
+        Date(Date().time - 1000 * 60 * 60 * 24).before(Date(checkedDate)) &&
+        !blockedDates.any { blockedDate ->
+            blockedDate.take(10) == simpleDateFormat.format(Date(checkedDate))
+        }
     }
 
     DatePickerDialog(
@@ -47,7 +55,6 @@ fun TargetDatePicker(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
                     if (state.selectedDateMillis != null){
                         state.selectedDateMillis?.let{
                             onSelectDate(simpleDateFormat.format(Date(it)))
@@ -110,7 +117,7 @@ fun TargetTimePicker(
 @Preview(showBackground = true)
 @Composable
 fun TargetDatePickerPreview() {
-    TargetDatePicker(selectedDate = "2023-11-17", onSelectDate = { }, onDismiss = { })
+    TargetDatePicker(selectedDate = "2023-11-17", blockedDates = listOf(), onSelectDate = { }, onDismiss = { })
 }
 
 @Preview(showBackground = true)

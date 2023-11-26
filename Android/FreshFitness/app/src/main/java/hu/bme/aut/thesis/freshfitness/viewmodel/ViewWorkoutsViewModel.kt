@@ -206,6 +206,10 @@ class ViewWorkoutsViewModel : ViewModel() {
         }
     }
 
+    fun getBlockedDates(): List<String> {
+        return this.savedWorkouts.map { it.savedToDate }
+    }
+
     fun saveWorkout(
         context: Context,
         workout: Workout,
