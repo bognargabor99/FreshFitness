@@ -10,7 +10,7 @@
     <string name="start">Start</string>
     <string name="stop">Stop</string>
     <string name="notification_title">Tracking running route</string>
-    <string name="notification_text">Tap to enter app</string>
+    <string name="notification_text">%1$d checkpoints saved</string>
     <string name="previous_runs">Previous runs</string>
     <string name="delete_run">Delete run</string>
     <string name="meters">%1$.2f meters</string>

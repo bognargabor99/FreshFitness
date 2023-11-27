@@ -54,18 +54,10 @@ class TrackRunningService : Service() {
 
             isRunning = false
 
-            if (checkpoints.size > 1) {
-                scope.launch {
-                    repository.insertNewRunning(checkpoints)
-                }.invokeOnCompletion {
-                    Log.d("trackRunningService", "Inserted new running")
-                    this.stopSelf()
-                }
-            } else
-                this.stopSelf()
+            this.stopSelf()
         }
 
-        startForeground(NOTIFICATION_ID, createNotification())
+        startForeground(NOTIFICATION_ID, createNotificationWithChannel())
         isRunning = true
         if (locationHelper == null) {
             val helper = LocationHelper(applicationContext, TrackRunningServiceCallback())
@@ -76,11 +68,14 @@ class TrackRunningService : Service() {
         return START_STICKY
     }
 
+    private fun createNotificationWithChannel(): Notification {
+        createNotificationChannel()
+        return createNotification()
+    }
+
     private fun createNotification(): Notification {
         val notificationIntent = Intent(this, FreshFitnessActivity::class.java)
         notificationIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
-
-        createNotificationChannel()
 
         val contentIntent = PendingIntent.getActivity(
             this,
@@ -101,10 +96,11 @@ class TrackRunningService : Service() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.notification_title))
-            .setContentText(getString(R.string.notification_text))
+            .setContentText(getString(R.string.notification_text, checkpoints.size))
             .setSmallIcon(R.drawable.directions_run)
             .setContentIntent(contentIntent)
             .addAction(0, getString(R.string.stop), stopPendingIntent)
+            .setOnlyAlertOnce(true)
             .build()
     }
 
@@ -116,6 +112,18 @@ class TrackRunningService : Service() {
         )
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(serviceChannel)
+    }
+
+    override fun onDestroy() {
+        if (checkpoints.size > 1) {
+            scope.launch {
+                repository.insertNewRunning(checkpoints)
+            }.invokeOnCompletion {
+                Log.d("trackRunningService", "Inserted new running")
+            }
+        }
+
+        super.onDestroy()
     }
 
     companion object {
@@ -146,8 +154,16 @@ class TrackRunningService : Service() {
             )
 
             checkpoints.add(checkpoint)
+
+            updateNotification()
+
             Log.d("trackRunningService", "Added new location to this running route")
             Log.d("trackRunningService", "lat: ${round(checkpoint.latitude * 100.0) / 100.0}, lng: ${round(checkpoint.longitude * 100.0) / 100.0}")
+        }
+
+        private fun updateNotification() {
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.notify(NOTIFICATION_ID, createNotification())
         }
     }
 }
