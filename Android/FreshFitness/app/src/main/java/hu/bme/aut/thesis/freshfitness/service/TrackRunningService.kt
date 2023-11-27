@@ -96,7 +96,7 @@ class TrackRunningService : Service() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.notification_title))
-            .setContentText(getString(R.string.notification_text, checkpoints.size))
+            .setContentText(resources.getQuantityString(R.plurals.notification_text, checkpoints.size, checkpoints.size))
             .setSmallIcon(R.drawable.directions_run)
             .setContentIntent(contentIntent)
             .addAction(0, getString(R.string.stop), stopPendingIntent)
@@ -108,7 +108,7 @@ class TrackRunningService : Service() {
         val serviceChannel = NotificationChannel(
             CHANNEL_ID,
             "Foreground Service Channel",
-            NotificationManager.IMPORTANCE_LOW
+            NotificationManager.IMPORTANCE_DEFAULT
         )
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(serviceChannel)

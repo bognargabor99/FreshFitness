@@ -10,7 +10,10 @@
     <string name="start">Start</string>
     <string name="stop">Stop</string>
     <string name="notification_title">Tracking running route</string>
-    <string name="notification_text">%1$d checkpoints saved</string>
+    <plurals name="notification_text">
+        <item quantity="one">%1$d checkpoint saved</item>
+        <item quantity="other">%1$d checkpoints saved</item>
+    </plurals>
     <string name="previous_runs">Previous runs</string>
     <string name="delete_run">Delete run</string>
     <string name="meters">%1$.2f meters</string>
