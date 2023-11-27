@@ -101,7 +101,7 @@ import kotlin.random.Random
 @Composable
 fun ViewWorkoutsScreen(
     contentType: FreshFitnessContentType,
-    viewModel: ViewWorkoutsViewModel = viewModel(factory = ViewWorkoutsViewModel.factory)
+    viewModel: ViewWorkoutsViewModel = viewModel()
 ) {
     ConnectivityStatus(
         availableContent = {

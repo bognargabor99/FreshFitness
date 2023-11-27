@@ -10,10 +10,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
@@ -404,13 +401,5 @@ class ViewWorkoutsViewModel : ViewModel() {
         Log.d("network_connectivity", "Internet not available")
         this.networkAvailable = false
         this.wasNetworkUnavailableBefore = true
-    }
-
-    companion object {
-        val factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                ViewWorkoutsViewModel(/*context = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Context*/)
-            }
-        }
     }
 }
