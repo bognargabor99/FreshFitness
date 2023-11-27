@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
@@ -33,6 +34,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -104,6 +106,7 @@ import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.ui.util.OkCancelDialog
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.UploadStateAlert
+import hu.bme.aut.thesis.freshfitness.ui.util.isScrollingUp
 import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
 import java.util.Objects
@@ -228,13 +231,15 @@ fun LoadedSocialFeed(
     onLoadMore: () -> Unit,
     isLoadingMore: Boolean
 ) {
+    val lazyListState = rememberLazyListState()
     Scaffold(
-        floatingActionButton = { if (createPostEnabled) { NewPostFAB(onCreatePost) } },
+        floatingActionButton = { if (createPostEnabled) { NewPostFAB(extended = lazyListState.isScrollingUp(), onClick = onCreatePost) } },
         floatingActionButtonPosition = FabPosition.End
     ) {
         if (posts.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier.padding(it),
+                state = lazyListState,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
@@ -591,6 +596,7 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
 
 @Composable
 fun NewPostFAB(
+    extended: Boolean,
     onClick: () -> Unit
 ) {
     FloatingActionButton(
@@ -598,7 +604,18 @@ fun NewPostFAB(
         elevation = FloatingActionButtonDefaults.elevation(12.dp),
         shape = CircleShape
     ) {
-        Icon(imageVector = Icons.Filled.Add, contentDescription = "Create post")
+        Row(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Icon(imageVector = Icons.Filled.Add, contentDescription = "Create post")
+            AnimatedVisibility(visible = extended) {
+                Text(
+                    text = stringResource(R.string.create),
+                    modifier = Modifier
+                        .padding(start = 8.dp, top = 3.dp)
+                )
+            }
+        }
     }
 }
 
