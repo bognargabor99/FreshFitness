@@ -226,6 +226,7 @@ fun GymListScreen(
                 modifier = Modifier
                     .fillMaxWidth(),
                 text = "No gyms found",
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
         else
