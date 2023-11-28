@@ -1,13 +1,10 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -59,13 +56,10 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
-import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
-import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilterChangers
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilters
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
-import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.exercises.MusclesAndEquipments
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.viewmodel.ExerciseBankViewModel
@@ -74,36 +68,15 @@ import kotlin.random.Random
 @Composable
 fun ExerciseBankScreen(
     contentType: FreshFitnessContentType,
+    networkAvailable: Boolean,
     viewModel: ExerciseBankViewModel = viewModel()
 ) {
-    ConnectivityStatus(
-        availableContent = {
-            viewModel.onNetworkAvailable()
-            if (viewModel.exercises.isEmpty())
-                LaunchedEffect(key1 = false) {
-                    viewModel.fetchData()
-                }
-        },
-        unAvailableContent = viewModel::onNetworkUnavailable
-    )
+    LaunchedEffect(key1 = networkAvailable) {
+        if (networkAvailable && viewModel.exercises.isEmpty())
+            viewModel.fetchData()
+    }
 
     Column {
-        AnimatedVisibility(
-            visible = !viewModel.networkAvailable && viewModel.hasDataToShow,
-            enter = slideInVertically(initialOffsetY = { -it }),
-            exit = slideOutVertically(targetOffsetY = { -it })
-        ) {
-            NoConnectionNotification()
-        }
-
-        AnimatedVisibility(
-            visible = viewModel.showBackOnline,
-            enter = slideInVertically(initialOffsetY = { -it }),
-            exit = slideOutVertically(targetOffsetY = { -it })
-        ) {
-            BackOnlineNotification()
-        }
-
         val filters by viewModel.filters.collectAsState()
         val filterChangers = ExerciseFilterChangers(
             onNameFilter = { viewModel.saveNameFilter(it) },
@@ -111,7 +84,7 @@ fun ExerciseBankScreen(
             onApplyNewFilters = { difficulty, muscle, equipment -> viewModel.saveOtherFilters(difficulty, muscle, equipment) }
         )
 
-        if (!viewModel.networkAvailable) {
+        if (!networkAvailable) {
             if (!viewModel.hasDataToShow)
                 NetworkUnavailable()
             else {

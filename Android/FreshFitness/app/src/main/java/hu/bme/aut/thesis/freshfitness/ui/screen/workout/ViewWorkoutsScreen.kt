@@ -7,8 +7,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -85,10 +83,7 @@ import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.parseDateToString
 import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
-import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
-import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
-import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.TargetDatePicker
 import hu.bme.aut.thesis.freshfitness.ui.util.TargetTimePicker
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
@@ -101,33 +96,12 @@ import kotlin.random.Random
 @Composable
 fun ViewWorkoutsScreen(
     contentType: FreshFitnessContentType,
+    networkAvailable: Boolean,
     viewModel: ViewWorkoutsViewModel = viewModel()
 ) {
-    ConnectivityStatus(
-        availableContent = {
-            viewModel.onNetworkAvailable()
-            LaunchedEffect(key1 = false) {
-                if (viewModel.communityWorkouts.isEmpty())
-                    viewModel.initScreen()
-            }
-        },
-        unAvailableContent = viewModel::onNetworkUnavailable
-    )
-
-    AnimatedVisibility(
-        visible = !viewModel.networkAvailable && viewModel.hasDataToShow,
-        enter = slideInVertically(initialOffsetY = { -it }),
-        exit = slideOutVertically(targetOffsetY = { -it })
-    ) {
-        NoConnectionNotification()
-    }
-
-    AnimatedVisibility(
-        visible = viewModel.showBackOnline,
-        enter = slideInVertically(initialOffsetY = { -it }),
-        exit = slideOutVertically(targetOffsetY = { -it })
-    ) {
-        BackOnlineNotification()
+    LaunchedEffect(key1 = networkAvailable) {
+        if (networkAvailable && viewModel.communityWorkouts.isEmpty())
+            viewModel.initScreen()
     }
 
     val workoutPlanState by viewModel.workoutPlanState.collectAsState()
@@ -167,6 +141,7 @@ fun ViewWorkoutsScreen(
                 )
             } else {
                 ViewWorkoutsScreenListOnly(
+                    networkAvailable = networkAvailable,
                     showDetailsOfWorkout = showDetailsOfWorkout,
                     detailedWorkout = detailedWorkout,
                     onDismissShowDetails = onDismissShowDetails,
@@ -188,6 +163,7 @@ fun ViewWorkoutsScreen(
             } else {
                 ViewWorkoutsScreenListAndDetail(
                     modifier = Modifier.fillMaxSize(),
+                    networkAvailable = networkAvailable,
                     permissionState = permission,
                     detailedWorkout = detailedWorkout,
                     viewModel = viewModel,
@@ -225,6 +201,7 @@ fun ViewWorkoutsScreen(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ViewWorkoutsScreenListOnly(
+    networkAvailable: Boolean,
     showDetailsOfWorkout: Boolean,
     detailedWorkout: Workout?,
     onDismissShowDetails: () -> Unit,
@@ -254,7 +231,7 @@ fun ViewWorkoutsScreenListOnly(
         Column(
             modifier = Modifier.padding(horizontal = 4.dp)
         ) {
-            if (!viewModel.networkAvailable) {
+            if (!networkAvailable) {
                 if (!viewModel.hasDataToShow) {
                     NetworkUnavailable()
                 }
@@ -278,6 +255,7 @@ fun ViewWorkoutsScreenListOnly(
 @Composable
 fun ViewWorkoutsScreenListAndDetail(
     modifier: Modifier = Modifier,
+    networkAvailable: Boolean,
     permissionState: PermissionState,
     detailedWorkout: Workout?,
     viewModel: ViewWorkoutsViewModel,
@@ -285,7 +263,10 @@ fun ViewWorkoutsScreenListAndDetail(
     onPlanWorkout: () -> Unit,
     onSaveWorkout: () -> Unit
 ) {
-    if (viewModel.isLoading) {
+    if (!networkAvailable && !viewModel.hasDataToShow) {
+        NetworkUnavailable()
+    }
+    else if (viewModel.isLoading) {
         ViewWorkoutsLoading(contentType = FreshFitnessContentType.LIST_AND_DETAIL)
     }
     else {

@@ -25,8 +25,6 @@ import hu.bme.aut.thesis.freshfitness.model.workout.UnitOfMeasure
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.repository.WorkoutCreationRepository
 import hu.bme.aut.thesis.freshfitness.repository.WorkoutsRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,10 +55,6 @@ class ViewWorkoutsViewModel : ViewModel() {
     // Determining which kind of screen to show
     var isLoading by mutableStateOf(true)
     var hasDataToShow by mutableStateOf(false)
-
-    var networkAvailable by mutableStateOf(true)
-    private var wasNetworkUnavailableBefore by mutableStateOf(false)
-    var showBackOnline by mutableStateOf(false)
 
     // Planning a workout
     private val _workoutPlanState = MutableStateFlow(WorkoutPlanState(owner = ""))
@@ -382,24 +376,5 @@ class ViewWorkoutsViewModel : ViewModel() {
         Log.d("create_workout", "New workout settings:\n${_workoutPlanState.value}")
         this.plannedWorkout = workoutCreationRepository.createWorkoutPlan(_workoutPlanState.value)
         this.planningWorkout = true
-    }
-
-    fun onNetworkAvailable() {
-        Log.d("network_connectivity", "Internet available")
-        this.networkAvailable = true
-        if (this.wasNetworkUnavailableBefore) {
-            this.showBackOnline = true
-            viewModelScope.launch(Dispatchers.IO) {
-                delay(3000)
-                this@ViewWorkoutsViewModel.showBackOnline = false
-                this@ViewWorkoutsViewModel.wasNetworkUnavailableBefore = false
-            }
-        }
-    }
-
-    fun onNetworkUnavailable() {
-        Log.d("network_connectivity", "Internet not available")
-        this.networkAvailable = false
-        this.wasNetworkUnavailableBefore = true
     }
 }

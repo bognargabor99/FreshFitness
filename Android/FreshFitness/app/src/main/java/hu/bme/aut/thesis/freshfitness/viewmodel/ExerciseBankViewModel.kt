@@ -1,6 +1,5 @@
 package hu.bme.aut.thesis.freshfitness.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -15,8 +14,6 @@ import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.model.workout.UnitOfMeasure
 import hu.bme.aut.thesis.freshfitness.repository.FavouriteExercisesRepository
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilters
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,11 +43,6 @@ class ExerciseBankViewModel : ViewModel() {
     // Determining which kind of screen to show
     var isLoading by mutableStateOf(true)
     var hasDataToShow by mutableStateOf(false)
-
-    // network availability
-    var networkAvailable by mutableStateOf(true)
-    private var wasNetworkUnavailableBefore by mutableStateOf(false)
-    var showBackOnline by mutableStateOf(false)
 
     fun fetchData() {
         this.getFavouriteExercises()
@@ -194,24 +186,5 @@ class ExerciseBankViewModel : ViewModel() {
         this.difficulties.clear()
         this.difficulties.addAll(this.exercises.map { it.difficulty }.distinct())
         applyFilters()
-    }
-
-    fun onNetworkAvailable() {
-        Log.d("network_connectivity", "Internet available")
-        this.networkAvailable = true
-        if (this.wasNetworkUnavailableBefore) {
-            this.showBackOnline = true
-            viewModelScope.launch(Dispatchers.IO) {
-                delay(3000)
-                this@ExerciseBankViewModel.showBackOnline = false
-                this@ExerciseBankViewModel.wasNetworkUnavailableBefore = false
-            }
-        }
-    }
-
-    fun onNetworkUnavailable() {
-        Log.d("network_connectivity", "Internet not available")
-        this.networkAvailable = false
-        this.wasNetworkUnavailableBefore = true
     }
 }

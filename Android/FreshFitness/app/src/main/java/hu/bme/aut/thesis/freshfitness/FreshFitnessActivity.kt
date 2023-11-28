@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,11 +15,13 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -49,15 +53,19 @@ import hu.bme.aut.thesis.freshfitness.ui.screen.workout.TrackRunningScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.ViewWorkoutsScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutScreen
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
+import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
+import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.DevicePosture
 import hu.bme.aut.thesis.freshfitness.ui.util.Exercises
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessNavigationType
+import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.Places
 import hu.bme.aut.thesis.freshfitness.ui.util.Planning
 import hu.bme.aut.thesis.freshfitness.ui.util.Running
 import hu.bme.aut.thesis.freshfitness.ui.util.isBookPosture
 import hu.bme.aut.thesis.freshfitness.ui.util.isSeparating
+import hu.bme.aut.thesis.freshfitness.viewmodel.ConnectivityViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -133,7 +141,7 @@ fun FreshFitnessAppContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.inverseOnSurface)
         ) {
-            FreshFitnessNavigationHost(navController = navController, contentType = contentType, modifier = Modifier.weight(1f))
+            FreshFitnessNavigationHost(modifier = Modifier.weight(1f), navController = navController, contentType = contentType)
 
             AnimatedVisibility(visible = navigationType == FreshFitnessNavigationType.BOTTOM_NAVIGATION) {
                 FitnessBottomNavigation(navInfo = navInfo, onTabSelected = onTabSelected)
@@ -144,47 +152,76 @@ fun FreshFitnessAppContent(
 
 @Composable
 fun FreshFitnessNavigationHost(
+    modifier: Modifier = Modifier,
+    viewModel: ConnectivityViewModel = viewModel(),
     navController: NavHostController,
     contentType: FreshFitnessContentType,
-    modifier: Modifier = Modifier,
 ) {
     setWorkoutOnClickListeners(navController)
-    NavHost(
-        modifier = modifier,
-        navController = navController,
-        startDestination = Social.route
+    Column(
+        modifier = modifier
     ) {
-        composable(route = Profile.route) {
-            ProfileScreen()
+        ConnectivityStatus(
+            availableContent = {
+                LaunchedEffect(key1 = false) { viewModel.onNetworkAvailable() }
+            },
+            unAvailableContent = {
+                LaunchedEffect(key1 = false) { viewModel.onNetworkUnavailable() }
+            }
+        )
+        AnimatedVisibility(
+            visible = !viewModel.networkAvailable,
+            enter = slideInVertically(initialOffsetY = { -it }),
+            exit = slideOutVertically(targetOffsetY = { -it })
+        ) {
+            NoConnectionNotification()
         }
-        composable(route = Workout.route) {
-            WorkoutScreen(contentType = contentType)
+
+        AnimatedVisibility(
+            visible = viewModel.showBackOnline,
+            enter = slideInVertically(initialOffsetY = { -it }),
+            exit = slideOutVertically(targetOffsetY = { -it })
+        ) {
+            BackOnlineNotification()
         }
-        composable(route = Social.route) {
-            SocialScreen(contentType = contentType)
-        }
-        composable(
-            route = Schedule.routeWithArgs,
-            arguments = Schedule.arguments,
-            deepLinks = Schedule.deepLinks
-        ) { navBackStackEntry ->
-            val dateArg = navBackStackEntry.arguments?.getString(Schedule.accountTypeArg) ?: ""
-            ScheduleScreen(date = dateArg, contentType = contentType)
-        }
-        composable(route = Home.route) {
-            HomeScreen()
-        }
-        composable(route = NearbyGyms.route) {
-            NearbyGymsScreen()
-        }
-        composable(route = TrackRunning.route) {
-            TrackRunningScreen()
-        }
-        composable(route = WorkoutPlanning.route) {
-            ViewWorkoutsScreen(contentType = contentType)
-        }
-        composable(route = ExerciseBank.route) {
-            ExerciseBankScreen(contentType = contentType)
+
+        NavHost(
+            //modifier = modifier,
+            navController = navController,
+            startDestination = Social.route
+        ) {
+            composable(route = Profile.route) {
+                ProfileScreen()
+            }
+            composable(route = Workout.route) {
+                WorkoutScreen(contentType = contentType)
+            }
+            composable(route = Social.route) {
+                SocialScreen(contentType = contentType)
+            }
+            composable(
+                route = Schedule.routeWithArgs,
+                arguments = Schedule.arguments,
+                deepLinks = Schedule.deepLinks
+            ) { navBackStackEntry ->
+                val dateArg = navBackStackEntry.arguments?.getString(Schedule.accountTypeArg) ?: ""
+                ScheduleScreen(date = dateArg, contentType = contentType, networkAvailable = viewModel.networkAvailable)
+            }
+            composable(route = Home.route) {
+                HomeScreen()
+            }
+            composable(route = NearbyGyms.route) {
+                NearbyGymsScreen()
+            }
+            composable(route = TrackRunning.route) {
+                TrackRunningScreen()
+            }
+            composable(route = WorkoutPlanning.route) {
+                ViewWorkoutsScreen(contentType = contentType, networkAvailable = viewModel.networkAvailable)
+            }
+            composable(route = ExerciseBank.route) {
+                ExerciseBankScreen(contentType = contentType, networkAvailable = viewModel.networkAvailable)
+            }
         }
     }
 }

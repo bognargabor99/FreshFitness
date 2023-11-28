@@ -1,9 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.schedule
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -87,14 +84,12 @@ import hu.bme.aut.thesis.freshfitness.getEquipmentsOfWorkout
 import hu.bme.aut.thesis.freshfitness.isValidDate
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
+import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.DetailedExerciseEquipment
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.DetailedWorkout
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutOverviewRow
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.getWorkoutBackground
-import hu.bme.aut.thesis.freshfitness.ui.util.BackOnlineNotification
-import hu.bme.aut.thesis.freshfitness.ui.util.ConnectivityStatus
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
-import hu.bme.aut.thesis.freshfitness.ui.util.NoConnectionNotification
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.Day
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.displayText
@@ -114,19 +109,15 @@ import kotlin.math.absoluteValue
 fun ScheduleScreen(
     date: String = LocalDate.now().toString(),
     contentType: FreshFitnessContentType,
+    networkAvailable: Boolean,
     viewModel: ScheduleViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    ConnectivityStatus(
-        availableContent = {
-            viewModel.onNetworkAvailable()
-            if (viewModel.exercises.isEmpty())
-                LaunchedEffect(key1 = false) {
-                    viewModel.initScreen()
-                }
-        },
-        unAvailableContent = viewModel::onNetworkUnavailable
-    )
+
+    LaunchedEffect(key1 = networkAvailable) {
+        if (networkAvailable && viewModel.exercises.isEmpty())
+            viewModel.initScreen()
+    }
 
     var showDetailsOfWorkout by rememberSaveable { mutableStateOf(false) }
     var detailedWorkout: Workout? by rememberSaveable { mutableStateOf(null) }
@@ -137,23 +128,10 @@ fun ScheduleScreen(
 
 
     Column {
-        AnimatedVisibility(
-            visible = !viewModel.networkAvailable && viewModel.hasDataToShow,
-            enter = slideInVertically(initialOffsetY = { -it }),
-            exit = slideOutVertically(targetOffsetY = { -it })
-        ) {
-            NoConnectionNotification()
+        if (!networkAvailable && !viewModel.hasDataToShow) {
+            NetworkUnavailable()
         }
-
-        AnimatedVisibility(
-            visible = viewModel.showBackOnline,
-            enter = slideInVertically(initialOffsetY = { -it }),
-            exit = slideOutVertically(targetOffsetY = { -it })
-        ) {
-            BackOnlineNotification()
-        }
-
-        if (!viewModel.savedWorkoutsFetched) {
+        else if (!viewModel.savedWorkoutsFetched) {
             ScheduleScreenLoading()
         }
         else {

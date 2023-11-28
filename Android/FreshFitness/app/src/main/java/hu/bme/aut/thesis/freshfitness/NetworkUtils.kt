@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.util.Log
 import hu.bme.aut.thesis.freshfitness.model.ConnectionState
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -35,6 +36,7 @@ private fun getCurrentConnectivityState(
  * Network Utility to observe availability or unavailability of Internet connection
  */
 fun Context.observeConnectivityAsFlow() = callbackFlow {
+    Log.d("observeConnectivityFlow", "Starting to observe")
     val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     val callback = NetworkCallback { connectionState -> trySend(connectionState) }
@@ -52,6 +54,7 @@ fun Context.observeConnectivityAsFlow() = callbackFlow {
     // Remove callback when not used
     awaitClose {
         // Remove listeners
+        Log.d("observeConnectivityFlow", "Removing observer")
         connectivityManager.unregisterNetworkCallback(callback)
     }
 }
