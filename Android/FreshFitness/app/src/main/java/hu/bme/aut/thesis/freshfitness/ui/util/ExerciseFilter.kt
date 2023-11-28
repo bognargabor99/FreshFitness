@@ -192,7 +192,7 @@ fun MuscleGroupCard(muscleGroup: MuscleGroup, isSelected: Boolean, onClick: (Str
                 .padding(vertical = 4.dp),
             text = muscleGroup.name,
             textAlign = TextAlign.Center,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }
@@ -239,7 +239,7 @@ fun Badge(text: String, isSelected: Boolean, onClick: (String) -> Unit) {
             )
             .padding(12.dp)
     ) {
-        Text(text = text)
+        Text(text = text, color = MaterialTheme.colorScheme.onBackground)
     }
 }
 

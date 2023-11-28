@@ -111,6 +111,7 @@ fun DetailedExerciseTitle(title: String) {
     Text(
         text = title,
         fontSize = 26.sp,
+        color = MaterialTheme.colorScheme.onBackground,
         fontWeight = FontWeight.Bold
     )
 }
@@ -133,6 +134,7 @@ fun DetailedExerciseDetails(details: String) {
             Text(
                 modifier = Modifier.padding(horizontal = 10.dp),
                 text = "${index + 1}. $s",
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 16.sp
             )
         }

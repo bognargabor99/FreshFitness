@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -92,9 +93,7 @@ fun NearbyGymsScreen(
                     }
 
                     LocationEnabledState.DISABLED -> {
-                        LocationDisabled {
-                            viewModel.startLocationFlow(context)
-                        }
+                        LocationDisabled(onTryAgain = { viewModel.startLocationFlow(context) })
                     }
 
                     LocationEnabledState.ENABLED_SEARCHING -> {
@@ -178,7 +177,7 @@ fun LocationDisabled(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text = "To continue, please turn on device location and then try again", textAlign = TextAlign.Center)
+            Text(text = "To continue, please turn on device location and then try again", color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
             Button(onClick = onTryAgain) {
                 Text(text = "Try again")
             }
@@ -280,37 +279,25 @@ fun GoogleMapModalBottomSheet(
 
 @Composable
 fun LocationEnabledUnknown(radius: Int, onValueChange: (Float) -> Unit) {
-    Column {
-        DistanceFilter(
-            radius = radius,
-            onValueChange = onValueChange,
-            onQuery = { }
-        )
-
-        Divider()
-
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                modifier = Modifier.wrapContentSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                InfiniteCircularProgressBar()
-                Text(
-                    text = "Checking settings...",
-                    fontStyle = FontStyle.Italic,
-                    color = Color.Black.copy(alpha = 0.5f)
-                )
-            }
-        }
-    }
+    LocationLoading(
+        text = "Checking settings...",
+        radius = radius,
+        onValueChange = onValueChange
+    )
 }
 
 @Composable
 fun LocationEnabledSearching(radius: Int, onValueChange: (Float) -> Unit, onQuery: () -> Unit) {
+    LocationLoading(
+        text = "Retrieving location...",
+        radius = radius,
+        onValueChange = onValueChange,
+        onQuery = onQuery
+    )
+}
+
+@Composable
+fun LocationLoading(text: String, radius: Int, onValueChange: (Float) -> Unit, onQuery: () -> Unit = { }) {
     Column {
         DistanceFilter(
             radius = radius,
@@ -327,13 +314,13 @@ fun LocationEnabledSearching(radius: Int, onValueChange: (Float) -> Unit, onQuer
             Column(
                 modifier = Modifier.wrapContentSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 InfiniteCircularProgressBar()
                 Text(
-                    text = "Retrieving location...",
+                    text = text,
                     fontStyle = FontStyle.Italic,
-                    color = Color.Black.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                 )
             }
         }
@@ -359,7 +346,7 @@ fun GoogleMapSheetContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(vertical = 12.dp),
-            cameraPositionState = cameraState
+            cameraPositionState = cameraState,
         ) {
             Marker(
                 state = MarkerState(position = shownLocation),
@@ -429,8 +416,8 @@ fun NearbyGymItem(
                     .weight(.8f),
                 verticalArrangement = Arrangement.SpaceAround
             ) {
-                Text(text = name, modifier = Modifier.padding(bottom = 6.dp), style = MaterialTheme.typography.titleLarge.copy(color = Color.Black.copy(alpha = 0.6f)), fontWeight = FontWeight.Bold)
-                Text(text = address, style = MaterialTheme.typography.labelLarge.copy(color = Color.Black.copy(alpha = 0.6f)))
+                Text(text = name, modifier = Modifier.padding(bottom = 6.dp), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontWeight = FontWeight.Bold)
+                Text(text = address, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
             }
             IconButton(
                 modifier = Modifier.weight(.2f),
@@ -443,7 +430,7 @@ fun NearbyGymItem(
                 )
             }
         }
-        if (expanded)
+        AnimatedVisibility(visible = expanded) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -456,6 +443,7 @@ fun NearbyGymItem(
                     Text(text = "Show")
                 }
             }
+        }
     }
 }
 

@@ -108,7 +108,14 @@ fun WorkoutPlanningHeader() {
             .wrapContentHeight(),
         contentAlignment = Alignment.CenterEnd
     ) {
-        Text(modifier = Modifier.fillMaxWidth(), text = stringResource(R.string.plan_a_workout), textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(R.string.plan_a_workout),
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp
+        )
     }
 }
 
@@ -182,7 +189,7 @@ fun WarmupSwitch(
         modifier = Modifier.padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Plan warmup?", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text(text = "Plan warmup?", fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
         Switch(
             checked = checked,
             onCheckedChange = { onCheckedChange(it) },

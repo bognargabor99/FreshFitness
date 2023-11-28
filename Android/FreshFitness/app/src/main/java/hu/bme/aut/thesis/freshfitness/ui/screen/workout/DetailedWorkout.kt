@@ -217,12 +217,18 @@ fun WorkoutOverview(
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Speed, title = "Difficulty") {
-            Text(text = workout.difficulty.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() })
+            Text(
+                text = workout.difficulty.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() },
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.FitnessCenter, title = "Equipments") {
             ClickableText(
                 text = if (showEquipmentsEnabled) AnnotatedString(stringResource(id = R.string.see_equipment)) else AnnotatedString(stringResource(id = R.string.no_equipment)),
-                style = TextStyle(textDecoration = if (showEquipmentsEnabled) TextDecoration.Underline else TextDecoration.None),
+                style = TextStyle(
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textDecoration = if (showEquipmentsEnabled) TextDecoration.Underline else TextDecoration.None
+                ),
                 onClick = { if (showEquipmentsEnabled) onSeeEquipments() }
             )
         }
@@ -255,8 +261,11 @@ fun WorkoutOverviewRow(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = imageVector, contentDescription = null)
-            Text(text = title)
+            Icon(imageVector = imageVector, tint = MaterialTheme.colorScheme.onBackground, contentDescription = null)
+            Text(
+                text = title,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
         rightElement()
     }
@@ -275,7 +284,13 @@ fun ExerciseList(
             .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        Text(modifier = Modifier.padding(8.dp), text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(
+            modifier = Modifier.padding(8.dp),
+            text = title,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp
+        )
         exercises.forEach {
             WorkoutExerciseRow(workoutExercise = it, onClick = onClickExercise)
         }
@@ -310,6 +325,7 @@ fun WorkoutExerciseRow(
             Text(
                 text = workoutExercise.exercise!!.name,
                 fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -338,6 +354,7 @@ fun ExerciseGroupDivider(
             fontSize = 14.sp,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.SemiBold
         )
         Divider(

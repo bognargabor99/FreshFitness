@@ -86,7 +86,7 @@ fun WorkoutCover(
                         text = name,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.background,
+                        color = Color.White,
                         style = TextStyle.Default.copy(
                             drawStyle = Fill,
                             shadow = Shadow(Color.Black, Offset(4f, 4f), blurRadius = 3f)
@@ -99,14 +99,14 @@ fun WorkoutCover(
                         onClick = onSave,
                         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.background)
                     ) {
-                        Icon(imageVector = Icons.Filled.SaveAlt, contentDescription = null)
+                        Icon(imageVector = Icons.Filled.SaveAlt, tint = MaterialTheme.colorScheme.onBackground, contentDescription = null)
                     }
                 if (isSaved && deleteEnabled)
                     IconButton(
                         onClick = onDelete,
                         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.background)
                     ) {
-                        Icon(imageVector = Icons.Filled.Delete, contentDescription = null)
+                        Icon(imageVector = Icons.Filled.Delete, tint = MaterialTheme.colorScheme.onBackground, contentDescription = null)
                     }
             }
         }

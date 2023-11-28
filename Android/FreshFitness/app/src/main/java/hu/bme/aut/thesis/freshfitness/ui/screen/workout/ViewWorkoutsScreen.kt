@@ -505,13 +505,13 @@ fun WorkoutTitle(title: String, listShown: Boolean, onShowClick: () -> Unit) {
             modifier = Modifier
                 .padding(8.dp),
             text = title.uppercase(),
-            color = Color(0xff666666),
+            color = Color(0xff888888),
             fontFamily = FontFamily.Monospace,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold
         )
         IconButton(onClick = onShowClick) {
-            Icon(imageVector = if (listShown) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowLeft, tint = Color(0xff666666), contentDescription = null)
+            Icon(imageVector = if (listShown) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowLeft, tint = Color(0xff888888), contentDescription = null)
         }
     }
 }
@@ -603,7 +603,7 @@ fun WorkoutRow(
                 fontSize = 16.sp,
                 textAlign = TextAlign.End,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.background,
+                color = Color.White,
                 style = TextStyle.Default.copy(
                     drawStyle = Fill,
                     shadow = Shadow(Color.Black, Offset(4f, 4f), blurRadius = 3f)

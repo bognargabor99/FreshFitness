@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.util
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -48,7 +49,8 @@ fun DistanceFilter(
 
     Column(
         modifier = Modifier
-            .padding(bottom = extraPadding.coerceAtLeast(0.dp)).background(MaterialTheme.colorScheme.background.copy(alpha = 0.9f))
+            .padding(bottom = extraPadding.coerceAtLeast(0.dp))
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.9f))
     ) {
         Row(
             modifier = Modifier
@@ -63,9 +65,7 @@ fun DistanceFilter(
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
             )
-            IconButton(
-                onClick = { expanded = !expanded }
-            ) {
+            IconButton(onClick = { expanded = !expanded }) {
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = "",
@@ -74,13 +74,14 @@ fun DistanceFilter(
             }
         }
 
-        if (expanded) {
+        AnimatedVisibility(visible = expanded) {
             Row(
                 modifier = Modifier.height(44.dp),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 Text(
                     modifier = Modifier.padding(12.dp),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                     text = stringResource(R.string.distance)
                 )
                 Slider(

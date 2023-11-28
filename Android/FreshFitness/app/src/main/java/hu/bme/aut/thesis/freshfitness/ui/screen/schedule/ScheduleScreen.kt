@@ -444,7 +444,7 @@ private fun CalendarTop(
             ) {
                 TopAppBar(
                     title = { Text(text = selection.month.name.lowercase().replaceFirstChar { it.uppercase() }, color = MaterialTheme.colorScheme.background) },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
                     actions = {
                         IconButton(onClick = { onRefresh() }) {
                             Icon(imageVector = Icons.Filled.Refresh, tint = MaterialTheme.colorScheme.background, contentDescription = null)
@@ -461,7 +461,7 @@ private fun CalendarTop(
                     Text(
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center,
-                        color = Color.DarkGray,
+                        color = MaterialTheme.colorScheme.onBackground,
                         text = dayOfWeek.displayText(),
                         fontSize = 15.sp,
                     )
@@ -504,6 +504,7 @@ private fun MonthHeader(calendarMonth: CalendarMonth) {
         Text(
             textAlign = TextAlign.Center,
             text = calendarMonth.yearMonth.displayText(),
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
         )
@@ -655,14 +656,14 @@ fun WorkoutOverview(
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.FitnessCenter, title = "Equipments") {
             val needEquipment = workout.exercises.any { it.exercise?.equipment != null && it.exercise?.equipment?.type != "none" }
-            Text(text = if (needEquipment) "Needs equipment" else "No equipment")
+            Text(text = if (needEquipment) "Needs equipment" else "No equipment", color = MaterialTheme.colorScheme.onBackground)
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Accessibility, title = "Warmup") {
             val hasWarmup = workout.warmupExercises.any()
-            Text(text = if (hasWarmup) "Planned" else "Not planned")
+            Text(text = if (hasWarmup) "Planned" else "Not planned", color = MaterialTheme.colorScheme.onBackground)
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.RotateRight, title = "Sets") {
-            Text(text = "${workout.sets} sets w/ ${workout.exercises.size} exercises")
+            Text(text = "${workout.sets} sets w/ ${workout.exercises.size} exercises", color = MaterialTheme.colorScheme.onBackground)
         }
     }
 

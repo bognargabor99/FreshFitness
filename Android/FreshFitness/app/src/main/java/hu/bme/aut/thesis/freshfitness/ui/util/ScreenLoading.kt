@@ -33,7 +33,7 @@ fun ScreenLoading(
             Text(
                 text = loadingText,
                 fontStyle = FontStyle.Italic,
-                color = Color.Black.copy(alpha = 0.5f)
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
             )
         }
     }

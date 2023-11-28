@@ -36,8 +36,8 @@ fun NetworkUnavailable() {
                     .size(180.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(text = stringResource(R.string.network_unavailable))
-            Text(text = stringResource(R.string.check_connection))
+            Text(text = stringResource(R.string.network_unavailable), color = MaterialTheme.colorScheme.onBackground)
+            Text(text = stringResource(R.string.check_connection), color = MaterialTheme.colorScheme.onBackground)
         }
     }
 }

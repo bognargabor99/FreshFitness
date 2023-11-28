@@ -3,9 +3,11 @@ package hu.bme.aut.thesis.freshfitness.ui.screen.profile
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,6 +22,7 @@ fun ProfileScreen() {
             Image(
                 modifier = Modifier.height(160.dp).fillMaxWidth(),
                 painter = painterResource(id = R.drawable.freshfitness_logo_big),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
                 alignment = Alignment.Center,
                 contentScale = ContentScale.FillHeight,
                 contentDescription = null

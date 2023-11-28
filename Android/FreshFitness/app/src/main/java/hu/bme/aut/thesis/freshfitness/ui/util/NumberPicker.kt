@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,7 +33,7 @@ fun NumberPicker(
         modifier = Modifier.clip(RoundedCornerShape(16.dp)).padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text(text = title, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -40,13 +41,13 @@ fun NumberPicker(
             IconButton(
                 modifier = Modifier.clip(CircleShape),
                 onClick = { onNumberChange(currentNumber - 1) }, enabled = numbers.contains(currentNumber - 1)) {
-                Icon(imageVector = Icons.Filled.ChevronLeft, contentDescription = null)
+                Icon(imageVector = Icons.Filled.ChevronLeft, tint = MaterialTheme.colorScheme.onBackground, contentDescription = null)
             }
-            Text(text = "$currentNumber", fontSize = 18.sp)
+            Text(text = "$currentNumber", color = MaterialTheme.colorScheme.onBackground, fontSize = 18.sp)
             IconButton(
                 modifier = Modifier.clip(CircleShape),
                 onClick = { onNumberChange(currentNumber + 1) }, enabled = numbers.contains(currentNumber + 1)) {
-                Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = null)
+                Icon(imageVector = Icons.Filled.ChevronRight, tint = MaterialTheme.colorScheme.onBackground, contentDescription = null)
             }
         }
     }

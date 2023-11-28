@@ -414,13 +414,14 @@ fun ExerciseRow(
         Text(
             text = exercise.name,
             fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
             IconButton(onClick = { onClickHeart(exercise) }) {
-                Icon(imageVector = if (isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, contentDescription = null)
+                Icon(imageVector = if (isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, tint = MaterialTheme.colorScheme.onBackground, contentDescription = null)
             }
         }
     }

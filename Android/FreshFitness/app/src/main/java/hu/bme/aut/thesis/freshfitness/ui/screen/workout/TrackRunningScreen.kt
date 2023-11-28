@@ -176,6 +176,7 @@ fun TrackRunningScreen(
                         item {
                             Text(
                                 text = stringResource(R.string.previous_runs),
+                                color = MaterialTheme.colorScheme.onBackground,
                                 fontSize = MaterialTheme.typography.headlineMedium.fontSize
                             )
                         }
@@ -266,10 +267,12 @@ fun TrackedRun(
         ) {
             Text(
                 text = stringResource(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100),
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 20.sp
             )
             Text(
                 text = calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" },
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 20.sp
             )
         }
@@ -292,7 +295,6 @@ fun TrackedRunMap(
     }
     Box(
         modifier = Modifier
-            .fillMaxWidth()
             .aspectRatio(1f)
             .padding(6.dp)
             .border(width = 1.dp, color = Color.LightGray)
