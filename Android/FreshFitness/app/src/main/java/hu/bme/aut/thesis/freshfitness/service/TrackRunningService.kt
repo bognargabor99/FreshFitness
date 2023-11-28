@@ -135,30 +135,22 @@ class TrackRunningService : Service() {
 
     inner class TrackRunningServiceCallback : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
-            val location = result.locations.last() ?: return
-
             result.locations.forEach {
-                if (lastKnownLocation != null) {
-                    if (lastKnownLocation!!.distanceTo(it) > 1000f && it.time - lastKnownLocation!!.time < 60000)
-                        lastKnownLocation = location
+                if (checkpoints.isEmpty() || lastKnownLocation!!.distanceTo(it) < 1000f) {
+                    val checkpoint = RunCheckpointEntity(
+                        latitude = it.latitude,
+                        longitude = it.longitude,
+                        height = it.altitude,
+                        timestamp = it.time
+                    )
+                    checkpoints.add(checkpoint)
+                    lastKnownLocation = it
                 }
-                else
-                    lastKnownLocation = location
             }
-
-            val checkpoint = RunCheckpointEntity(
-                latitude = location.latitude,
-                longitude = location.longitude,
-                height = location.altitude,
-                timestamp = location.time
-            )
-
-            checkpoints.add(checkpoint)
-
             updateNotification()
 
             Log.d("trackRunningService", "Added new location to this running route")
-            Log.d("trackRunningService", "lat: ${round(checkpoint.latitude * 100.0) / 100.0}, lng: ${round(checkpoint.longitude * 100.0) / 100.0}")
+            Log.d("trackRunningService", "lat: ${round(checkpoints.last().latitude * 100.0) / 100.0}, lng: ${round(checkpoints.last().longitude * 100.0) / 100.0}")
         }
 
         private fun updateNotification() {
