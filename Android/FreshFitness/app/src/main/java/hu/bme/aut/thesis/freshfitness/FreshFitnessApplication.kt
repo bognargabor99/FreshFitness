@@ -35,7 +35,7 @@ class FreshFitnessApplication : Application() {
                 klass = RunningDatabase::class.java,
                 name = "fresh_fitness_database"
             )
-            .createFromAsset("fresh_fitness_database.db")
+            .createFromAsset("database/fresh_fitness_database.db")
             .fallbackToDestructiveMigration().build()
     }
 }
