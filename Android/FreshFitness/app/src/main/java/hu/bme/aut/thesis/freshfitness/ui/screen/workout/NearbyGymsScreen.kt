@@ -269,7 +269,6 @@ fun GoogleMapModalBottomSheet(
         modifier = Modifier,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         onDismissRequest = onHidePlace,
-        dragHandle = { }
     ) {
         GoogleMapSheetContent(
             shownLocation = shownLocation,
@@ -339,7 +338,7 @@ fun GoogleMapSheetContent(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.7f)
+            .fillMaxHeight(0.5f)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -351,12 +350,12 @@ fun GoogleMapSheetContent(
         ) {
             Marker(
                 state = MarkerState(position = shownLocation),
-                title = "Here"
+                title = "Gym"
             )
             MapMarker(
                 context = LocalContext.current,
                 position = userLocation,
-                title = "You are here",
+                title = stringResource(R.string.you_are_here),
                 iconResourceId = R.drawable.ic_map_marker)
         }
     }
@@ -439,7 +438,7 @@ fun NearbyGymItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "$totalRatings users rated this place $rating/5")
+                Text(text = "$totalRatings users rated this place $rating/5", color = MaterialTheme.colorScheme.onBackground)
                 Button(onClick = { onGo() }) {
                     Text(text = "Show")
                 }
@@ -448,15 +447,15 @@ fun NearbyGymItem(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun NearbyGymItemPreview() {
     FreshFitnessTheme {
         NearbyGymItem(
             name = "Muscle Beach",
             address = "Siófok, Petőfi stny. 3-5, 8600",
-            rating = 5.0f,
-            totalRatings = 1,
+            rating = 4.7f,
+            totalRatings = 173,
             onGo = { },
             saved = false,
             onSaveToFavourites = { }
