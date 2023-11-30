@@ -142,7 +142,7 @@ fun TrackRunningScreen(
                 )
             }
             if (viewModel.showUploadState) {
-                UploadStateAlert(text = stringResource(R.string.uploading_file), fractionCompleted = viewModel.uploadState) { }
+                UploadStateAlert(text = stringResource(R.string.uploading_file), fractionCompleted = viewModel.uploadState)
             }
         }
         else {

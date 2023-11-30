@@ -169,7 +169,7 @@ fun SocialScreen(
             )
         }
         if (viewModel.showUploadState) {
-            UploadStateAlert(text = viewModel.uploadText, fractionCompleted = viewModel.uploadState) { }
+            UploadStateAlert(text = viewModel.uploadText, fractionCompleted = viewModel.uploadState)
         }
         if (viewModel.showPostOptionsDialog) {
             OptionsDialog(

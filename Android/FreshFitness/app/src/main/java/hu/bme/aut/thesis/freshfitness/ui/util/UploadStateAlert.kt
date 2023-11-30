@@ -26,9 +26,9 @@ import kotlin.math.round
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UploadStateAlert(text: String, fractionCompleted: Double, onDismiss: () -> Unit) {
+fun UploadStateAlert(text: String, fractionCompleted: Double) {
     AlertDialog(
-        onDismissRequest = onDismiss
+        onDismissRequest = { }
     ) {
         Surface(
             modifier = Modifier
@@ -62,7 +62,5 @@ fun UploadStateAlert(text: String, fractionCompleted: Double, onDismiss: () -> U
 @Preview(showBackground = true)
 @Composable
 fun UploadStateAlertPreview() {
-    UploadStateAlert(text = "Processing file...", fractionCompleted = 0.5) {
-
-    }
+    UploadStateAlert(text = "Processing file...", fractionCompleted = 0.5)
 }
