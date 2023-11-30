@@ -51,7 +51,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -119,8 +118,8 @@ fun ScheduleScreen(
             viewModel.initScreen()
     }
 
-    var showDetailsOfWorkout by rememberSaveable { mutableStateOf(false) }
-    var detailedWorkout: Workout? by rememberSaveable { mutableStateOf(null) }
+    var showDetailsOfWorkout by remember { mutableStateOf(false) }
+    var detailedWorkout: Workout? by remember { mutableStateOf(null) }
     val onDismissShowWorkout: () -> Unit = {
         showDetailsOfWorkout = false
         detailedWorkout = null
@@ -315,6 +314,7 @@ fun ScheduleScreenLoadedListAndDetail(
                 DetailedWorkout(
                     workout = detailedWorkout!!,
                     saveEnabled = false,
+                    isSaved = true,
                     deleteEnabled = true,
                     onDelete = onDelete,
                     onDismiss = onDismissShowWorkout
@@ -651,8 +651,7 @@ fun WorkoutOverview(
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Speed, title = "Difficulty") {
-            Text(text = workout.difficulty.replaceFirstChar { if (it.isLowerCase()) it.titlecase(
-                Locale.ROOT) else it.toString() })
+            Text(text = workout.difficulty.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }, color = MaterialTheme.colorScheme.onBackground)
         }
         WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.FitnessCenter, title = "Equipments") {
             val needEquipment = workout.exercises.any { it.exercise?.equipment != null && it.exercise?.equipment?.type != "none" }

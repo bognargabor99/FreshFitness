@@ -186,7 +186,6 @@ fun FreshFitnessNavigationHost(
         }
 
         NavHost(
-            //modifier = modifier,
             navController = navController,
             startDestination = Social.route
         ) {
