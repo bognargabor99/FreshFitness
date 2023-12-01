@@ -338,22 +338,6 @@ fun PostCard(
     onShowPostOptions: (Int) -> Unit = { },
     onImageClick: (String) -> Unit = { }
 ) {
-    val model = ImageRequest.Builder(LocalContext.current)
-        .data("${BuildConfig.S3_IMAGES_BASE_URL}${post.imageLocation}")
-        .size(Size.ORIGINAL)
-        .crossfade(true)
-        .build()
-    val imageLoader = ImageLoader.Builder(LocalContext.current)
-        .components {
-            if (SDK_INT >= 28) {
-                add(ImageDecoderDecoder.Factory())
-            } else {
-                add(GifDecoder.Factory())
-            }
-        }
-        .build()
-
-    val painter = rememberAsyncImagePainter(model, imageLoader = imageLoader)
     var showAllRows by remember { mutableStateOf(false) }
     val maxLines by animateIntAsState(if (showAllRows) 10 else 1, label = "")
     ElevatedCard(
@@ -371,67 +355,117 @@ fun PostCard(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = post.username,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 10.sp
-                )
-                Text(text = parseDateToTimeSince(post.createdAt),
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 10.sp)
-            }
-            if (post.details.isNotBlank()) {
-                Text(
-                    text = post.details,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp,
-                    maxLines = maxLines
-                )
-            }
-            if (post.imageLocation.isNotBlank()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        painter = painter,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .heightIn(max = 300.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .border(6.dp, Color.Gray, RoundedCornerShape(16.dp))
-                            .clickable { onImageClick(post.imageLocation) }
-                            .fillMaxWidth(0.9f),
-                        contentScale = ContentScale.FillWidth
-                    )
-                }
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(enabled = editEnabled, onClick = { onLikePost(post) }) {
-                    Icon(
-                        imageVector = if (post.likes.any { it == userName }) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
-                        contentDescription = null
-                    )
-                }
-                Text(
-                    modifier = Modifier.clickable(enabled = post.likeCount > 0) { onShowLikes(post.id) },
-                    text = if (post.likeCount == 1) "1 like" else "${post.likeCount} likes"
-                )
-                IconButton(enabled = editEnabled, onClick = { onStartComment(post.id) }) {
-                    Icon(imageVector = Icons.Outlined.Chat, contentDescription = null)
-                }
-                Text(
-                    modifier = Modifier.clickable(enabled = post.commentCount > 0) { onShowComments(post.id) },
-                    text = if (post.commentCount == 1) "1 comment" else "${post.commentCount} comments"
-                )
+            PostCardHeader(post = post)
+            PostCardDetails(details = post.details, maxLines = maxLines)
+            if (post.imageLocation.isNotBlank())
+                PostCardImage(imageLocation = post.imageLocation, onImageClick = onImageClick)
+            PostCardActions(
+                post = post,
+                userName = userName,
+                onLikePost = onLikePost,
+                editEnabled = editEnabled,
+                onShowLikes = onShowLikes,
+                onShowComments = onShowComments,
+                onStartComment = onStartComment
+            )
+        }
+    }
+}
+
+@Composable
+fun PostCardHeader(post: Post) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = post.username,
+            fontWeight = FontWeight.Bold,
+            fontSize = 10.sp
+        )
+        Text(text = parseDateToTimeSince(post.createdAt),
+            fontWeight = FontWeight.Normal,
+            fontSize = 10.sp)
+    }
+}
+
+@Composable
+fun PostCardDetails(details: String, maxLines: Int) {
+    if (details.isNotBlank()) {
+        Text(
+            text = details,
+            fontWeight = FontWeight.Normal,
+            fontSize = 18.sp,
+            maxLines = maxLines
+        )
+    }
+}
+
+@Composable
+fun PostCardImage(imageLocation: String, onImageClick: (String) -> Unit) {
+    val model = ImageRequest.Builder(LocalContext.current)
+        .data("${BuildConfig.S3_IMAGES_BASE_URL}$imageLocation")
+        .size(Size.ORIGINAL)
+        .crossfade(true)
+        .build()
+    val imageLoader = ImageLoader.Builder(LocalContext.current)
+        .components {
+            if (SDK_INT >= 28) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
             }
         }
+        .build()
+    val painter = rememberAsyncImagePainter(model, imageLoader = imageLoader)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painter,
+            contentDescription = null,
+            modifier = Modifier
+                .heightIn(max = 300.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .border(6.dp, Color.Gray, RoundedCornerShape(16.dp))
+                .clickable { onImageClick(imageLocation) }
+                .fillMaxWidth(0.9f),
+            contentScale = ContentScale.FillWidth
+        )
+    }
+}
+
+@Composable
+fun PostCardActions(
+    post: Post,
+    userName: String,
+    onLikePost: (Post) -> Unit = { },
+    editEnabled: Boolean = false,
+    onShowLikes: (Int) -> Unit = { },
+    onShowComments: (Int) -> Unit = { },
+    onStartComment: (Int) -> Unit = { },
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(enabled = editEnabled, onClick = { onLikePost(post) }) {
+            Icon(
+                imageVector = if (post.likes.any { it == userName }) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                contentDescription = null
+            )
+        }
+        Text(
+            modifier = Modifier.clickable(enabled = post.likeCount > 0) { onShowLikes(post.id) },
+            text = if (post.likeCount == 1) "1 like" else "${post.likeCount} likes"
+        )
+        IconButton(enabled = editEnabled, onClick = { onStartComment(post.id) }) {
+            Icon(imageVector = Icons.Outlined.Chat, contentDescription = null)
+        }
+        Text(
+            modifier = Modifier.clickable(enabled = post.commentCount > 0) { onShowComments(post.id) },
+            text = if (post.commentCount == 1) "1 comment" else "${post.commentCount} comments"
+        )
     }
 }
 
