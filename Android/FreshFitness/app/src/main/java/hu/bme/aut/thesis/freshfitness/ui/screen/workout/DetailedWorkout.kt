@@ -261,7 +261,7 @@ fun WorkoutOverviewRow(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = imageVector, tint = MaterialTheme.colorScheme.onBackground, contentDescription = null)
+            Icon(imageVector = imageVector, tint = MaterialTheme.colorScheme.onBackground, contentDescription = "$title icon")
             Text(
                 text = title,
                 color = MaterialTheme.colorScheme.onBackground

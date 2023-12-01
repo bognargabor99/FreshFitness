@@ -68,4 +68,6 @@
     <string name="are_you_sure_to_share_run">Are you sure you want to share this run?</string>
     <string name="uploading_file">Uploading file…</string>
     <string name="you_are_here">You are here</string>
+    <string name="needs_equipment">Needs equipment</string>
+    <string name="warmup">Warmup</string>
 </resources>

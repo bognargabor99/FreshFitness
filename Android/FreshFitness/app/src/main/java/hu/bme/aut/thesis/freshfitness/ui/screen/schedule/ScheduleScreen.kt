@@ -650,14 +650,15 @@ fun WorkoutOverview(
             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f))
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Speed, title = "Difficulty") {
+        WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Speed, title = stringResource(R.string.difficulty)) {
             Text(text = workout.difficulty.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }, color = MaterialTheme.colorScheme.onBackground)
         }
-        WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.FitnessCenter, title = "Equipments") {
+        WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.FitnessCenter, title = stringResource(R.string.equipments)) {
             val needEquipment = workout.exercises.any { it.exercise?.equipment != null && it.exercise?.equipment?.type != "none" }
-            Text(text = if (needEquipment) "Needs equipment" else "No equipment", color = MaterialTheme.colorScheme.onBackground)
+            Text(text = stringResource(if (needEquipment) R.string.needs_equipment else R.string.no_equipment), color = MaterialTheme.colorScheme.onBackground)
         }
-        WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Accessibility, title = "Warmup") {
+        WorkoutOverviewRow(modifier = Modifier.weight(1f), imageVector = Icons.Filled.Accessibility, title = stringResource(R.string.warmup)
+        ) {
             val hasWarmup = workout.warmupExercises.any()
             Text(text = if (hasWarmup) "Planned" else "Not planned", color = MaterialTheme.colorScheme.onBackground)
         }
