@@ -357,8 +357,8 @@ fun NoWorkoutsForTheDay(
                     .size(150.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(text = date, fontSize = 18.sp)
-            Text(text = stringResource(R.string.no_workouts_scheduled))
+            Text(text = date, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
+            Text(text = stringResource(R.string.no_workouts_scheduled), color = MaterialTheme.colorScheme.onBackground)
         }
     }
 }
