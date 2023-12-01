@@ -25,19 +25,26 @@ fun ProfileScreen() {
     ) {
         Authenticator(
             headerContent = {
-                Image(
-                    modifier = Modifier.height(160.dp).fillMaxWidth(),
-                    painter = painterResource(id = R.drawable.freshfitness_logo_big),
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
-                    alignment = Alignment.Center,
-                    contentScale = ContentScale.FillHeight,
-                    contentDescription = null
-                )
+                ProfileHeader()
             }
         ) {
             LoggedInScreen()
         }
     }
+}
+
+@Composable
+fun ProfileHeader() {
+    Image(
+        modifier = Modifier
+            .height(160.dp)
+            .fillMaxWidth(),
+        painter = painterResource(id = R.drawable.freshfitness_logo_big),
+        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
+        alignment = Alignment.Center,
+        contentScale = ContentScale.FillHeight,
+        contentDescription = null
+    )
 }
 
 @Preview
