@@ -400,8 +400,8 @@ fun FullScreenCalendar(
     changeSelection: (LocalDate) -> Unit
 ) {
     val currentMonth = remember { YearMonth.now() }
-    val startMonth = remember { currentMonth }
-    val endMonth = remember { currentMonth.plusMonths(2) }
+    val startMonth = remember { currentMonth.minusMonths(1) }
+    val endMonth = remember { currentMonth.plusMonths(1) }
     val today = remember { LocalDate.now() }
     val daysOfWeek = remember { daysOfWeek() }
     val state = rememberCalendarState(
