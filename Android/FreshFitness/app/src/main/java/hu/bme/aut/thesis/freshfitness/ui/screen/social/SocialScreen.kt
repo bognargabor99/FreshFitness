@@ -424,7 +424,7 @@ fun PostCardImage(imageLocation: String, onImageClick: (String) -> Unit) {
     ) {
         Image(
             painter = painter,
-            contentDescription = null,
+            contentDescription = "Image from $imageLocation",
             modifier = Modifier
                 .heightIn(max = 300.dp)
                 .clip(RoundedCornerShape(16.dp))
@@ -452,7 +452,7 @@ fun PostCardActions(
         IconButton(enabled = editEnabled, onClick = { onLikePost(post) }) {
             Icon(
                 imageVector = if (post.likes.any { it == userName }) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
-                contentDescription = null
+                contentDescription = "Like or dislike post"
             )
         }
         Text(
@@ -460,7 +460,7 @@ fun PostCardActions(
             text = if (post.likeCount == 1) "1 like" else "${post.likeCount} likes"
         )
         IconButton(enabled = editEnabled, onClick = { onStartComment(post.id) }) {
-            Icon(imageVector = Icons.Outlined.Chat, contentDescription = null)
+            Icon(imageVector = Icons.Outlined.Chat, contentDescription = "Comment on post")
         }
         Text(
             modifier = Modifier.clickable(enabled = post.commentCount > 0) { onShowComments(post.id) },
