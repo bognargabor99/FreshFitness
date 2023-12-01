@@ -42,8 +42,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import hu.bme.aut.thesis.freshfitness.FreshFitnessAppContent
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.navigateSingleTopTo
@@ -55,9 +55,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun FitnessNavigationWrapperUI(
     navigationType: FreshFitnessNavigationType,
-    contentType: FreshFitnessContentType
+    contentType: FreshFitnessContentType,
+    navController: NavHostController
 ) {
-    val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentDestination = currentBackStack?.destination
 
@@ -154,7 +154,7 @@ fun FitnessBottomNavigation(
                 icon = {
                     Icon(
                         imageVector = destination.icon,
-                        contentDescription = destination.route.replaceFirstChar { c -> c.uppercaseChar() } + " screen"
+                        contentDescription = destination.route.replaceFirstChar { c -> c.uppercaseChar() } + " screen bottom tab"
                     )
                 },
                 label = {
@@ -183,7 +183,7 @@ fun FreshFitnessNavigationRail(
             NavigationRailItem(
                 selected = navInfo.currentScreen == destination,
                 label = { Text(destination.route.replaceFirstChar { c -> c.uppercaseChar() }) },
-                icon =  { Icon(imageVector = destination.icon, contentDescription = destination.route.replaceFirstChar { c -> c.uppercaseChar() } + " screen") },
+                icon =  { Icon(imageVector = destination.icon, contentDescription = destination.route.replaceFirstChar { c -> c.uppercaseChar() } + " screen rail item") },
                 onClick = {
                     onTabSelected(destination)
                 }

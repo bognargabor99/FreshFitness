@@ -26,6 +26,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import hu.bme.aut.thesis.freshfitness.navigation.ExerciseBank
@@ -116,7 +117,8 @@ fun FreshFitnessApp(
 ) {
     FreshFitnessTheme {
         val (navigationType, contentType) = getNavigationAndContentType(windowSize, foldingDevicePosture)
-        FitnessNavigationWrapperUI(navigationType = navigationType, contentType = contentType)
+        val navController = rememberNavController()
+        FitnessNavigationWrapperUI(navigationType = navigationType, contentType = contentType, navController = navController)
     }
 }
 

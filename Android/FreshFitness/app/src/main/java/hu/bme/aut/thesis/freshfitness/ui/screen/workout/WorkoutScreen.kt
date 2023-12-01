@@ -61,7 +61,7 @@ fun WorkoutScreenListOnly(
             ImageWithTextOverlay(
                 modifier = Modifier.aspectRatio(4f / 3f),
                 painter = painterResource(tabs[it].drawableId),
-                contentDescription = null,
+                contentDescription = "${stringResource(tabs[it].textId)} screen",
                 text = stringResource(tabs[it].textId),
                 onClick = tabs[it].onClick
             )
