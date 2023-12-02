@@ -99,14 +99,14 @@ fun WorkoutCover(
                         onClick = onSave,
                         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.background)
                     ) {
-                        Icon(imageVector = Icons.Filled.SaveAlt, tint = MaterialTheme.colorScheme.onBackground, contentDescription = null)
+                        Icon(imageVector = Icons.Filled.SaveAlt, tint = Color.White.copy(red = 0.95f, green = 0.95f, blue = 0.95f), contentDescription = null)
                     }
                 if (isSaved && deleteEnabled)
                     IconButton(
                         onClick = onDelete,
                         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.background)
                     ) {
-                        Icon(imageVector = Icons.Filled.Delete, tint = MaterialTheme.colorScheme.onBackground, contentDescription = null)
+                        Icon(imageVector = Icons.Filled.Delete, tint = Color.White.copy(red = 0.95f, green = 0.95f, blue = 0.95f), contentDescription = null)
                     }
             }
         }

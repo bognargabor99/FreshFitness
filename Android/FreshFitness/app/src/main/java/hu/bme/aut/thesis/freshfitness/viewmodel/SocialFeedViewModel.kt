@@ -284,8 +284,8 @@ class SocialFeedViewModel : ViewModel() {
             }
             file.close()
 
-            val bufferedStream = BufferedInputStream(context.contentResolver.openInputStream(contentUri))
             try {
+                val bufferedStream = BufferedInputStream(context.contentResolver.openInputStream(contentUri))
                 mimeType = URLConnection.guessContentTypeFromStream(bufferedStream)
                 Log.i("mime_type_detection", "MimeType detected: $mimeType")
             } catch (e: Exception) {
@@ -312,7 +312,7 @@ class SocialFeedViewModel : ViewModel() {
 
         if (buffer != null && !mimeType.isNullOrBlank() && mimeType.startsWith("image/")) {
             this.uploadText = "Uploading file..."
-            val f = File(context.filesDir, "tempFile.png")
+            val f = File(context.filesDir, "tempFile.$mimeType")
             f.writeBytes(buffer.toByteArray())
             postService.uploadFile(
                 userName = this.userName,
