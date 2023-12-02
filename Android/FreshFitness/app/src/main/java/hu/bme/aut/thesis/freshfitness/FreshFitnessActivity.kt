@@ -198,7 +198,7 @@ fun FreshFitnessNavigationHost(
                 WorkoutScreen(contentType = contentType)
             }
             composable(route = Social.route) {
-                SocialScreen(contentType = contentType)
+                SocialScreen(contentType = contentType, networkAvailable = viewModel.networkAvailable)
             }
             composable(
                 route = Schedule.routeWithArgs,

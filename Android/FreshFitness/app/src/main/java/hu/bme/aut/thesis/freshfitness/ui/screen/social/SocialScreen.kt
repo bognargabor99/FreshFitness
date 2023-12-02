@@ -101,6 +101,7 @@ import hu.bme.aut.thesis.freshfitness.createImageFile
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.parseDateToTimeSince
+import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.ui.util.OkCancelDialog
@@ -114,11 +115,12 @@ import java.util.Objects
 @Composable
 fun SocialScreen(
     contentType: FreshFitnessContentType,
+    networkAvailable: Boolean,
     viewModel: SocialFeedViewModel = viewModel(factory = SocialFeedViewModel.factory)
 ) {
     val context = LocalContext.current
-    LaunchedEffect(key1 = false) {
-        if (viewModel.posts.isEmpty())
+    LaunchedEffect(key1 = networkAvailable) {
+        if (networkAvailable && viewModel.posts.isEmpty())
             viewModel.initFeed()
     }
     @Suppress("DEPRECATION")
@@ -126,7 +128,10 @@ fun SocialScreen(
         state = rememberSwipeRefreshState(isRefreshing = false),
         onRefresh = viewModel::initFeed
     ) {
-        if (viewModel.isLoading) {
+        if (!networkAvailable && viewModel.posts.isEmpty()) {
+            NetworkUnavailable()
+        }
+        else if (viewModel.isLoading) {
             LoadingSocialFeed()
         }
         else {
