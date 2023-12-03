@@ -40,6 +40,4 @@ data class FavouriteExerciseEntity(
     val intermediateLimit: Int,
     val advancedLimit: Int,
     val forWarmup: Int
-) {
-    fun isForWarmup(): Boolean = forWarmup == 1
-}
+)

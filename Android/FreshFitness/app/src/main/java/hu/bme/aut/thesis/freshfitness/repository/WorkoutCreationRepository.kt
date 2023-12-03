@@ -49,13 +49,9 @@ class WorkoutCreationRepository(
         equipmentTypes = equipmentTypes.take(eqIdx + 1)
         difficulties = difficulties.take(difficultyIdx + 1)
         val exercises = this.exercises.filter {
-            (
-                if (workoutPlanState.muscleId != 1)
-                    it.muscleGroupId == workoutPlanState.muscleId
-                else true
-            ) &&
+            rightMuscle(workoutPlanState.muscleId, it.muscleGroupId) &&
             difficulties.contains(it.difficulty) &&
-            (equipmentTypes.contains(it.equipment!!.type) || if (it.alternateEquipment != null) equipmentTypes.contains(it.alternateEquipment!!.type) else false) &&
+            rightEquipment(equipmentTypes, it) &&
             if (workoutPlanState.muscleId == 1) { !it.name.lowercase().contains("running") } else true
         }.shuffled().take(exerciseCount)
         return exercises.mapIndexed { index, it ->
@@ -83,4 +79,16 @@ class WorkoutCreationRepository(
             else -> (exercise.intermediateLimit * 0.8).roundToInt()
         }
     }
+
+    private fun rightMuscle(plannedMuscleId: Int, exerciseMuscleId: Int): Boolean =
+        if (plannedMuscleId != 1)
+            exerciseMuscleId == plannedMuscleId
+        else true
+
+    private fun rightEquipment(types: List<String>, exercise: Exercise): Boolean =
+        types.contains(exercise.equipment!!.type) ||
+            if (exercise.alternateEquipment != null)
+                types.contains(exercise.alternateEquipment!!.type)
+            else
+                false
 }
