@@ -485,7 +485,10 @@ fun ExerciseListLoadingListOnlyPreview() {
     ExerciseListLoading(contentType = FreshFitnessContentType.LIST_ONLY)
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true,
+    widthDp = 840
+)
 @Composable
 fun ExerciseListLoadingListAndDetailPreview() {
     ExerciseListLoading(contentType = FreshFitnessContentType.LIST_AND_DETAIL)
