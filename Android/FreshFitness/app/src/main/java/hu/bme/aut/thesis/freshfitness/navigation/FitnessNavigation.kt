@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.navigation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -29,7 +31,6 @@ import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,9 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import hu.bme.aut.thesis.freshfitness.FreshFitnessAppContent
 import hu.bme.aut.thesis.freshfitness.R
-import hu.bme.aut.thesis.freshfitness.ui.util.DevicePosture
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessNavigationType
 import kotlinx.coroutines.launch
@@ -135,6 +134,36 @@ fun FitnessNavigationWrapperUI(
                     }
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun FreshFitnessAppContent(
+    navigationType: FreshFitnessNavigationType,
+    contentType: FreshFitnessContentType,
+    navInfo: NavigationInfo,
+    navController: NavHostController,
+    onDrawerClicked: () -> Unit = {},
+    onTabSelected: (FitnessDestination) -> Unit
+) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        AnimatedVisibility(visible = navigationType == FreshFitnessNavigationType.NAVIGATION_RAIL) {
+            FreshFitnessNavigationRail(
+                navInfo = navInfo,
+                onDrawerClicked = onDrawerClicked,
+                onTabSelected = onTabSelected
+            )
+        }
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.inverseOnSurface)
+        ) {
+            FreshFitnessNavigationHost(modifier = Modifier.weight(1f), navController = navController, contentType = contentType)
+
+            AnimatedVisibility(visible = navigationType == FreshFitnessNavigationType.BOTTOM_NAVIGATION) {
+                FitnessBottomNavigation(navInfo = navInfo, onTabSelected = onTabSelected)
+            }
         }
     }
 }
@@ -263,43 +292,6 @@ fun FreshFitnessNavigationRailPreview() {
         ),
         onTabSelected = {}
     )
-}
-
-fun getNavigationAndContentType(
-    windowSize: WindowWidthSizeClass,
-    foldingDevicePosture: DevicePosture
-): Pair<FreshFitnessNavigationType, FreshFitnessContentType> {
-    val navigationType: FreshFitnessNavigationType
-    val contentType: FreshFitnessContentType
-
-    when (windowSize) {
-        WindowWidthSizeClass.Compact -> {
-            navigationType = FreshFitnessNavigationType.BOTTOM_NAVIGATION
-            contentType = FreshFitnessContentType.LIST_ONLY
-        }
-        WindowWidthSizeClass.Medium -> {
-            navigationType = FreshFitnessNavigationType.NAVIGATION_RAIL
-            contentType = if (foldingDevicePosture is DevicePosture.BookPosture
-                || foldingDevicePosture is DevicePosture.Separating) {
-                FreshFitnessContentType.LIST_AND_DETAIL
-            } else {
-                FreshFitnessContentType.LIST_ONLY
-            }
-        }
-        WindowWidthSizeClass.Expanded -> {
-            navigationType = if (foldingDevicePosture is DevicePosture.BookPosture) {
-                FreshFitnessNavigationType.NAVIGATION_RAIL
-            } else {
-                FreshFitnessNavigationType.PERMANENT_NAVIGATION_DRAWER
-            }
-            contentType = FreshFitnessContentType.LIST_AND_DETAIL
-        }
-        else -> {
-            navigationType = FreshFitnessNavigationType.BOTTOM_NAVIGATION
-            contentType = FreshFitnessContentType.LIST_ONLY
-        }
-    }
-    return navigationType to contentType
 }
 
 fun NavHostController.navigateSingleTopTo(route: String) =
