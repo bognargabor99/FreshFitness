@@ -24,7 +24,7 @@ import hu.bme.aut.thesis.freshfitness.persistence.model.WorkoutExerciseEntity
         WorkoutEntity::class,
         WorkoutExerciseEntity::class
                ],
-    version = 6)
+    version = 7)
 abstract class RunningDatabase : RoomDatabase() {
     abstract fun runningDao(): RunningDao
 

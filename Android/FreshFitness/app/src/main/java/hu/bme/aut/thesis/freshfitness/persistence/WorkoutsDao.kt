@@ -11,7 +11,7 @@ import hu.bme.aut.thesis.freshfitness.persistence.model.WorkoutWithExercises
 @Dao
 interface WorkoutsDao {
     @Insert
-    fun insertWorkout(workoutEntity: WorkoutEntity)
+    fun insertWorkout(workoutEntity: WorkoutEntity): Long
 
     @Insert
     fun insertWorkoutExercises(exercises: List<WorkoutExerciseEntity>)
@@ -24,6 +24,6 @@ interface WorkoutsDao {
     @Query("SELECT * from workouts WHERE id = :workoutId")
     fun getWorkout(workoutId: Int): List<WorkoutWithExercises>
 
-    @Query("DELETE FROM workouts WHERE id = :workoutId")
-    fun deleteWorkout(workoutId: Int)
+    @Query("DELETE FROM workouts WHERE awsId = :workoutId and savedToDate = :date")
+    fun deleteWorkout(workoutId: Int, date: String)
 }

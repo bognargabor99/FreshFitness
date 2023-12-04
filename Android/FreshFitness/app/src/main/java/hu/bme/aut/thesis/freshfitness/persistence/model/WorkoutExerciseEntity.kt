@@ -16,7 +16,8 @@ import androidx.room.PrimaryKey
     ]
 )
 data class WorkoutExerciseEntity(
-    @PrimaryKey(autoGenerate = false) val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val awsId: Int,
     val exerciseId: Int,
     val exerciseName: String,
     var workoutId: Int? = null,

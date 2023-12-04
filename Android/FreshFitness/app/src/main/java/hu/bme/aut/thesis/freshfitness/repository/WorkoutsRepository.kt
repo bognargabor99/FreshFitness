@@ -11,7 +11,8 @@ class WorkoutsRepository(private val workoutsDao: WorkoutsDao) {
         val entity = workout.toWorkoutEntity()
         val exerciseEntities = (workout.exercises + workout.warmupExercises).map { it.toWorkoutExerciseEntity() }
         withContext(Dispatchers.IO) {
-            workoutsDao.insertWorkout(entity)
+            val wId = workoutsDao.insertWorkout(entity)
+            exerciseEntities.forEach { it.workoutId = wId.toInt() }
             workoutsDao.insertWorkoutExercises(exerciseEntities)
         }
     }
@@ -32,6 +33,6 @@ class WorkoutsRepository(private val workoutsDao: WorkoutsDao) {
 
     suspend fun deleteWorkout(workout: Workout) =
         withContext(Dispatchers.IO) {
-            workoutsDao.deleteWorkout(workout.id)
+            workoutsDao.deleteWorkout(workout.id, workout.savedToDate)
         }
 }

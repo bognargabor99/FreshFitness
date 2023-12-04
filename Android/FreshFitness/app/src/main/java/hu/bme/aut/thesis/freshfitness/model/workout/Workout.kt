@@ -22,7 +22,7 @@ data class Workout(
 ) {
     fun toWorkoutEntity(): WorkoutEntity {
         return WorkoutEntity(
-            id = id,
+            awsId = id,
             muscleId = muscleId,
             difficulty = difficulty,
             owner = owner,
@@ -37,7 +37,7 @@ data class Workout(
     companion object {
         fun fromWorkoutEntity(entity: WorkoutEntity): Workout {
             return Workout(
-                id = entity.id,
+                id = entity.awsId,
                 muscleId = entity.muscleId,
                 difficulty = entity.difficulty,
                 owner = entity.owner,

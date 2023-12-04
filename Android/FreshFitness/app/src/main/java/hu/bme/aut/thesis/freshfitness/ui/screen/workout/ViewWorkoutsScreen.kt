@@ -48,7 +48,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,8 +104,8 @@ fun ViewWorkoutsScreen(
     }
 
     val workoutPlanState by viewModel.workoutPlanState.collectAsState()
-    var planWorkout by rememberSaveable { mutableStateOf(false) }
-    var showDetailsOfWorkout by rememberSaveable { mutableStateOf(false) }
+    var planWorkout by remember { mutableStateOf(false) }
+    var showDetailsOfWorkout by remember { mutableStateOf(false) }
     var detailedWorkout: Workout? by remember { mutableStateOf(null) }
     val onWorkoutClick: (Workout) -> Unit = {
         detailedWorkout = it
@@ -212,7 +211,6 @@ fun ViewWorkoutsScreenListOnly(
     viewModel: ViewWorkoutsViewModel
 ) {
     if (showDetailsOfWorkout) {
-        val context = LocalContext.current
         LaunchedEffect(true) {
             permissionState.launchPermissionRequest()
         }
@@ -221,9 +219,9 @@ fun ViewWorkoutsScreenListOnly(
             onDismiss = onDismissShowDetails,
             isSaved = viewModel.savedWorkouts.any { it.id == detailedWorkout.id },
             onSave = onSaveWorkout,
-            onDelete = { viewModel.deleteSavedWorkout(detailedWorkout, context) },
+            onDelete = { },
             saveEnabled = true,
-            deleteEnabled = true
+            deleteEnabled = false
         )
         
     }
@@ -276,7 +274,6 @@ fun ViewWorkoutsScreenListAndDetail(
             }
             Column(modifier = modifier.weight(1f)) {
                 if (detailedWorkout != null) {
-                    val context = LocalContext.current
                     LaunchedEffect(true) {
                         permissionState.launchPermissionRequest()
                     }
@@ -285,9 +282,9 @@ fun ViewWorkoutsScreenListAndDetail(
                         onDismiss = { },
                         isSaved = viewModel.savedWorkouts.any { it.id == detailedWorkout.id },
                         onSave = onSaveWorkout,
-                        onDelete = { viewModel.deleteSavedWorkout(detailedWorkout, context) },
+                        onDelete = { },
                         saveEnabled = true,
-                        deleteEnabled = true
+                        deleteEnabled = false
                     )
                 } else {
                     DetailedWorkoutEmpty()

@@ -20,7 +20,7 @@ data class WorkoutExercise(
 
     fun toWorkoutExerciseEntity(): WorkoutExerciseEntity {
         return WorkoutExerciseEntity(
-            id = id,
+            awsId = id,
             exerciseId = exerciseId,
             exerciseName = exerciseName,
             workoutId = workoutId,
@@ -33,7 +33,7 @@ data class WorkoutExercise(
     companion object {
         fun fromWorkoutExerciseEntity(entity: WorkoutExerciseEntity): WorkoutExercise {
             return WorkoutExercise(
-                id = entity.id,
+                id = entity.awsId,
                 exerciseId = entity.exerciseId,
                 exerciseName = entity.exerciseName,
                 workoutId = entity.workoutId ?: -1,

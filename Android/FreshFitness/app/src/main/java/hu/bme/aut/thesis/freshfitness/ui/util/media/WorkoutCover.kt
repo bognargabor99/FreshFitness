@@ -94,7 +94,7 @@ fun WorkoutCover(
                     )
                     content()
                 }
-                if (!isSaved && saveEnabled)
+                if (saveEnabled)
                     IconButton(
                         onClick = onSave,
                         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.background)
