@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
-import hu.bme.aut.thesis.freshfitness.decodeJWT
+import hu.bme.aut.thesis.freshfitness.util.decodeJWT
 import org.json.JSONObject
 
 class AuthViewModel : ViewModel() {

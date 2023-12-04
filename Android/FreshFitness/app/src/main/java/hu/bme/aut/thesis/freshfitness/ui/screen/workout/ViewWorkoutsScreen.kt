@@ -80,12 +80,12 @@ import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.state.WorkoutPlanState
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
-import hu.bme.aut.thesis.freshfitness.parseDateToString
 import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.TargetDatePicker
 import hu.bme.aut.thesis.freshfitness.ui.util.TargetTimePicker
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
+import hu.bme.aut.thesis.freshfitness.util.parseDateToString
 import hu.bme.aut.thesis.freshfitness.viewmodel.ViewWorkoutsViewModel
 import java.time.LocalDate
 import java.util.Locale

@@ -97,10 +97,8 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
-import hu.bme.aut.thesis.freshfitness.createImageFile
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
-import hu.bme.aut.thesis.freshfitness.parseDateToTimeSince
 import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
@@ -109,6 +107,8 @@ import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.UploadStateAlert
 import hu.bme.aut.thesis.freshfitness.ui.util.isScrollingUp
 import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
+import hu.bme.aut.thesis.freshfitness.util.createImageFile
+import hu.bme.aut.thesis.freshfitness.util.parseDateToTimeSince
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
 import java.util.Objects
 

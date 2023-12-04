@@ -79,8 +79,6 @@ import com.kizitonwose.calendar.core.CalendarMonth
 import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.daysOfWeek
 import hu.bme.aut.thesis.freshfitness.R
-import hu.bme.aut.thesis.freshfitness.getEquipmentsOfWorkout
-import hu.bme.aut.thesis.freshfitness.isValidDate
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
@@ -94,6 +92,8 @@ import hu.bme.aut.thesis.freshfitness.ui.util.calendar.Day
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.displayText
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.getWeekPageTitle
 import hu.bme.aut.thesis.freshfitness.ui.util.calendar.rememberFirstVisibleWeekAfterScroll
+import hu.bme.aut.thesis.freshfitness.util.getEquipmentsOfWorkout
+import hu.bme.aut.thesis.freshfitness.util.isValidDate
 import hu.bme.aut.thesis.freshfitness.viewmodel.ScheduleViewModel
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek

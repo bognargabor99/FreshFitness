@@ -15,8 +15,6 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
-import hu.bme.aut.thesis.freshfitness.decodeJWT
-import hu.bme.aut.thesis.freshfitness.getWorkoutDescription
 import hu.bme.aut.thesis.freshfitness.model.state.WorkoutPlanState
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
@@ -25,6 +23,8 @@ import hu.bme.aut.thesis.freshfitness.model.workout.UnitOfMeasure
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.repository.WorkoutCreationRepository
 import hu.bme.aut.thesis.freshfitness.repository.WorkoutsRepository
+import hu.bme.aut.thesis.freshfitness.util.decodeJWT
+import hu.bme.aut.thesis.freshfitness.util.getWorkoutDescription
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -220,24 +220,6 @@ class ViewWorkoutsViewModel : ViewModel() {
         Log.d("fresh_fitness_workout_save", "Calendar event ID is $eventId")
         viewModelScope.launch {
             workoutsRepository.insertWorkout(workout = workout)
-        }.invokeOnCompletion {
-            getSavedWorkouts()
-        }
-    }
-
-    fun deleteSavedWorkout(workout: Workout, context: Context) {
-        val eventId = workout.calendarEventId
-        if (eventId != -1) {
-            try {
-                Log.d("fresh_fitness_workout_delete", "Deleting calendar event with id $eventId")
-                context.contentResolver.delete(CalendarContract.Events.CONTENT_URI, CalendarContract.Events._ID+"=${eventId}", null)
-                Log.d("fresh_fitness_workout_delete", "Deleted calendar event with id $eventId")
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        viewModelScope.launch {
-            workoutsRepository.deleteWorkout(workout)
         }.invokeOnCompletion {
             getSavedWorkouts()
         }

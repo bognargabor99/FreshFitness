@@ -4,9 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.platform.LocalContext
-import hu.bme.aut.thesis.freshfitness.currentConnectivityState
 import hu.bme.aut.thesis.freshfitness.model.ConnectionState
-import hu.bme.aut.thesis.freshfitness.observeConnectivityAsFlow
+import hu.bme.aut.thesis.freshfitness.util.currentConnectivityState
+import hu.bme.aut.thesis.freshfitness.util.observeConnectivityAsFlow
 
 @Composable
 fun connectivityState(): State<ConnectionState> {

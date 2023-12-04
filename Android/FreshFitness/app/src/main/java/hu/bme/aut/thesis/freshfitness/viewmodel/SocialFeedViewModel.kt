@@ -16,13 +16,13 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
 import hu.bme.aut.thesis.freshfitness.amplify.StorageService
-import hu.bme.aut.thesis.freshfitness.decodeJWT
 import hu.bme.aut.thesis.freshfitness.model.social.CommentOnPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.CreatePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeleteCommentDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeletePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.service.PostService
+import hu.bme.aut.thesis.freshfitness.util.decodeJWT
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream

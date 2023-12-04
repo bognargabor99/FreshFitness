@@ -1,4 +1,4 @@
-package hu.bme.aut.thesis.freshfitness
+package hu.bme.aut.thesis.freshfitness.util
 
 import android.content.Context
 import android.net.ConnectivityManager

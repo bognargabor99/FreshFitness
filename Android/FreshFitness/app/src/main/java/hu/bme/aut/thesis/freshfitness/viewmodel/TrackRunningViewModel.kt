@@ -18,11 +18,11 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
-import hu.bme.aut.thesis.freshfitness.decodeJWT
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
 import hu.bme.aut.thesis.freshfitness.repository.RunningRepository
 import hu.bme.aut.thesis.freshfitness.service.PostService
 import hu.bme.aut.thesis.freshfitness.service.TrackRunningService
+import hu.bme.aut.thesis.freshfitness.util.decodeJWT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

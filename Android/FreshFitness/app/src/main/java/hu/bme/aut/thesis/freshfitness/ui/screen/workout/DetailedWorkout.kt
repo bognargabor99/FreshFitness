@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
-import hu.bme.aut.thesis.freshfitness.getEquipmentsOfWorkout
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
 import hu.bme.aut.thesis.freshfitness.model.workout.WorkoutExercise
@@ -63,6 +62,7 @@ import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
 import hu.bme.aut.thesis.freshfitness.ui.util.NeededEquipmentsModal
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
 import hu.bme.aut.thesis.freshfitness.ui.util.media.WorkoutCover
+import hu.bme.aut.thesis.freshfitness.util.getEquipmentsOfWorkout
 import java.util.Locale
 import kotlin.random.Random
 
