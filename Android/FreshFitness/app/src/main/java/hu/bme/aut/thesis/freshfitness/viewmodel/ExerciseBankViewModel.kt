@@ -2,6 +2,7 @@ package hu.bme.aut.thesis.freshfitness.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -34,7 +35,7 @@ class ExerciseBankViewModel : ViewModel() {
     private var savedEquipments = mutableListOf<Equipment>()
 
     var favouriteExercises = mutableStateListOf<Exercise>()
-    var filteredExercises = mutableStateListOf<Exercise>()
+    var filteredExercises = mutableStateMapOf<String, List<Exercise>>()
     private var difficulties = mutableStateListOf<String>()
 
     private var _filters = MutableStateFlow(ExerciseFilters())
@@ -64,7 +65,10 @@ class ExerciseBankViewModel : ViewModel() {
 
         }
         filteredExercises.clear()
-        filteredExercises.addAll(tempFilteredExercises)
+
+        tempFilteredExercises.groupBy { it.name[0].uppercase() }.forEach { char, exercises ->
+            filteredExercises[char] = exercises
+        }
     }
 
     fun saveNameFilter(newNameFilter: String) {

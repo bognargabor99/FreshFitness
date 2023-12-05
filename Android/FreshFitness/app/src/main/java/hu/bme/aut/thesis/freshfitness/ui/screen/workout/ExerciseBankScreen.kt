@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -56,6 +57,7 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.ui.screen.nocontent.NetworkUnavailable
+import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilterChangers
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilters
@@ -91,7 +93,7 @@ fun ExerciseBankScreen(
                 val musclesAndEquipments = MusclesAndEquipments(muscles = viewModel.muscleGroups, equipments = viewModel.equipments)
                 ExerciseListLoaded(
                     contentType = contentType,
-                    exercises = viewModel.filteredExercises,
+                    exercises = viewModel.filteredExercises.toMap(),
                     filters = filters,
                     musclesAndEquipments = musclesAndEquipments,
                     filterChangers = filterChangers,
@@ -170,31 +172,9 @@ fun ExerciseListLoadingListAndDetail(alpha: Float) {
 }
 
 @Composable
-fun LoadingExerciseList(alpha: Float) {
-    Column(
-        modifier = Modifier
-            .padding(12.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .border(1.dp, Color.Gray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
-    ) {
-        (1..20).forEach {
-            LoadingExerciseRow(alpha)
-            if (it < 20)
-                Divider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .width(1.dp),
-                    thickness = 1.dp,
-                    color = Color.Gray.copy(alpha = 0.5f)
-                )
-        }
-    }
-}
-
-@Composable
 fun ExerciseListLoaded(
     contentType: FreshFitnessContentType,
-    exercises: List<Exercise>,
+    exercises: Map<String, List<Exercise>>,
     filters: ExerciseFilters,
     musclesAndEquipments: MusclesAndEquipments,
     filterChangers: ExerciseFilterChangers,
@@ -203,7 +183,7 @@ fun ExerciseListLoaded(
 ) {
     var showDetailsOfExercise: Boolean by remember { mutableStateOf(false) }
     var showFilterBottomSheet: Boolean by remember { mutableStateOf(false) }
-    var detailedExercise: Exercise by remember { mutableStateOf(exercises.first()) }
+    var detailedExercise: Exercise? by remember { mutableStateOf(exercises.values.firstOrNull()?.firstOrNull()) }
 
     val onChooseExercise: (Exercise) -> Unit = {
         detailedExercise = it
@@ -224,7 +204,7 @@ fun ExerciseListLoaded(
                 onChooseExercise = onChooseExercise
             )
             if (showDetailsOfExercise)
-                DetailedExerciseBottomSheet(exercise = detailedExercise, onDismiss = { showDetailsOfExercise = false })
+                DetailedExerciseBottomSheet(exercise = detailedExercise!!, onDismiss = { showDetailsOfExercise = false })
         }
         FreshFitnessContentType.LIST_AND_DETAIL -> {
             ExerciseListLoadedListAndDetail(
@@ -245,7 +225,7 @@ fun ExerciseListLoaded(
 
 @Composable
 fun ExerciseListLoadedListOnly(
-    exercises: List<Exercise>,
+    exercises: Map<String, List<Exercise>>,
     filters: ExerciseFilters,
     musclesAndEquipments: MusclesAndEquipments,
     filterChangers: ExerciseFilterChangers,
@@ -282,7 +262,7 @@ fun ExerciseListLoadedListOnly(
 @Composable
 fun ExerciseListLoadedListAndDetail(
     modifier: Modifier = Modifier,
-    exercises: List<Exercise>,
+    exercises: Map<String, List<Exercise>>,
     filters: ExerciseFilters,
     musclesAndEquipments: MusclesAndEquipments,
     filterChangers: ExerciseFilterChangers,
@@ -291,7 +271,7 @@ fun ExerciseListLoadedListAndDetail(
     showFilterBottomSheet: Boolean,
     changeShowFilterBottomSheet: (Boolean) -> Unit,
     onChooseExercise: (Exercise) -> Unit,
-    detailedExercise: Exercise
+    detailedExercise: Exercise?
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(modifier = modifier.weight(1f)) {
@@ -308,7 +288,13 @@ fun ExerciseListLoadedListAndDetail(
             )
         }
         Column(modifier = modifier.weight(1f)) {
-            DetailedExercise(exercise = detailedExercise)
+            if (detailedExercise != null)
+                DetailedExercise(exercise = detailedExercise)
+            else
+                EmptyScreen(
+                    stringResource(R.string.no_chosen_exercises),
+                    stringResource(R.string.click_an_exercise)
+                )
         }
     }
 }
@@ -354,26 +340,21 @@ fun ExerciseNameFilter(enabled: Boolean = true, nameFilter: String, onNameFilter
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ExerciseList(
-    exercises: List<Exercise>,
+    exercises: Map<String, List<Exercise>>,
     onChooseExercise: (Exercise) -> Unit,
     favourites: List<Int>,
     onClickHeart: (Exercise) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
-            .padding(12.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .border(1.dp, Color.Gray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
+            .padding(top = 12.dp)
     ) {
-        itemsIndexed(exercises) {index, it ->
-            ExerciseRow(
-                exercise = it,
-                onClick = onChooseExercise,
-                isFavourite = favourites.contains(it.id),
-                onClickHeart = onClickHeart)
-            if (exercises.size != index + 1)
+        exercises.forEach { (initial, exercisesForInitial) ->
+            stickyHeader {
+                ExerciseListStickyHeader(initial)
                 Divider(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -381,7 +362,36 @@ fun ExerciseList(
                     thickness = 1.dp,
                     color = Color.Gray.copy(alpha = 0.5f)
                 )
+            }
+
+            itemsIndexed(exercisesForInitial) {index, it ->
+                ExerciseRow(
+                    exercise = it,
+                    onClick = onChooseExercise,
+                    isFavourite = favourites.contains(it.id),
+                    onClickHeart = onClickHeart)
+                if (exercises.size != index + 1)
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .width(1.dp),
+                        thickness = 1.dp,
+                        color = Color.Gray.copy(alpha = 0.5f)
+                    )
+            }
         }
+    }
+}
+
+@Composable
+fun ExerciseListStickyHeader(initial: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.inverseOnSurface)
+            .padding(vertical = 12.dp, horizontal = 20.dp)
+    ) {
+        Text(text = initial, color = MaterialTheme.colorScheme.onBackground, fontSize = 18.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -396,6 +406,7 @@ fun ExerciseRow(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
+            .padding(horizontal = 12.dp)
             .clickable { onClick(exercise) },
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
         verticalAlignment = Alignment.CenterVertically
@@ -428,12 +439,48 @@ fun ExerciseRow(
 }
 
 @Composable
+fun LoadingExerciseList(alpha: Float) {
+    Column(
+        modifier = Modifier
+            .padding(top = 12.dp)
+    ) {
+        listOf(1..2, 1..1, 1..3, 1..5, 1..10).forEach { range ->
+            LoadingExerciseListStickyHeader(alpha)
+            range.forEach {
+                LoadingExerciseRow(alpha)
+                if (it < range.last)
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .width(1.dp),
+                        thickness = 1.dp,
+                        color = Color.Gray.copy(alpha = 0.5f)
+                    )
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingExerciseListStickyHeader(alpha: Float) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.inverseOnSurface)
+            .padding(vertical = 12.dp, horizontal = 20.dp)
+    ) {
+        Box(modifier = Modifier.size(16.dp).background(Color.Gray.copy(alpha = alpha)))
+    }
+}
+
+@Composable
 fun LoadingExerciseRow(alpha: Float) {
     val length by remember { mutableStateOf(Random.nextFloat() * 0.3f + 0.3f) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp),
+            .height(80.dp)
+            .padding(horizontal = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
         verticalAlignment = Alignment.CenterVertically
     ) {

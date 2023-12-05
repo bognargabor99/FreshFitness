@@ -76,4 +76,6 @@
     <string name="delete_post">Delete post</string>
     <string name="take_picture">Take picture</string>
     <string name="create_post">Create post</string>
+    <string name="no_chosen_exercises">No chosen exercises</string>
+    <string name="click_an_exercise">Click on an exercise to view the details of it</string>
 </resources>
