@@ -81,7 +81,7 @@ import com.kizitonwose.calendar.core.daysOfWeek
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Workout
-import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
+import hu.bme.aut.thesis.freshfitness.ui.screen.nocontent.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.DetailedExerciseEquipment
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.DetailedWorkout
 import hu.bme.aut.thesis.freshfitness.ui.screen.workout.WorkoutOverviewRow

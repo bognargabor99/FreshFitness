@@ -1,4 +1,4 @@
-package hu.bme.aut.thesis.freshfitness.ui.screen.todo
+package hu.bme.aut.thesis.freshfitness.ui.screen.nocontent
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat

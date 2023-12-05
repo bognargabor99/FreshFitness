@@ -55,7 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
-import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
+import hu.bme.aut.thesis.freshfitness.ui.screen.nocontent.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilterChangers
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilters

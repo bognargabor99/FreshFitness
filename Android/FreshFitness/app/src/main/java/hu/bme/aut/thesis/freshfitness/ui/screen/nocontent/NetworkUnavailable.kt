@@ -1,4 +1,4 @@
-package hu.bme.aut.thesis.freshfitness.ui.screen.todo
+package hu.bme.aut.thesis.freshfitness.ui.screen.nocontent
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

@@ -92,7 +92,7 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
-import hu.bme.aut.thesis.freshfitness.ui.screen.todo.NetworkUnavailable
+import hu.bme.aut.thesis.freshfitness.ui.screen.nocontent.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.ui.util.OkCancelDialog

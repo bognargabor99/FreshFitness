@@ -11,7 +11,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import hu.bme.aut.thesis.freshfitness.ui.screen.home.HomeScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.profile.ProfileScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.schedule.ScheduleScreen
 import hu.bme.aut.thesis.freshfitness.ui.screen.social.SocialScreen
@@ -85,9 +84,6 @@ fun FreshFitnessNavigationHost(
             ) { navBackStackEntry ->
                 val dateArg = navBackStackEntry.arguments?.getString(Schedule.accountTypeArg) ?: ""
                 ScheduleScreen(date = dateArg, contentType = contentType, networkAvailable = viewModel.networkAvailable)
-            }
-            composable(route = Home.route) {
-                HomeScreen()
             }
             composable(route = NearbyGyms.route) {
                 NearbyGymsScreen()
