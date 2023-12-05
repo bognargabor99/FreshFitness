@@ -76,9 +76,9 @@ class SocialScreenTests {
             PostCard(
                 modifier = Modifier.semantics(mergeDescendants = false) { },
                 post = post,
-                userName = testUsername,
                 editEnabled = editEnabled,
-                onLikePost = onLike
+                onLikePost = onLike,
+                deleteEnabled = true
             )
         }
     }
