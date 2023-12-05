@@ -56,6 +56,7 @@ import com.amplifyframework.ui.authenticator.SignedInState
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.ui.util.UploadStateAlert
+import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
 import hu.bme.aut.thesis.freshfitness.ui.util.media.ImagePickers
 import hu.bme.aut.thesis.freshfitness.viewmodel.ProfileViewModel
 
@@ -102,15 +103,18 @@ fun LoggedInScreen(
     }
     if (viewModel.showImageOptionsDialog) {
         OptionsDialog(
-            options = mapOf(
-                "View" to {},
-                "Update" to viewModel::showUpdateProfileImageDialog
-            ),
+            options = viewModel.getOptionsMap(),
             onDismiss = viewModel::dismissImageOptions
         )
     }
     if (viewModel.showUploadState) {
         UploadStateAlert(text = viewModel.uploadText, fractionCompleted = viewModel.uploadState)
+    }
+    if (viewModel.showImageFullScreen) {
+        FullScreenImage(
+            imageUrl = "${BuildConfig.S3_IMAGES_BASE_URL}${viewModel.profileImageLocation}",
+            onDismiss = viewModel::hideFullScreenImage
+        )
     }
 }
 

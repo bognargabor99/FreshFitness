@@ -5,6 +5,7 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
+import com.amplifyframework.storage.result.StorageRemoveResult
 import java.io.File
 
 object StorageService {
@@ -32,7 +33,7 @@ object StorageService {
     /**
      * Delete
      */
-    fun deleteFile(key: String) {
+    fun deleteFile(key: String, onSuccess: (StorageRemoveResult) -> Unit = { }) {
         val options = StorageRemoveOptions
             .builder()
             .accessLevel(StorageAccessLevel.PUBLIC)
@@ -41,6 +42,7 @@ object StorageService {
         Amplify.Storage.remove(key, options,
             {
                 Log.i("file_deletion", "Successfully removed: ${it.key}")
+                onSuccess(it)
             },
             {
                 Log.e("file_deletion", "Remove failure", it)

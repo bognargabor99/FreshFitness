@@ -37,6 +37,9 @@ class ProfileViewModel : ViewModel() {
     var uploadState: Double by mutableStateOf(0.0)
     var uploadText by mutableStateOf("")
 
+    // Show fullscreen of image
+    var showImageFullScreen by mutableStateOf(false)
+
     fun fetchAuthSession() {
         AuthService.fetchAuthSession(
             {
@@ -122,12 +125,14 @@ class ProfileViewModel : ViewModel() {
                     ApiService.setProfileImageForUser(
                         SetProfileImageDto(this.username, location),
                         onSuccess = {
-                            StorageService.deleteFile(oldProfile.substring(7))
+                            if (oldProfile.isNotBlank())
+                                StorageService.deleteFile(oldProfile.substring(7))
                             this.profileImageLocation = it
                             f.delete()
                             this.showUpdateProfileDialog = false
-                            this.uploadText = ""
                             this.showUploadState = false
+                            this.uploadText = ""
+                            this.uploadState = 0.0
                             this.updateProfileEnabled = true
                         }
                     )
@@ -136,7 +141,22 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    fun showUpdateProfileImageDialog() {
+    private fun deleteProfileImage() {
+        this.showImageOptionsDialog = false
+        ApiService.setProfileImageForUser(
+            setProfileImageDto = SetProfileImageDto(this.username, ""),
+            onSuccess = {
+                StorageService.deleteFile(this.profileImageLocation.substring(7))
+                this.profileImageLocation = ""
+                this.showUpdateProfileDialog = false
+                this.uploadText = ""
+                this.showUploadState = false
+                this.updateProfileEnabled = true
+            }
+        )
+    }
+
+    private fun showUpdateProfileImageDialog() {
         this.showImageOptionsDialog = false
         this.showUpdateProfileDialog = true
     }
@@ -154,7 +174,25 @@ class ProfileViewModel : ViewModel() {
         this.showImageOptionsDialog = false
     }
 
+    private fun showFullScreenImage() {
+        showImageOptionsDialog = false
+        showImageFullScreen = true
+    }
+
+    fun hideFullScreenImage() {
+        showImageFullScreen = false
+    }
+
     fun signOut() {
         AuthService.signOut()
     }
+
+    fun getOptionsMap(): Map<String, () -> Unit> =
+        mutableMapOf<String, () -> Unit>().apply {
+            if (this@ProfileViewModel.profileImageLocation.isNotBlank())
+                put("View", ::showFullScreenImage)
+            put("Update", ::showUpdateProfileImageDialog)
+            if (this@ProfileViewModel.profileImageLocation.isNotBlank())
+                put("Delete", ::deleteProfileImage)
+        }
 }
