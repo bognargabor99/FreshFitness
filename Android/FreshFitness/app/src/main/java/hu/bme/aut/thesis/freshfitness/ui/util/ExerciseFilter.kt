@@ -49,8 +49,8 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
-import hu.bme.aut.thesis.freshfitness.ui.util.exercises.MusclesAndEquipments
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
+import hu.bme.aut.thesis.freshfitness.util.MusclesAndEquipments
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

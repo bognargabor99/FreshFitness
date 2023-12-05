@@ -1,4 +1,4 @@
-package hu.bme.aut.thesis.freshfitness.ui.util.exercises
+package hu.bme.aut.thesis.freshfitness.util
 
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup

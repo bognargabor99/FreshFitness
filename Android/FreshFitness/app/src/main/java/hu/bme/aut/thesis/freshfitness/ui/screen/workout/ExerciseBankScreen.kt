@@ -60,8 +60,8 @@ import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilterChangers
 import hu.bme.aut.thesis.freshfitness.ui.util.ExerciseFilters
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
-import hu.bme.aut.thesis.freshfitness.ui.util.exercises.MusclesAndEquipments
 import hu.bme.aut.thesis.freshfitness.ui.util.media.S3Image
+import hu.bme.aut.thesis.freshfitness.util.MusclesAndEquipments
 import hu.bme.aut.thesis.freshfitness.viewmodel.ExerciseBankViewModel
 import kotlin.random.Random
 
