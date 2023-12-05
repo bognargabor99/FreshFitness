@@ -55,9 +55,8 @@ import coil.size.Size
 import com.amplifyframework.ui.authenticator.SignedInState
 import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
-import hu.bme.aut.thesis.freshfitness.ui.screen.social.CameraImageCapture
-import hu.bme.aut.thesis.freshfitness.ui.screen.social.MediaPicker
 import hu.bme.aut.thesis.freshfitness.ui.util.UploadStateAlert
+import hu.bme.aut.thesis.freshfitness.ui.util.media.ImagePickers
 import hu.bme.aut.thesis.freshfitness.viewmodel.ProfileViewModel
 
 @Composable
@@ -238,7 +237,7 @@ fun UpdateProfileImageDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 UpdateProfileImageTitle()
-                UpdateProfileImagePickers(enabled = updateEnabled, onPhotoPicked = { photoUri = it })
+                ImagePickers(enabled = updateEnabled, onPhotoPicked = { photoUri = it })
                 UpdateProfileImagePreview(photoUri = photoUri)
                 UpdateProfileActionButtons(
                     updateEnabled = updateEnabled,
@@ -253,20 +252,6 @@ fun UpdateProfileImageDialog(
 @Composable
 fun UpdateProfileImageTitle() {
     Text(modifier = Modifier.padding(8.dp), text = stringResource(R.string.update_profile_image), fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-}
-
-@Composable
-fun UpdateProfileImagePickers(
-    enabled: Boolean,
-    onPhotoPicked: (Uri?) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
-    ) {
-        MediaPicker(enabled = enabled, onPhotoPicked = onPhotoPicked)
-        CameraImageCapture(enabled = enabled, onCapturedImage = onPhotoPicked)
-    }
 }
 
 @Composable

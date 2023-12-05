@@ -161,6 +161,7 @@ object ApiService {
                     postId = commentDto.postId,
                     text = commentDto.text,
                     username = commentDto.username,
+                    userImage = "",
                     createdAt = Instant.now().toString()
                 )
                 onSuccess(newComment)

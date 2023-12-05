@@ -9,5 +9,6 @@ data class Comment(
     @SerialName(value = "post_id") val postId: Int,
     val text: String,
     @SerialName(value = "user_name") val username: String,
+    @SerialName(value = "user_image") val userImage: String,
     @SerialName(value = "created_at") val createdAt: String,
 )

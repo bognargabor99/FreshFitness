@@ -8,6 +8,7 @@ data class PagedPostDto(
     val id: Int,
     var details: String,
     val owner: String,
+    @SerialName(value = "owner_profile") val ownerProfile: String,
     @SerialName(value = "image_location") val imageLocation: String,
     @SerialName(value = "created_at") val createdAt: String,
     @SerialName(value = "likecount") var likeCount: Int,

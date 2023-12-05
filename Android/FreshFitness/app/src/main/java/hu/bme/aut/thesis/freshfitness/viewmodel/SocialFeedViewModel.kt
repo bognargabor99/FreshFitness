@@ -353,6 +353,7 @@ class SocialFeedViewModel : ViewModel() {
                         likeCount = pagedPost.likeCount,
                         commentCount = pagedPost.commentCount,
                         username = pagedPost.owner,
+                        userProfileImage = pagedPost.ownerProfile,
                         imageLocation = pagedPost.imageLocation
                     )
                     if (!pagedPost.liker.isNullOrBlank()) {

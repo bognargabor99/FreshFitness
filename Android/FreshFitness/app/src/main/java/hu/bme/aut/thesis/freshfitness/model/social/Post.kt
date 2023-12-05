@@ -13,6 +13,7 @@ data class Post(
     @SerialName(value = "created_at") val createdAt: String,
     @SerialName(value = "likecount") var likeCount: Int,
     @SerialName(value = "commentcount") var commentCount: Int,
+    @Transient var userProfileImage: String = "",
     @Transient var comments: MutableList<Comment> = mutableListOf(),
     @Transient var likes: MutableList<String> = mutableListOf()
 )

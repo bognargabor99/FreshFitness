@@ -73,4 +73,7 @@
     <string name="upload">Upload</string>
     <string name="update_profile_image">Update profile image</string>
     <string name="write_about_your_fitness_journey">Write about your fitness journey…</string>
+    <string name="delete_post">Delete post</string>
+    <string name="take_picture">Take picture</string>
+    <string name="create_post">Create post</string>
 </resources>

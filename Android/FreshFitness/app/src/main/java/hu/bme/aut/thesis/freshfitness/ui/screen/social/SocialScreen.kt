@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +40,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.Chat
@@ -73,9 +73,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -83,6 +83,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -108,6 +109,7 @@ import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.ui.util.UploadStateAlert
 import hu.bme.aut.thesis.freshfitness.ui.util.isScrollingUp
 import hu.bme.aut.thesis.freshfitness.ui.util.media.FullScreenImage
+import hu.bme.aut.thesis.freshfitness.ui.util.media.ImagePickers
 import hu.bme.aut.thesis.freshfitness.util.createImageFile
 import hu.bme.aut.thesis.freshfitness.util.parseDateToTimeSince
 import hu.bme.aut.thesis.freshfitness.viewmodel.SocialFeedViewModel
@@ -256,14 +258,15 @@ fun LoadedSocialFeed(
                     PostCard(
                         modifier = Modifier.animateItemPlacement(animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)),
                         post = p,
-                        userName = userName,
                         onLikePost = onLikePost,
                         editEnabled = editEnabled,
                         onShowLikes = onShowLikes,
                         onShowComments = onShowComments,
                         onStartComment = onStartComment,
                         onShowPostOptions = onShowPostOptions,
-                        onImageClick = onImageClick)
+                        onImageClick = onImageClick,
+                        deleteEnabled = p.username == userName
+                    )
                 }
                 item {
                     if (isLoadingMore)
@@ -335,14 +338,14 @@ fun Header(
 fun PostCard(
     modifier: Modifier = Modifier,
     post: Post,
-    userName: String,
     onLikePost: (Post) -> Unit = { },
     editEnabled: Boolean = false,
     onShowLikes: (Int) -> Unit = { },
     onShowComments: (Int) -> Unit = { },
     onStartComment: (Int) -> Unit = { },
     onShowPostOptions: (Int) -> Unit = { },
-    onImageClick: (String) -> Unit = { }
+    onImageClick: (String) -> Unit = { },
+    deleteEnabled: Boolean
 ) {
     var showAllRows by remember { mutableStateOf(false) }
     val maxLines by animateIntAsState(if (showAllRows) 10 else 1, label = "")
@@ -351,7 +354,8 @@ fun PostCard(
             .fillMaxWidth()
             .padding(vertical = 10.dp, horizontal = 16.dp)
             .combinedClickable(onLongClick = {
-                onShowPostOptions(post.id)
+                if (editEnabled && deleteEnabled)
+                    onShowPostOptions(post.id)
             }) { showAllRows = !showAllRows },
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
@@ -361,13 +365,13 @@ fun PostCard(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            PostCardHeader(post = post)
+            PostCardHeader(post = post, deleteEnabled = deleteEnabled, onShowPostOptions = onShowPostOptions)
             PostCardDetails(details = post.details, maxLines = maxLines)
             if (post.imageLocation.isNotBlank())
                 PostCardImage(imageLocation = post.imageLocation, onImageClick = onImageClick)
             PostCardActions(
                 post = post,
-                userName = userName,
+                userName = post.username,
                 onLikePost = onLikePost,
                 editEnabled = editEnabled,
                 onShowLikes = onShowLikes,
@@ -379,19 +383,68 @@ fun PostCard(
 }
 
 @Composable
-fun PostCardHeader(post: Post) {
+fun PostCardHeader(
+    post: Post,
+    deleteEnabled: Boolean,
+    onShowPostOptions: (Int) -> Unit = { }
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PostCardHeaderProfileImage(post.userProfileImage)
+            PostCardHeaderTexts(post.username, post.createdAt)
+        }
+        PostCardOptionsButton(
+            deleteEnabled = deleteEnabled,
+            onClick = { onShowPostOptions(post.id) }
+        )
+
+    }
+}
+
+@Composable
+fun PostCardHeaderProfileImage(profileImageKey: String) {
+    val model = ImageRequest.Builder(LocalContext.current)
+        .data("${BuildConfig.S3_IMAGES_BASE_URL}${profileImageKey}")
+        .error(R.drawable.default_profile)
+        .placeholder(R.drawable.default_profile)
+        .size(Size.ORIGINAL)
+        .crossfade(true)
+        .build()
+    val painter = rememberAsyncImagePainter(model)
+    SizeableProfileImage(painter, 50.dp)
+}
+
+@Composable
+fun PostCardHeaderTexts(userName: String, createdAt: String) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = post.username,
+            text = userName,
             fontWeight = FontWeight.Bold,
-            fontSize = 10.sp
+            fontSize = 16.sp
         )
-        Text(text = parseDateToTimeSince(post.createdAt),
+        Text(
+            text = parseDateToTimeSince(createdAt),
             fontWeight = FontWeight.Normal,
-            fontSize = 10.sp)
+            fontSize = 12.sp
+        )
+    }
+}
+
+@Composable
+fun PostCardOptionsButton(deleteEnabled: Boolean, onClick: () -> Unit) {
+    if (deleteEnabled) {
+        IconButton(onClick = onClick) {
+            Icon(imageVector = Icons.Default.MoreVert, tint = MaterialTheme.colorScheme.onBackground, contentDescription = stringResource(R.string.delete_post))
+        }
     }
 }
 
@@ -497,38 +550,48 @@ fun Comment(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp, horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.default_profile),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = comment.username,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp)
-                    Text(text = parseDateToTimeSince(comment.createdAt),
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 10.sp)
-                }
-                Text(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    text = comment.text,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp
-                )
-            }
+            CommentProfileImage(imageKey = comment.userImage)
+            CommentContent(userName = comment.username, text = comment.text, createdAt = comment.createdAt)
         }
+    }
+}
+
+@Composable
+fun CommentProfileImage(imageKey: String) {
+    val model = ImageRequest.Builder(LocalContext.current)
+        .data("${BuildConfig.S3_IMAGES_BASE_URL}${imageKey}")
+        .error(R.drawable.default_profile)
+        .placeholder(R.drawable.default_profile)
+        .size(Size.ORIGINAL)
+        .crossfade(true)
+        .build()
+    val painter = rememberAsyncImagePainter(model)
+    SizeableProfileImage(painter, 40.dp)
+}
+
+@Composable
+fun CommentContent(userName: String, text: String, createdAt: String) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = userName,
+                fontWeight = FontWeight.Bold,
+                fontSize = 10.sp)
+            Text(text = parseDateToTimeSince(createdAt),
+                fontWeight = FontWeight.Normal,
+                fontSize = 10.sp)
+        }
+        Text(
+            modifier = Modifier.padding(vertical = 8.dp),
+            text = text,
+            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp
+        )
     }
 }
 
@@ -537,21 +600,6 @@ fun Comment(
 fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?) -> Unit, onDismiss: () -> Unit) {
     var text by remember { mutableStateOf("") }
     var photoUri: Uri? by remember { mutableStateOf(null) }
-    val model = ImageRequest.Builder(LocalContext.current)
-        .data(data = photoUri)
-        .size(Size.ORIGINAL)
-        .crossfade(true)
-        .build()
-    val imageLoader = ImageLoader.Builder(LocalContext.current)
-        .components {
-            if (SDK_INT >= 28) {
-                add(ImageDecoderDecoder.Factory())
-            } else {
-                add(GifDecoder.Factory())
-            }
-        }
-        .build()
-    val painter = rememberAsyncImagePainter(model, imageLoader = imageLoader)
 
     AlertDialog(
         modifier = Modifier.fillMaxWidth(),
@@ -567,72 +615,109 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
                     .padding(vertical = 8.dp, horizontal = 8.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Text(text = "Create post", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    MediaPicker(enabled = postCreationButtonsEnabled, onPhotoPicked = {
-                        photoUri = it
-                    })
-                    CameraImageCapture(enabled = postCreationButtonsEnabled, onCapturedImage = {
-                        photoUri = it
-                    })
-                }
-                if (photoUri != null) {
-                    Image(
-                        painter = painter,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .heightIn(max = 300.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .border(6.dp, Color.Gray, RoundedCornerShape(16.dp))
-                            .fillMaxWidth(0.9f),
-                        contentScale = ContentScale.FillWidth
-                    )
-                } else {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .heightIn(min = 200.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .border(6.0.dp, Color.Gray, RoundedCornerShape(16.dp))
-                                .background(Color.LightGray)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(
+                CreatePostDialogTitle()
+                ImagePickers(enabled = postCreationButtonsEnabled, onPhotoPicked = { photoUri = it })
+                CreatePostDialogImage(photoUri = photoUri)
+                CreatePostDialogTextField(
                     enabled = postCreationButtonsEnabled,
-                    minLines = 3,
-                    maxLines = 5,
-                    placeholder = { Text(text = stringResource(R.string.write_about_your_fitness_journey)) },
-                    value = text,
+                    text = text,
                     onValueChange = { text = it }
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(6.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    Button(onClick = onDismiss, enabled = postCreationButtonsEnabled) {
-                        Text(text = stringResource(R.string.cancel))
-                    }
-                    Button(onClick = {  if (text.isEmpty() && photoUri == null) onDismiss() else onPost(text, photoUri) }, enabled = postCreationButtonsEnabled) {
-                        Text(text = stringResource(R.string.post))
-                    }
-                }
+                CreatePostDialogActionButtons(
+                    enabled = postCreationButtonsEnabled,
+                    onPost = {  if (text.isEmpty() && photoUri == null) onDismiss() else onPost(text, photoUri) },
+                    onDismiss = onDismiss
+                )
             }
         }
     }
+}
+
+@Composable
+fun CreatePostDialogTitle() {
+    Text(text = stringResource(R.string.create_post), fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+}
+
+@Composable
+fun CreatePostDialogImage(photoUri: Uri?) {
+    val model = ImageRequest.Builder(LocalContext.current)
+        .data(data = photoUri)
+        .size(Size.ORIGINAL)
+        .crossfade(true)
+        .build()
+    val imageLoader = ImageLoader.Builder(LocalContext.current)
+        .components {
+            if (SDK_INT >= 28) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
+            }
+        }
+        .build()
+    val painter = rememberAsyncImagePainter(model, imageLoader = imageLoader)
+    Image(
+        painter = painter,
+        contentDescription = null,
+        modifier = Modifier
+            .heightIn(max = (if (photoUri != null) 300 else 200).dp)
+            .clip(RoundedCornerShape(16.dp))
+            .border(6.dp, Color.Gray, RoundedCornerShape(16.dp))
+            .fillMaxWidth(0.9f)
+            .background(Color.LightGray),
+        contentScale = ContentScale.FillWidth
+    )
+}
+
+@Composable
+fun CreatePostDialogTextField(
+    enabled: Boolean,
+    text: String,
+    onValueChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        enabled = enabled,
+        minLines = 3,
+        maxLines = 5,
+        placeholder = { Text(text = stringResource(R.string.write_about_your_fitness_journey)) },
+        value = text,
+        onValueChange = onValueChange
+    )
+}
+
+@Composable
+fun CreatePostDialogActionButtons(
+    enabled: Boolean,
+    onPost: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(6.dp),
+        horizontalArrangement = Arrangement.SpaceAround
+    ) {
+        Button(onClick = onDismiss, enabled = enabled) {
+            Text(text = stringResource(R.string.cancel))
+        }
+        Button(onClick = onPost, enabled = enabled) {
+            Text(text = stringResource(R.string.post))
+        }
+    }
+}
+
+@Composable
+fun SizeableProfileImage(painter: Painter, size: Dp) {
+    Image(
+        painter = painter,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape)
+            .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+    )
 }
 
 @Composable
@@ -697,15 +782,14 @@ fun CameraImageCapture(enabled: Boolean, onCapturedImage: (Uri) -> Unit) {
     }
 
     FilledTonalButton(enabled = enabled, onClick = {
-        val permissionCheckResult =
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+        val permissionCheckResult = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
         if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
             cameraLauncher.launch(uri)
         } else {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }) {
-        Text(text = "Take picture")
+        Text(text = stringResource(R.string.take_picture))
     }
 }
 
@@ -751,21 +835,20 @@ fun CommentsDialog(
         onDismissRequest = onDismiss
     ) {
         Surface(
-            modifier = Modifier
-                .wrapContentHeight(),
+            modifier = Modifier.wrapContentHeight(),
             shape = MaterialTheme.shapes.large,
             tonalElevation = AlertDialogDefaults.TonalElevation
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(text = stringResource(R.string.comments), fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-                Spacer(modifier = Modifier.height(6.dp))
-
-                LazyColumn {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
                     items(post.commentCount) {index ->
-                        Spacer(modifier = Modifier.height(2.dp))
                         Comment(post.comments[index], deleteCommentEnabled, onShowCommentOptions)
                     }
                 }
@@ -782,17 +865,16 @@ fun AddCommentDialog(onComment: (String) -> Unit = { }, onDismiss: () -> Unit = 
         onDismissRequest = onDismiss
     ) {
         Surface(
-            modifier = Modifier
-                .wrapContentHeight(),
+            modifier = Modifier.wrapContentHeight(),
             shape = MaterialTheme.shapes.large,
             tonalElevation = AlertDialogDefaults.TonalElevation
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(text = "Add comment", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-                Spacer(Modifier.height(6.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -866,11 +948,13 @@ fun PostPreview() {
             id = 1,
             details = "My new personal best on the squat machine",
             username = "gaborbognar123",
+            userProfileImage = "",
             imageLocation = "",
             createdAt = "2023-08-21T21:34",
             likeCount = 2,
-            commentCount = 7),
-        userName = ""
+            commentCount = 7
+        ),
+        deleteEnabled = true
     )
 }
 
@@ -884,6 +968,7 @@ fun LikesDialogPreview() {
             imageLocation = "",
             createdAt = "",
             username = "gaborbognar123",
+            userProfileImage = "",
             likeCount = 5,
             likes = mutableListOf("andrew_huberman", "jason_todd", "dick_grayson", "emily_monroe", "keanu_reeves"),
             commentCount = 0,
@@ -909,7 +994,7 @@ fun HeaderPreview() {
 @Preview(showBackground = true)
 @Composable
 fun CommentPreview() {
-    Comment(comment = Comment(0, 0, "", "", ""), { false }) { }
+    Comment(comment = Comment(0, 0, "", "", "", ""), { false }) { }
 }
 
 @Preview(showBackground = true)
