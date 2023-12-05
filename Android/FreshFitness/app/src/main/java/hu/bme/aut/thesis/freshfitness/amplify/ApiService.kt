@@ -9,10 +9,11 @@ import hu.bme.aut.thesis.freshfitness.model.social.CommentOnPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.CreatePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeleteCommentDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeletePostDto
-import hu.bme.aut.thesis.freshfitness.model.social.LikeDto
+import hu.bme.aut.thesis.freshfitness.model.social.ImageDto
 import hu.bme.aut.thesis.freshfitness.model.social.LikePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.PagedPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
+import hu.bme.aut.thesis.freshfitness.model.social.SetProfileImageDto
 import hu.bme.aut.thesis.freshfitness.model.workout.Equipment
 import hu.bme.aut.thesis.freshfitness.model.workout.Exercise
 import hu.bme.aut.thesis.freshfitness.model.workout.MuscleGroup
@@ -48,20 +49,20 @@ object ApiService {
         )
     }
 
-    fun getLikesForPost(postId: Int, onSuccess: (List<LikeDto>) -> Unit) {
+    fun getProfileImageForUser(name: String, onSuccess: (String) -> Unit) {
         val options = RestOptions.builder()
-            .addPath("/likes")
-            .addQueryParameters(mapOf("post_id" to postId.toString()))
+            .addPath("/users/images")
+            .addQueryParameters(mapOf("name" to name))
             .build()
 
         Amplify.API.get(options,
             {
-                Log.i("social_feed_post", "GET succeeded: $it")
-                val likes = Json.decodeFromString<List<LikeDto>>(it.data.asString())
-                onSuccess(likes)
+                Log.i("social_feed_profile_image", "GET succeeded: $it")
+                val imageDto = Json.decodeFromString<ImageDto>(it.data.asString())
+                onSuccess(imageDto.image)
             },
             {
-                Log.e("social_feed_post", "GET failed", it)
+                Log.e("social_feed_profile_image", "GET failed", it)
             }
         )
     }
@@ -123,6 +124,24 @@ object ApiService {
             {
                 Log.e("social_feed_post", "Liking post failed", it)
                 onError()
+            }
+        )
+    }
+
+    fun setProfileImageForUser(setProfileImageDto: SetProfileImageDto, onSuccess: (String) -> Unit) {
+        val options = RestOptions.builder()
+            .addPath("/users/images")
+            .addBody(Json.encodeToString(setProfileImageDto).toByteArray())
+            .build()
+
+        Amplify.API.post(options,
+            {
+                Log.i("social_feed_profile_image", "POST succeeded: $it")
+                val imageDto = Json.decodeFromString<ImageDto>(it.data.asString())
+                onSuccess(imageDto.image)
+            },
+            {
+                Log.e("social_feed_profile_image", "POST failed", it)
             }
         )
     }

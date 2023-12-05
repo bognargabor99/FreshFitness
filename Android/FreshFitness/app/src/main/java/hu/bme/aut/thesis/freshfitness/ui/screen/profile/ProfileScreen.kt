@@ -28,7 +28,7 @@ fun ProfileScreen() {
                 ProfileHeader()
             }
         ) {
-            LoggedInScreen()
+            LoggedInScreen(it)
         }
     }
 }

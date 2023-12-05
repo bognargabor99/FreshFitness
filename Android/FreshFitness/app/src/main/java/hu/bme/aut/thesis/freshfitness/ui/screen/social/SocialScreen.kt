@@ -52,6 +52,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -180,7 +181,7 @@ fun SocialScreen(
             OptionsDialog(
                 onDelete = viewModel::showDeletePostAlert,
                 onDismiss = viewModel::dismissPostOptions
-                )
+            )
         }
         if (viewModel.showCommentOptionsDialog) {
             OptionsDialog(
@@ -612,6 +613,7 @@ fun CreatePostDialog(postCreationButtonsEnabled: Boolean, onPost: (String, Uri?)
                     enabled = postCreationButtonsEnabled,
                     minLines = 3,
                     maxLines = 5,
+                    placeholder = { Text(text = stringResource(R.string.write_about_your_fitness_journey)) },
                     value = text,
                     onValueChange = { text = it }
                 )
@@ -663,7 +665,7 @@ fun MediaPicker(enabled: Boolean, onPhotoPicked: (Uri?) -> Unit) {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         onPhotoPicked(uri)
     }
-    Button(enabled = enabled, onClick = {
+    FilledTonalButton(enabled = enabled, onClick = {
         launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }) {
         Text(text = "Select photo")
@@ -694,7 +696,7 @@ fun CameraImageCapture(enabled: Boolean, onCapturedImage: (Uri) -> Unit) {
         }
     }
 
-    Button(enabled = enabled, onClick = {
+    FilledTonalButton(enabled = enabled, onClick = {
         val permissionCheckResult =
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
         if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
@@ -845,9 +847,9 @@ fun OptionsDialog(
             ) {
                 Text(
                     modifier = Modifier
-                        .padding(vertical = 16.dp, horizontal = 16.dp)
                         .fillMaxWidth()
-                        .clickable { onDelete() },
+                        .clickable { onDelete() }
+                        .padding(vertical = 16.dp, horizontal = 16.dp),
                     text = stringResource(R.string.delete),
                     fontSize = 18.sp
                 )

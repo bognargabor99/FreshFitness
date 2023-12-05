@@ -11,7 +11,7 @@ object StorageService {
     /**
      * Upload
      */
-    fun uploadFile(key: String, file: File, onFractionCompleted: (Double) -> Unit, onSuccess: (String) -> Unit) {
+    fun uploadFile(key: String, file: File, onFractionCompleted: (Double) -> Unit, onSuccess: (String) -> Unit, onError: () -> Unit = { }) {
         val options = StorageUploadFileOptions.defaultInstance()
         Amplify.Storage.uploadFile(key, file, options,
             {
@@ -23,6 +23,7 @@ object StorageService {
                 onSuccess(it.key)
             },
             {
+                onError()
                 Log.e("uploadFile", "Upload failed", it)
             }
         )
