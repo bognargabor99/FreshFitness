@@ -22,7 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,9 +38,9 @@ fun DistanceFilter(
     onValueChange: (Float) -> Unit,
     onQuery: () -> Unit
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
     val extraPadding by animateDpAsState(
-        if (expanded) 12.dp else 0.dp,
+        targetValue = if (expanded) 12.dp else 0.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
@@ -48,8 +48,7 @@ fun DistanceFilter(
     )
 
     Column(
-        modifier = Modifier
-            .padding(bottom = extraPadding.coerceAtLeast(0.dp))
+        modifier = Modifier.padding(bottom = extraPadding.coerceAtLeast(0.dp))
             .background(MaterialTheme.colorScheme.background.copy(alpha = 0.9f))
     ) {
         Row(
