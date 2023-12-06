@@ -312,7 +312,7 @@ class SocialFeedViewModel : ViewModel() {
 
         if (buffer != null && !mimeType.isNullOrBlank() && mimeType.startsWith("image/")) {
             this.uploadText = "Uploading file..."
-            val f = File(context.filesDir, "tempFile.$mimeType")
+            val f = File(context.filesDir, "tempFile.${mimeType.substring(6)}")
             f.writeBytes(buffer.toByteArray())
             postService.uploadFile(
                 userName = this.userName,
