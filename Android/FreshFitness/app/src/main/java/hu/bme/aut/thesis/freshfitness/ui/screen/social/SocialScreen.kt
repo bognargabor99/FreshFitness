@@ -539,7 +539,7 @@ fun Comment(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp, horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             CommentProfileImage(imageKey = comment.userImage)
             CommentContent(userName = comment.username, text = comment.text, createdAt = comment.createdAt)
@@ -557,7 +557,7 @@ fun CommentProfileImage(imageKey: String) {
         .crossfade(true)
         .build()
     val painter = rememberAsyncImagePainter(model)
-    SizeableProfileImage(painter, 40.dp)
+    SizeableProfileImage(painter, 50.dp)
 }
 
 @Composable
@@ -565,12 +565,13 @@ fun CommentContent(userName: String, text: String, createdAt: String) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = userName,
                 fontWeight = FontWeight.Bold,
-                fontSize = 10.sp)
+                fontSize = 12.sp)
             Text(text = parseDateToTimeSince(createdAt),
                 fontWeight = FontWeight.Normal,
                 fontSize = 10.sp)
@@ -935,7 +936,7 @@ fun HeaderPreview() {
 @Preview(showBackground = true)
 @Composable
 fun CommentPreview() {
-    Comment(comment = Comment(0, 0, "", "", "", ""), { false }) { }
+    Comment(comment = Comment(0, 0, "Comment in preview", "test_user", "", "2023-12-05T18:42:00"), { false }) { }
 }
 
 @Preview(showBackground = true)
