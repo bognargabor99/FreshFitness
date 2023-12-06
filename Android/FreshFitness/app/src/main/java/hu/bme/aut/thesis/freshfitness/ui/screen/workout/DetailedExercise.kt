@@ -269,23 +269,16 @@ fun LoadingExerciseDetails(alpha: Float) {
 
 @Composable
 fun LoadingExerciseEquipments(alpha: Float) {
-    Box(modifier = Modifier
-        .padding(vertical = 4.dp)
-        .fillMaxWidth(0.3f)
-        .heightIn(14.dp)
-        .background(Color.Gray.copy(alpha = alpha))
-    )
-    ElevatedCard(
+    Column(
         modifier = Modifier
             .padding(horizontal = 4.dp, vertical = 12.dp)
             .widthIn(min = 140.dp, max = 140.dp)
+            .clip(RoundedCornerShape(12.dp))
             .border(
                 width = 2.dp,
                 color = Color.Gray.copy(alpha = alpha),
                 shape = RoundedCornerShape(12.dp)
-            ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(12.dp)
+            )
     ) {
         Box(
             modifier = Modifier
