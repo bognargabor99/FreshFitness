@@ -16,7 +16,8 @@ import com.google.accompanist.permissions.shouldShowRationale
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RequireLocationPermissions(
-    onGranted: @Composable () -> Unit
+    onDenied: @Composable () -> Unit = { },
+    onGranted: @Composable () -> Unit,
 ) {
     val permissionStates =
         rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
@@ -46,10 +47,10 @@ fun RequireLocationPermissions(
                         onGranted()
                     }
                     it.status.shouldShowRationale -> {
-                        /* Happens if a user denies the permission two times */
+                        onDenied()
                     }
                     !it.status.isGranted && !it.status.shouldShowRationale -> {
-                        /* If the permission is denied and the should not show rationale */
+                        onDenied()
                     }
                 }
             }

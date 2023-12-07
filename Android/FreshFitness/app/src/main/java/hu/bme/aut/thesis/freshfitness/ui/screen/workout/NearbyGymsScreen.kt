@@ -1,5 +1,6 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -64,6 +65,7 @@ import com.google.maps.model.PlacesSearchResult
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.LocationEnabledState
 import hu.bme.aut.thesis.freshfitness.model.NearByGymShowLocationState
+import hu.bme.aut.thesis.freshfitness.ui.screen.nocontent.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 import hu.bme.aut.thesis.freshfitness.ui.util.DistanceFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
@@ -77,12 +79,13 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun NearbyGymsScreen(
+    networkAvailable: Boolean,
     contentType: FreshFitnessContentType,
     viewModel: NearbyGymsViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    RequireLocationPermissions {
-        LaunchedEffect(true) { viewModel.startLocationFlow(context) }
+    RequireLocationPermissions(onDenied = { DeniedLocationPermission() }) {
+        LaunchedEffect(networkAvailable) { if (networkAvailable && viewModel.gyms.isEmpty()) viewModel.startLocationFlow(context) }
 
         Column {
             NearbyGymsTopAppBar(
@@ -91,41 +94,10 @@ fun NearbyGymsScreen(
             )
             Divider()
             if (!viewModel.showSavedList) {
-                when (viewModel.locationEnabledState) {
-                    LocationEnabledState.UNKNOWN -> {
-                        LocationEnabledUnknown(
-                            radius = viewModel.radius,
-                            onValueChange = { viewModel.changeRadius(it.toInt()) }
-                        )
-                    }
-
-                    LocationEnabledState.DISABLED -> {
-                        LocationDisabled(onTryAgain = { viewModel.startLocationFlow(context) })
-                    }
-
-                    LocationEnabledState.ENABLED_SEARCHING -> {
-                        LocationEnabledSearching(
-                            radius = viewModel.radius,
-                            onValueChange = { viewModel.changeRadius(it.toInt()) }
-                        )
-                    }
-
-                    LocationEnabledState.ENABLED_SEARCHING_FINISHED -> {
-                        GymListScreen(
-                            contentType = contentType,
-                            useDistanceFilter = true,
-                            radius = viewModel.radius,
-                            onRadiusChange = { viewModel.changeRadius(it.toInt()) },
-                            gyms = viewModel.gyms,
-                            onSaveItem = viewModel::savePlace,
-                            onCheckSaved = { place -> viewModel.favouritePlaces.any { it.id == place.placeId }},
-                            onGoToPlace = viewModel::showPlaceOnMap,
-                            onHidePlace = viewModel::hideMap,
-                            locationState = viewModel.showLocationState,
-                            userLocation =  viewModel.currentLocation
-                        )
-                    }
-                }
+                if (!networkAvailable)
+                    NetworkUnavailable()
+                else
+                    GymSearchScreen(viewModel, context, contentType)
             } else {
                 GymListScreen(
                     contentType = contentType,
@@ -141,6 +113,40 @@ fun NearbyGymsScreen(
                     userLocation =  viewModel.currentLocation
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun GymSearchScreen(
+    viewModel: NearbyGymsViewModel,
+    context: Context,
+    contentType: FreshFitnessContentType
+) {
+    when (viewModel.locationEnabledState) {
+        LocationEnabledState.UNKNOWN ->
+            LocationEnabledUnknown(viewModel.radius, viewModel::changeRadius)
+
+        LocationEnabledState.DISABLED ->
+            LocationDisabled() { viewModel.startLocationFlow(context) }
+
+        LocationEnabledState.ENABLED_SEARCHING ->
+            LocationEnabledSearching(viewModel.radius, viewModel::changeRadius)
+
+        LocationEnabledState.ENABLED_SEARCHING_FINISHED -> {
+            GymListScreen(
+                contentType = contentType,
+                useDistanceFilter = true,
+                radius = viewModel.radius,
+                onRadiusChange = viewModel::changeRadius,
+                gyms = viewModel.gyms,
+                onSaveItem = viewModel::savePlace,
+                onCheckSaved = { place -> viewModel.favouritePlaces.any { it.id == place.placeId }},
+                onGoToPlace = viewModel::showPlaceOnMap,
+                onHidePlace = viewModel::hideMap,
+                locationState = viewModel.showLocationState,
+                userLocation =  viewModel.currentLocation
+            )
         }
     }
 }
@@ -165,6 +171,14 @@ fun NearbyGymsTopAppBar(
                 onClick = onLoadList
             )
         },
+    )
+}
+
+@Composable
+fun DeniedLocationPermission() {
+    EmptyScreen(
+        "You did not grant access to your location and without that we cannot show gyms nearby",
+        "Please enable the access in your settings"
     )
 }
 

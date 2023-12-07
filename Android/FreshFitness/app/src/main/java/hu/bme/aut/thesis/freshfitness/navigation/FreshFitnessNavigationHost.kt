@@ -86,7 +86,7 @@ fun FreshFitnessNavigationHost(
                 ScheduleScreen(date = dateArg, contentType = contentType, networkAvailable = viewModel.networkAvailable)
             }
             composable(route = NearbyGyms.route) {
-                NearbyGymsScreen(contentType = contentType)
+                NearbyGymsScreen(networkAvailable = viewModel.networkAvailable, contentType = contentType)
             }
             composable(route = TrackRunning.route) {
                 TrackRunningScreen()

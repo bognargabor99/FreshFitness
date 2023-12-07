@@ -113,8 +113,8 @@ class NearbyGymsViewModel : ViewModel() {
         )
     }
 
-    fun changeRadius(newRadius: Int) {
-        this.radius = newRadius
+    fun changeRadius(newRadius: Float) {
+        this.radius = newRadius.toInt()
     }
 
     fun showPlaceOnMap(place: PlacesSearchResult) {
