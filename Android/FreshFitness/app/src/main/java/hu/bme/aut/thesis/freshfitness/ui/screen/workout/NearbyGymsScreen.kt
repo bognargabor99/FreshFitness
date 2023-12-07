@@ -1,6 +1,5 @@
 package hu.bme.aut.thesis.freshfitness.ui.screen.workout
 
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -97,7 +96,20 @@ fun NearbyGymsScreen(
                 if (!networkAvailable)
                     NetworkUnavailable()
                 else
-                    GymSearchScreen(viewModel, context, contentType)
+                    GymSearchScreen(
+                        contentType = contentType,
+                        gyms = viewModel.gyms,
+                        radius = viewModel.radius,
+                        onSaveItem = viewModel::savePlace,
+                        onCheckSaved = { place -> viewModel.favouritePlaces.any { it.id == place.placeId }},
+                        onGoToPlace = viewModel::showPlaceOnMap,
+                        onHidePlace = viewModel::hideMap,
+                        locationState = viewModel.showLocationState,
+                        userLocation =  viewModel.currentLocation,
+                        changeRadius = viewModel::changeRadius,
+                        locationEnabledState = viewModel.locationEnabledState,
+                        startLocationFlow = { viewModel.startLocationFlow(context) }
+                    )
             } else {
                 GymListScreen(
                     contentType = contentType,
@@ -119,33 +131,42 @@ fun NearbyGymsScreen(
 
 @Composable
 fun GymSearchScreen(
-    viewModel: NearbyGymsViewModel,
-    context: Context,
-    contentType: FreshFitnessContentType
+    contentType: FreshFitnessContentType,
+    locationEnabledState: LocationEnabledState,
+    radius: Int,
+    changeRadius: (Float) -> Unit,
+    startLocationFlow: () -> Unit,
+    gyms: List<PlacesSearchResult>,
+    onSaveItem: (PlacesSearchResult) -> Unit,
+    onCheckSaved: (PlacesSearchResult) -> Boolean,
+    onGoToPlace: (PlacesSearchResult) -> Unit,
+    onHidePlace: () -> Unit,
+    locationState: NearByGymShowLocationState,
+    userLocation: LatLng
 ) {
-    when (viewModel.locationEnabledState) {
+    when (locationEnabledState) {
         LocationEnabledState.UNKNOWN ->
-            LocationEnabledUnknown(viewModel.radius, viewModel::changeRadius)
+            LocationEnabledUnknown(radius, changeRadius)
 
         LocationEnabledState.DISABLED ->
-            LocationDisabled() { viewModel.startLocationFlow(context) }
+            LocationDisabled(startLocationFlow)
 
         LocationEnabledState.ENABLED_SEARCHING ->
-            LocationEnabledSearching(viewModel.radius, viewModel::changeRadius)
+            LocationEnabledSearching(radius, changeRadius)
 
         LocationEnabledState.ENABLED_SEARCHING_FINISHED -> {
             GymListScreen(
                 contentType = contentType,
                 useDistanceFilter = true,
-                radius = viewModel.radius,
-                onRadiusChange = viewModel::changeRadius,
-                gyms = viewModel.gyms,
-                onSaveItem = viewModel::savePlace,
-                onCheckSaved = { place -> viewModel.favouritePlaces.any { it.id == place.placeId }},
-                onGoToPlace = viewModel::showPlaceOnMap,
-                onHidePlace = viewModel::hideMap,
-                locationState = viewModel.showLocationState,
-                userLocation =  viewModel.currentLocation
+                radius = radius,
+                onRadiusChange = changeRadius,
+                gyms = gyms,
+                onSaveItem = onSaveItem,
+                onCheckSaved = onCheckSaved,
+                onGoToPlace = onGoToPlace,
+                onHidePlace = onHidePlace,
+                locationState = locationState,
+                userLocation =  userLocation
             )
         }
     }
