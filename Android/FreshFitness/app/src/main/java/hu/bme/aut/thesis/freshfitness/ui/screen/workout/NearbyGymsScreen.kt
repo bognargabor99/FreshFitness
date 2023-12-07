@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -45,14 +47,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -63,14 +66,18 @@ import hu.bme.aut.thesis.freshfitness.model.LocationEnabledState
 import hu.bme.aut.thesis.freshfitness.model.NearByGymShowLocationState
 import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 import hu.bme.aut.thesis.freshfitness.ui.util.DistanceFilter
-import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
+import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
+import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.MapMarker
 import hu.bme.aut.thesis.freshfitness.ui.util.RequireLocationPermissions
+import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
 import hu.bme.aut.thesis.freshfitness.viewmodel.NearbyGymsViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
 fun NearbyGymsScreen(
+    contentType: FreshFitnessContentType,
     viewModel: NearbyGymsViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -84,7 +91,7 @@ fun NearbyGymsScreen(
             )
             Divider()
             if (!viewModel.showSavedList) {
-                when (viewModel.locationEnabled) {
+                when (viewModel.locationEnabledState) {
                     LocationEnabledState.UNKNOWN -> {
                         LocationEnabledUnknown(
                             radius = viewModel.radius,
@@ -99,13 +106,13 @@ fun NearbyGymsScreen(
                     LocationEnabledState.ENABLED_SEARCHING -> {
                         LocationEnabledSearching(
                             radius = viewModel.radius,
-                            onValueChange = { viewModel.changeRadius(it.toInt()) },
-                            onQuery = { viewModel.startLocationFlow(context) }
+                            onValueChange = { viewModel.changeRadius(it.toInt()) }
                         )
                     }
 
                     LocationEnabledState.ENABLED_SEARCHING_FINISHED -> {
                         GymListScreen(
+                            contentType = contentType,
                             useDistanceFilter = true,
                             radius = viewModel.radius,
                             onRadiusChange = { viewModel.changeRadius(it.toInt()) },
@@ -115,13 +122,13 @@ fun NearbyGymsScreen(
                             onGoToPlace = viewModel::showPlaceOnMap,
                             onHidePlace = viewModel::hideMap,
                             locationState = viewModel.showLocationState,
-                            shownLocation = viewModel.shownLocation,
                             userLocation =  viewModel.currentLocation
                         )
                     }
                 }
             } else {
                 GymListScreen(
+                    contentType = contentType,
                     useDistanceFilter = false,
                     radius = 0,
                     onRadiusChange = { },
@@ -131,7 +138,6 @@ fun NearbyGymsScreen(
                     onGoToPlace = viewModel::showPlaceOnMap,
                     onHidePlace = viewModel::hideMap,
                     locationState = viewModel.showLocationState,
-                    shownLocation = viewModel.shownLocation,
                     userLocation =  viewModel.currentLocation
                 )
             }
@@ -177,7 +183,7 @@ fun LocationDisabled(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text = "To continue, please turn on device location and then try again", color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
+            Text(modifier = Modifier.fillMaxWidth(0.8f), text = "To continue, please turn on device location and then try again", color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
             Button(onClick = onTryAgain) {
                 Text(text = "Try again")
             }
@@ -198,6 +204,7 @@ fun TopAppBarActionButton(
 
 @Composable
 fun GymListScreen(
+    contentType: FreshFitnessContentType,
     useDistanceFilter: Boolean,
     radius: Int,
     onRadiusChange: (Float) -> Unit,
@@ -207,17 +214,14 @@ fun GymListScreen(
     onGoToPlace: (PlacesSearchResult) -> Unit,
     onHidePlace: () -> Unit,
     locationState: NearByGymShowLocationState,
-    shownLocation: LatLng,
     userLocation: LatLng
 ) {
-    val scope = rememberCoroutineScope()
 
     Column {
         if (useDistanceFilter) {
             DistanceFilter(
                 radius = radius,
-                onValueChange = onRadiusChange,
-                onQuery = { }
+                onValueChange = onRadiusChange
             )
             Divider()
         }
@@ -229,40 +233,156 @@ fun GymListScreen(
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
-        else
-            LazyColumn(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                items(gyms.size) { placeIndex ->
-                    NearByGymItem(
-                        place = gyms[placeIndex],
-                        onSaveItem = onSaveItem,
-                        saved = onCheckSaved(gyms[placeIndex]),
-                        onGo = {
-                            scope.launch {
-                                onGoToPlace(gyms[placeIndex])
-                            }
-                        }
-                    )
-                }
-            }
+        else {
+            GymList(
+                contentType = contentType,
+                gyms = gyms,
+                onSaveItem = onSaveItem,
+                onCheckSaved = onCheckSaved,
+                onGoToPlace = onGoToPlace,
+                onHidePlace = onHidePlace,
+                userLocation = userLocation,
+                showLocationState = locationState
+            )
+        }
     }
+}
 
-    if (locationState is NearByGymShowLocationState.Show) {
+@Composable
+fun GymList(
+    contentType: FreshFitnessContentType,
+    gyms: List<PlacesSearchResult>,
+    onSaveItem: (PlacesSearchResult) -> Unit,
+    onCheckSaved: (PlacesSearchResult) -> Boolean,
+    onGoToPlace: (PlacesSearchResult) -> Unit,
+    onHidePlace: () -> Unit,
+    userLocation: LatLng,
+    showLocationState: NearByGymShowLocationState
+) {
+    val scope = rememberCoroutineScope()
+
+    when (contentType) {
+        FreshFitnessContentType.LIST_ONLY -> {
+            GymListListOnly(
+                gyms = gyms,
+                onSaveItem = onSaveItem,
+                onCheckSaved = onCheckSaved,
+                onGoToPlace = onGoToPlace,
+                showLocationState = showLocationState,
+                onHidePlace = onHidePlace,
+                userLocation = userLocation,
+                scope = scope
+            )
+        }
+        FreshFitnessContentType.LIST_AND_DETAIL -> {
+            GymListListAndDetail(
+                gyms = gyms,
+                onSaveItem = onSaveItem,
+                onCheckSaved = onCheckSaved,
+                onGoToPlace = onGoToPlace,
+                showLocationState = showLocationState,
+                userLocation = userLocation,
+                scope = scope,
+            )
+        }
+    }
+}
+
+@Composable
+fun GymListListOnly(
+    gyms: List<PlacesSearchResult>,
+    onSaveItem: (PlacesSearchResult) -> Unit,
+    onCheckSaved: (PlacesSearchResult) -> Boolean,
+    onGoToPlace: (PlacesSearchResult) -> Unit,
+    showLocationState: NearByGymShowLocationState,
+    onHidePlace: () -> Unit,
+    userLocation: LatLng,
+    scope: CoroutineScope
+) {
+    GymListOnlyList(
+        gyms = gyms,
+        onSaveItem = onSaveItem,
+        onCheckSaved = onCheckSaved,
+        onGoToPlace = onGoToPlace,
+        openableItems = true,
+        scope = scope
+    )
+    if (showLocationState is NearByGymShowLocationState.Show) {
         GoogleMapModalBottomSheet(
             onHidePlace = onHidePlace,
-            shownLocation = shownLocation,
+            place = showLocationState.place,
             userLocation = userLocation
         )
+    }
+}
+
+@Composable
+fun GymListListAndDetail(
+    modifier: Modifier = Modifier,
+    gyms: List<PlacesSearchResult>,
+    onSaveItem: (PlacesSearchResult) -> Unit,
+    onCheckSaved: (PlacesSearchResult) -> Boolean,
+    onGoToPlace: (PlacesSearchResult) -> Unit,
+    showLocationState: NearByGymShowLocationState,
+    userLocation: LatLng,
+    scope: CoroutineScope
+) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = modifier.weight(1f)) {
+            GymListOnlyList(
+                gyms = gyms,
+                onSaveItem = onSaveItem,
+                onCheckSaved = onCheckSaved,
+                onGoToPlace = onGoToPlace,
+                openableItems = false,
+                scope = scope
+            )
+        }
+        Column(modifier = modifier.weight(1f)) {
+            if (showLocationState is NearByGymShowLocationState.Show) {
+                DetailedPlace(place = showLocationState.place, showFooter = true, userLocation = userLocation)
+            }
+            else {
+                EmptyScreen("No place chosen", "Please click on one to view it")
+            }
+        }
+    }
+}
+
+@Composable
+fun GymListOnlyList(
+    gyms: List<PlacesSearchResult>,
+    onSaveItem: (PlacesSearchResult) -> Unit,
+    onCheckSaved: (PlacesSearchResult) -> Boolean,
+    onGoToPlace: (PlacesSearchResult) -> Unit,
+    openableItems: Boolean,
+    scope: CoroutineScope
+) {
+    LazyColumn(
+        modifier = Modifier.padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(gyms.size) { placeIndex ->
+            NearByGymItem(
+                place = gyms[placeIndex],
+                onSaveItem = onSaveItem,
+                saved = onCheckSaved(gyms[placeIndex]),
+                onGo = {
+                    scope.launch {
+                        onGoToPlace(gyms[placeIndex])
+                    }
+                },
+                openable = openableItems
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoogleMapModalBottomSheet(
+    place: PlacesSearchResult,
     onHidePlace: () -> Unit,
-    shownLocation: LatLng,
     userLocation: LatLng
 ) {
     ModalBottomSheet(
@@ -270,9 +390,10 @@ fun GoogleMapModalBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         onDismissRequest = onHidePlace,
     ) {
-        GoogleMapSheetContent(
-            shownLocation = shownLocation,
-            userLocation = userLocation
+        DetailedPlace(
+            place = place,
+            userLocation = userLocation,
+            showFooter = false
         )
     }
 }
@@ -287,77 +408,137 @@ fun LocationEnabledUnknown(radius: Int, onValueChange: (Float) -> Unit) {
 }
 
 @Composable
-fun LocationEnabledSearching(radius: Int, onValueChange: (Float) -> Unit, onQuery: () -> Unit) {
+fun LocationEnabledSearching(radius: Int, onValueChange: (Float) -> Unit) {
     LocationLoading(
         text = "Retrieving location...",
         radius = radius,
-        onValueChange = onValueChange,
-        onQuery = onQuery
+        onValueChange = onValueChange
     )
 }
 
 @Composable
-fun LocationLoading(text: String, radius: Int, onValueChange: (Float) -> Unit, onQuery: () -> Unit = { }) {
+fun LocationLoading(text: String, radius: Int, onValueChange: (Float) -> Unit) {
     Column {
         DistanceFilter(
             radius = radius,
-            onValueChange = onValueChange,
-            onQuery = onQuery
+            onValueChange = onValueChange
         )
-
         Divider()
-
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                modifier = Modifier.wrapContentSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                InfiniteCircularProgressBar()
-                Text(
-                    text = text,
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                )
-            }
-        }
+        ScreenLoading(loadingText = text)
     }
 }
 
 @Composable
-fun GoogleMapSheetContent(
-    shownLocation: LatLng,
+fun DetailedPlace(
+    place: PlacesSearchResult,
+    showFooter: Boolean,
     userLocation: LatLng
 ) {
     val cameraState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(shownLocation, 13.5f)
+        position = CameraPosition.fromLatLngZoom(
+            place.geometry.location.run { LatLng(lat, lng) }, 13.5f
+        )
     }
+    LaunchedEffect(key1 = place) {
+        cameraState.animate(
+            update = CameraUpdateFactory.newCameraPosition(
+                CameraPosition(place.geometry.location.run { LatLng(lat, lng) }, 13.5f, 0f, 0f)
+            ),
+            durationMs = 1000
+        )
+    }
+    DetailedPlaceContent(
+        cameraState = cameraState,
+        place = place,
+        userLocation = userLocation,
+        showFooter = showFooter
+    )
+}
+
+@Composable
+fun DetailedPlaceContent(
+    cameraState: CameraPositionState,
+    place: PlacesSearchResult,
+    userLocation: LatLng,
+    showFooter: Boolean
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 6.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        DetailedPlaceHeader(place = place)
+        DetailedPlaceMap(
+            cameraState = cameraState,
+            place = place,
+            userLocation = userLocation
+        )
+        if (showFooter)
+            DetailedPlaceFooter(place = place)
+    }
+}
+
+@Composable
+fun DetailedPlaceHeader(place: PlacesSearchResult) {
+    Text(
+        text = place.name,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+        fontWeight = FontWeight.Bold
+    )
+}
+
+@Composable
+fun DetailedPlaceMap(
+    cameraState: CameraPositionState,
+    place: PlacesSearchResult,
+    userLocation: LatLng
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.5f)
-            .padding(horizontal = 16.dp),
+            .fillMaxHeight(0.5f),
         contentAlignment = Alignment.Center
     ) {
         GoogleMap(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 12.dp),
+                .padding(vertical = 12.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f), RoundedCornerShape(12.dp)),
             cameraPositionState = cameraState,
         ) {
             Marker(
-                state = MarkerState(position = shownLocation),
-                title = "Gym"
+                state = MarkerState(position = place.geometry.location.run { LatLng(lat, lng) }),
+                title = stringResource(R.string.gym)
             )
             MapMarker(
                 context = LocalContext.current,
                 position = userLocation,
                 title = stringResource(R.string.you_are_here),
-                iconResourceId = R.drawable.ic_map_marker)
+                iconResourceId = R.drawable.ic_map_marker
+            )
         }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun DetailedPlaceFooter(place: PlacesSearchResult) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = place.vicinity,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+        )
+        Text(
+            text = "${place.userRatingsTotal} users rated this place ${place.rating}/5",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+        )
     }
 }
 
@@ -366,7 +547,8 @@ fun NearByGymItem(
     place: PlacesSearchResult,
     saved: Boolean = false,
     onSaveItem: (PlacesSearchResult) -> Unit,
-    onGo: () -> Unit
+    onGo: () -> Unit,
+    openable: Boolean = true
 ) {
     NearbyGymItem(
         name = place.name ?: "Default name",
@@ -375,7 +557,8 @@ fun NearByGymItem(
         totalRatings = place.userRatingsTotal,
         saved = saved,
         onSaveToFavourites = { onSaveItem(place) },
-        onGo = onGo
+        onGo = onGo,
+        openable = openable
     )
 }
 
@@ -387,7 +570,8 @@ fun NearbyGymItem(
     totalRatings: Int,
     saved: Boolean = false,
     onSaveToFavourites: () -> Unit,
-    onGo: () -> Unit
+    onGo: () -> Unit,
+    openable: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -395,13 +579,15 @@ fun NearbyGymItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .border(
-                width = 1.dp,
-                color = Color.DarkGray.copy(alpha = 0.3f),
-                RoundedCornerShape(8.dp)
-            )
+            .border(1.dp, Color.DarkGray.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
             .padding(6.dp)
-            .clickable { expanded = !expanded },
+            .clickable {
+                if (openable) {
+                    expanded = !expanded
+                } else {
+                    onGo()
+                }
+            },
     ) {
         Row(
             modifier = Modifier
@@ -430,7 +616,7 @@ fun NearbyGymItem(
                 )
             }
         }
-        AnimatedVisibility(visible = expanded) {
+        AnimatedVisibility(visible = openable && expanded) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -439,7 +625,7 @@ fun NearbyGymItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "$totalRatings users rated this place $rating/5", color = MaterialTheme.colorScheme.onBackground)
-                Button(onClick = { onGo() }) {
+                Button(onClick = onGo) {
                     Text(text = "Show")
                 }
             }
@@ -458,7 +644,8 @@ fun NearbyGymItemPreview() {
             totalRatings = 173,
             onGo = { },
             saved = false,
-            onSaveToFavourites = { }
+            onSaveToFavourites = { },
+            openable = true
         )
     }
 }

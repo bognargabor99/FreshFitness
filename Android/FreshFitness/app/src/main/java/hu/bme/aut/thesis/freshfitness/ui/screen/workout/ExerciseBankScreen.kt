@@ -355,13 +355,7 @@ fun ExerciseList(
         exercises.forEach { (initial, exercisesForInitial) ->
             stickyHeader {
                 ExerciseListStickyHeader(initial)
-                Divider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .width(1.dp),
-                    thickness = 1.dp,
-                    color = Color.Gray.copy(alpha = 0.5f)
-                )
+                ExerciseDivider()
             }
 
             itemsIndexed(exercisesForInitial) {index, it ->
@@ -371,13 +365,7 @@ fun ExerciseList(
                     isFavourite = favourites.contains(it.id),
                     onClickHeart = onClickHeart)
                 if (exercises.size != index + 1)
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .width(1.dp),
-                        thickness = 1.dp,
-                        color = Color.Gray.copy(alpha = 0.5f)
-                    )
+                    ExerciseDivider()
             }
         }
     }
@@ -449,13 +437,7 @@ fun LoadingExerciseList(alpha: Float) {
             range.forEach {
                 LoadingExerciseRow(alpha)
                 if (it < range.last)
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .width(1.dp),
-                        thickness = 1.dp,
-                        color = Color.Gray.copy(alpha = 0.5f)
-                    )
+                    ExerciseDivider()
             }
         }
     }
@@ -506,6 +488,17 @@ fun LoadingExerciseRow(alpha: Float) {
             }
         }
     }
+}
+
+@Composable
+private fun ExerciseDivider() {
+    Divider(
+        modifier = Modifier
+            .fillMaxWidth()
+            .width(1.dp),
+        thickness = 1.dp,
+        color = Color.Gray.copy(alpha = 0.5f)
+    )
 }
 
 @Preview(showBackground = true)

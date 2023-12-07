@@ -1,8 +1,8 @@
 package hu.bme.aut.thesis.freshfitness.model
 
-import com.google.android.gms.maps.model.LatLng
+import com.google.maps.model.PlacesSearchResult
 
 sealed interface NearByGymShowLocationState {
-    data class Show(val place: LatLng) : NearByGymShowLocationState
+    data class Show(val place: PlacesSearchResult) : NearByGymShowLocationState
     object NotShow : NearByGymShowLocationState
 }

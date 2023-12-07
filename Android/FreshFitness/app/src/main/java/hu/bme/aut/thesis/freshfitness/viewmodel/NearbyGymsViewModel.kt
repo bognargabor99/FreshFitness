@@ -44,7 +44,7 @@ class NearbyGymsViewModel : ViewModel() {
     var gyms by mutableStateOf(listOf<PlacesSearchResult>())
     var favouritePlaces by mutableStateOf(listOf<FavouritePlaceEntity>())
 
-    var locationEnabled by mutableStateOf(LocationEnabledState.UNKNOWN)
+    var locationEnabledState by mutableStateOf(LocationEnabledState.UNKNOWN)
 
     var radius by mutableStateOf(2500)
         private set
@@ -64,7 +64,7 @@ class NearbyGymsViewModel : ViewModel() {
                 .radius(this.radius)
                 .type(PlaceType.GYM)
                 .await()
-            locationEnabled = LocationEnabledState.ENABLED_SEARCHING_FINISHED
+            locationEnabledState = LocationEnabledState.ENABLED_SEARCHING_FINISHED
             gyms = response.results.toList()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -99,16 +99,16 @@ class NearbyGymsViewModel : ViewModel() {
     }
 
     fun startLocationFlow(context: Context) {
-        locationEnabled = LocationEnabledState.UNKNOWN
+        locationEnabledState = LocationEnabledState.UNKNOWN
         showSavedList = false
         checkLocationSettings(
             context = context,
             onLocationEnabled = {
-                locationEnabled = LocationEnabledState.ENABLED_SEARCHING
+                locationEnabledState = LocationEnabledState.ENABLED_SEARCHING
                 queryLocation(context)
             },
             onFailure = {
-                locationEnabled = LocationEnabledState.DISABLED
+                locationEnabledState = LocationEnabledState.DISABLED
             }
         )
     }
@@ -120,9 +120,11 @@ class NearbyGymsViewModel : ViewModel() {
     fun showPlaceOnMap(place: PlacesSearchResult) {
         Log.d("fitness_places", "Showing map")
         showLocationState = NearByGymShowLocationState.Show(
-            place = com.google.android.gms.maps.model.LatLng(place.geometry.location.lat, place.geometry.location.lng)
+            place = place
         )
-        shownLocation = (showLocationState as NearByGymShowLocationState.Show).place
+        shownLocation = (showLocationState as NearByGymShowLocationState.Show).place.geometry.location.run {
+            com.google.android.gms.maps.model.LatLng(lat, lng)
+        }
     }
 
     fun hideMap() {

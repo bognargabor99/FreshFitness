@@ -35,8 +35,7 @@ import hu.bme.aut.thesis.freshfitness.R
 @Composable
 fun DistanceFilter(
     radius: Int,
-    onValueChange: (Float) -> Unit,
-    onQuery: () -> Unit
+    onValueChange: (Float) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val extraPadding by animateDpAsState(
@@ -88,7 +87,6 @@ fun DistanceFilter(
                     onValueChange = onValueChange,
                     steps = (10000 - 500) / 500 - 1,
                     valueRange = 500f..10000f,
-                    onValueChangeFinished = onQuery
                 )
             }
         }
@@ -98,7 +96,5 @@ fun DistanceFilter(
 @Preview(showBackground = true)
 @Composable
 fun DistanceFilterPreview() {
-    DistanceFilter(radius = 2500, onValueChange = {}) {
-
-    }
+    DistanceFilter(radius = 2500, onValueChange = {})
 }
