@@ -79,4 +79,6 @@
     <string name="no_chosen_exercises">No chosen exercises</string>
     <string name="click_an_exercise">Click on an exercise to view the details of it</string>
     <string name="gym">Gym</string>
+    <string name="delete_from_favourites">Delete from favourites</string>
+    <string name="save_to_favourites">Save to favourites</string>
 </resources>

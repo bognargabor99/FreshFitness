@@ -589,47 +589,101 @@ fun NearbyGymItem(
                 }
             },
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Max),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(.8f),
-                verticalArrangement = Arrangement.SpaceAround
-            ) {
-                Text(text = name, modifier = Modifier.padding(bottom = 6.dp), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontWeight = FontWeight.Bold)
-                Text(text = address, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
-            }
-            IconButton(
-                modifier = Modifier.weight(.2f),
-                onClick = onSaveToFavourites,
-            ) {
-                Icon(
-                    imageVector = if (saved) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                    tint = if (saved) Color(0xffFFD700) else MaterialTheme.colorScheme.onBackground,
-                    contentDescription = if (saved) "Delete from favourites" else "Save to favourites"
-                )
-            }
-        }
+        NearbyGymItemMainContent(
+            name = name,
+            address = address,
+            saved = saved,
+            onSaveToFavourites = onSaveToFavourites
+        )
         AnimatedVisibility(visible = openable && expanded) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Max),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "$totalRatings users rated this place $rating/5", color = MaterialTheme.colorScheme.onBackground)
-                Button(onClick = onGo) {
-                    Text(text = "Show")
-                }
-            }
+            NearbyGymItemSubContent(
+                totalRatings = totalRatings,
+                rating = rating,
+                onGo = onGo
+            )
         }
+    }
+}
+
+@Composable
+fun NearbyGymItemMainContent(
+    name: String,
+    address: String,
+    saved: Boolean,
+    onSaveToFavourites: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Max),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        NearbyGymBasicInfo(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(.8f),
+            name = name,
+            address = address
+        )
+        SavePlaceButton(
+            modifier = Modifier.weight(.2f),
+            saved = saved,
+            onSaveToFavourites = onSaveToFavourites
+        )
+    }
+}
+
+@Composable
+fun NearbyGymItemSubContent(
+    totalRatings: Int,
+    rating: Float,
+    onGo: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Max),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = "$totalRatings users rated this place $rating/5", color = MaterialTheme.colorScheme.onBackground)
+        Button(onClick = onGo) {
+            Text(text = "Show")
+        }
+    }
+}
+
+@Composable
+fun NearbyGymBasicInfo(
+    modifier: Modifier = Modifier,
+    name: String,
+    address: String
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.SpaceAround
+    ) {
+        Text(text = name, modifier = Modifier.padding(bottom = 6.dp), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontWeight = FontWeight.Bold)
+        Text(text = address, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+    }
+}
+
+@Composable
+fun SavePlaceButton(
+    modifier: Modifier = Modifier,
+    saved: Boolean,
+    onSaveToFavourites: () -> Unit
+) {
+    IconButton(
+        modifier = modifier,
+        onClick = onSaveToFavourites,
+    ) {
+        Icon(
+            imageVector = if (saved) Icons.Filled.Star else Icons.Outlined.StarBorder,
+            tint = if (saved) Color(0xffFFD700) else MaterialTheme.colorScheme.onBackground,
+            contentDescription = stringResource(if (saved) R.string.delete_from_favourites else R.string.save_to_favourites)
+        )
     }
 }
 
