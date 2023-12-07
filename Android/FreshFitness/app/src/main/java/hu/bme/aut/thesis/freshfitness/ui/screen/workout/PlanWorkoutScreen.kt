@@ -49,6 +49,7 @@ import hu.bme.aut.thesis.freshfitness.ui.util.ToggleFilter
 @SuppressLint("SimpleDateFormat")
 @Composable
 fun PlanWorkoutScreen(
+    isAdmin: Boolean,
     workoutPlanState: WorkoutPlanState,
     allMuscles: List<MuscleGroup>,
     allDifficulties: List<String>,
@@ -58,6 +59,7 @@ fun PlanWorkoutScreen(
     onEquipmentTypeChange: (String) -> Unit,
     onMuscleChange: (String) -> Unit,
     onCreateWarmupChange: (Boolean) -> Unit,
+    onIsCommunityChange: (Boolean) -> Unit,
     onTargetDateChange: (String) -> Unit,
     isCreationEnabled: Boolean,
     onCreateWorkout: () -> Unit,
@@ -74,11 +76,13 @@ fun PlanWorkoutScreen(
         }
         WorkoutPlanningHeader()
         WorkoutPlanningBody(
+            isAdmin = isAdmin,
             allMuscles = allMuscles,
             allDifficulties = allDifficulties,
             allEquipmentTypes = allEquipmentTypes,
             workoutPlanState = workoutPlanState,
             onCreateWarmupChange = onCreateWarmupChange,
+            onIsCommunityChange = onIsCommunityChange,
             onDifficultyChange = onDifficultyChange,
             onEquipmentTypeChange = onEquipmentTypeChange,
             onMuscleChange = onMuscleChange,
@@ -123,6 +127,7 @@ fun WorkoutPlanningHeader() {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WorkoutPlanningBody(
+    isAdmin: Boolean,
     allDifficulties: List<String>,
     allEquipmentTypes: List<String>,
     allMuscles: List<MuscleGroup>,
@@ -132,6 +137,7 @@ fun WorkoutPlanningBody(
     onEquipmentTypeChange: (String) -> Unit,
     onMuscleChange: (String) -> Unit,
     onCreateWarmupChange: (Boolean) -> Unit,
+    onIsCommunityChange: (Boolean) -> Unit,
     onShowTargetDateDialog: () -> Unit,
 ) {
     FlowRow(horizontalArrangement = Arrangement.SpaceAround) {
@@ -155,6 +161,11 @@ fun WorkoutPlanningBody(
             allMuscles = allMuscles
         )
         DateChooser(selectedDate = workoutPlanState.targetDate, onClick = onShowTargetDateDialog)
+        if (isAdmin)
+            IsCommunityWorkoutSwitch(
+                isCommunity = workoutPlanState.owner == "community",
+                onChange = onIsCommunityChange
+            )
     }
 }
 
@@ -192,7 +203,24 @@ fun WarmupSwitch(
         Text(text = "Plan warmup?", fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
         Switch(
             checked = checked,
-            onCheckedChange = { onCheckedChange(it) },
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            )
+        )
+    }
+}
+
+@Composable
+fun IsCommunityWorkoutSwitch(isCommunity: Boolean, onChange: (Boolean) -> Unit) {
+    Column(
+        modifier = Modifier.padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Workout plan for everyone?", fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
+        Switch(
+            checked = isCommunity,
+            onCheckedChange = onChange,
             colors = SwitchDefaults.colors(
                 checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
             )

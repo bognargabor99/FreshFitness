@@ -316,6 +316,7 @@ fun PlanWorkoutListOnly(
     }
     else if (planWorkout) {
         PlanWorkoutScreen(
+            isAdmin = viewModel.isAdmin,
             workoutPlanState = workoutPlanState,
             allMuscles = viewModel.muscleGroups,
             allDifficulties = viewModel.allDifficulties,
@@ -325,6 +326,7 @@ fun PlanWorkoutListOnly(
             onEquipmentTypeChange = viewModel::onEquipmentTypeChange,
             onMuscleChange = viewModel::onMuscleChange,
             onCreateWarmupChange = viewModel::onCreateWarmupChange,
+            onIsCommunityChange = viewModel::onSetCommunityWorkout,
             onTargetDateChange = viewModel::onTargetDateChange,
             isCreationEnabled = viewModel.isCreationEnabled(),
             onCreateWorkout = viewModel::createWorkoutPlan,
@@ -342,6 +344,7 @@ fun PlanWorkoutListAndDetail(
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(modifier = modifier.weight(1f)) {
             PlanWorkoutScreen(
+                isAdmin = viewModel.isAdmin,
                 workoutPlanState = workoutPlanState,
                 allMuscles = viewModel.muscleGroups,
                 allDifficulties = viewModel.allDifficulties,
@@ -351,6 +354,7 @@ fun PlanWorkoutListAndDetail(
                 onEquipmentTypeChange = viewModel::onEquipmentTypeChange,
                 onMuscleChange = viewModel::onMuscleChange,
                 onCreateWarmupChange = viewModel::onCreateWarmupChange,
+                onIsCommunityChange = viewModel::onSetCommunityWorkout,
                 onTargetDateChange = viewModel::onTargetDateChange,
                 isCreationEnabled = viewModel.isCreationEnabled(),
                 onCreateWorkout = viewModel::createWorkoutPlan,

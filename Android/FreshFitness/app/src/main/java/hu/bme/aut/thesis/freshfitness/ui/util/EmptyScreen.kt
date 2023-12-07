@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -30,7 +31,12 @@ fun EmptyScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             texts.forEach { text ->
-                Text(modifier = Modifier.fillMaxWidth(0.9f), text = text, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+                Text(
+                    modifier = Modifier.fillMaxWidth(0.9f),
+                    text = text,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                )
             }
         }
     }

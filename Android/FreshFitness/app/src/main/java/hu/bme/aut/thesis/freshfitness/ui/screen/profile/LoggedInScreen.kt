@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,6 +47,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,34 +66,23 @@ import hu.bme.aut.thesis.freshfitness.viewmodel.ProfileViewModel
 @Composable
 fun LoggedInScreen(
     state: SignedInState,
+    onNavigateViewWorkoutsScreen: () -> Unit,
     viewModel: ProfileViewModel = viewModel()
 ) {
     val context = LocalContext.current
     LaunchedEffect(key1 = false) {
         viewModel.fetchAuthSession()
     }
-    Box {
-        Column(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
-                .wrapContentSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ProfileImage(
-                imageKey = viewModel.profileImageLocation,
-                onClick = viewModel::showImageOptions
-            )
-            ProfileInfo(state, viewModel.isAdmin)
-        }
-        IconButton(
-            onClick = viewModel::signOut,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Logout,
-                contentDescription = stringResource(R.string.logout))
+    Column {
+        MainProfileInformation(
+            isAdmin = viewModel.isAdmin,
+            state = state,
+            profileImageLocation = viewModel.profileImageLocation,
+            onShowImageOptions = viewModel::showImageOptions,
+            onSignOut = viewModel::signOut
+        )
+        if (viewModel.isAdmin) {
+            AdminProfileContent(onNavigateViewWorkoutsScreen)
         }
     }
 
@@ -115,6 +107,78 @@ fun LoggedInScreen(
             imageUrl = "${BuildConfig.S3_IMAGES_BASE_URL}${viewModel.profileImageLocation}",
             onDismiss = viewModel::hideFullScreenImage
         )
+    }
+}
+
+@Composable
+fun MainProfileInformation(
+    isAdmin: Boolean,
+    state: SignedInState,
+    profileImageLocation: String,
+    onShowImageOptions: () -> Unit,
+    onSignOut: () -> Unit,
+) {
+    Box {
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+                .wrapContentSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            ProfileImage(
+                imageKey = profileImageLocation,
+                onClick = onShowImageOptions
+            )
+            ProfileInfo(state, isAdmin)
+        }
+        IconButton(
+            onClick = onSignOut,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Logout,
+                contentDescription = stringResource(R.string.logout))
+        }
+    }
+}
+
+@Composable
+fun AdminProfileContent(
+    onNavigateViewWorkoutsScreen: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AdminContentTitle()
+        AdminContentBody(onNavigateViewWorkoutsScreen)
+    }
+}
+
+@Composable
+fun AdminContentTitle() {
+    Text(text = stringResource(R.string.you_are_an_admin), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+}
+
+@Composable
+fun AdminContentBody(
+    onNavigateViewWorkoutsScreen: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = stringResource(R.string.admin_abilities), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+        Text(text = stringResource(R.string.community_workout_benefits), style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+    }
+    Button(onClick = onNavigateViewWorkoutsScreen) {
+        Text(text = stringResource(R.string.take_me_there))
     }
 }
 

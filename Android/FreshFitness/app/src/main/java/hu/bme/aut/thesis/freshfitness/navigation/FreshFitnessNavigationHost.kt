@@ -69,7 +69,7 @@ fun FreshFitnessNavigationHost(
             startDestination = Social.route
         ) {
             composable(route = Profile.route) {
-                ProfileScreen()
+                ProfileScreen(onNavigateViewWorkoutsScreen = Planning.onClick)
             }
             composable(route = Workout.route) {
                 WorkoutScreen(contentType = contentType)

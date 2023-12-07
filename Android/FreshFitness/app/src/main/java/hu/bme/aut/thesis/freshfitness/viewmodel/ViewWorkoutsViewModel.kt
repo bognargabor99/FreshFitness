@@ -40,6 +40,7 @@ class ViewWorkoutsViewModel : ViewModel() {
     // For fetching user's workouts
     var isLoggedIn by mutableStateOf(false)
     private var userName by mutableStateOf("")
+    var isAdmin by mutableStateOf(false)
 
     val userWorkouts = mutableStateListOf<Workout>()
     val communityWorkouts = mutableStateListOf<Workout>()
@@ -72,9 +73,18 @@ class ViewWorkoutsViewModel : ViewModel() {
         AuthService.fetchAuthSession(onSuccess = {
             if (it.isSignedIn) {
                 this.isLoggedIn = true
+                this.isAdmin = false
                 val session = (it as AWSCognitoAuthSession)
                 val jwt = decodeJWT(session.accessToken!!.split(".").getOrElse(1) { "" })
                 val jsonObject = JSONObject(jwt)
+                if (jsonObject.has("cognito:groups")) {
+                    val groups = jsonObject.getJSONArray("cognito:groups")
+                    for (i in 0 until groups.length()) {
+                        if (groups.getString(i) == "Admins") {
+                            this.isAdmin = true
+                        }
+                    }
+                }
                 this.userName = jsonObject.getString("username")
                 this._workoutPlanState.update { currentState ->
                     currentState.copy(
@@ -156,9 +166,7 @@ class ViewWorkoutsViewModel : ViewModel() {
     fun createWorkout() {
         if (this.plannedWorkout == null)
             return
-        this._workoutPlanState.update {
-            WorkoutPlanState(owner = this.userName)
-        }
+        resetWorkoutPlan()
         val workout = (this.plannedWorkout as Workout)
         ApiService.postWorkout(workout,
             onSuccess = { w ->
@@ -194,6 +202,12 @@ class ViewWorkoutsViewModel : ViewModel() {
             savedWorkouts.clear()
             savedWorkouts.addAll(workoutsRepository.getWorkouts())
             savedWorkoutsFetched = true
+        }
+    }
+
+    private fun resetWorkoutPlan() {
+        this._workoutPlanState.update {
+            WorkoutPlanState(owner = this.userName)
         }
     }
 
@@ -337,6 +351,14 @@ class ViewWorkoutsViewModel : ViewModel() {
         _workoutPlanState.update { currentState ->
             currentState.copy(
                 targetDate = targetDate
+            )
+        }
+    }
+
+    fun onSetCommunityWorkout(isCommunity: Boolean) {
+        _workoutPlanState.update { currentState ->
+            currentState.copy(
+                owner = if (isCommunity) "community" else this.userName
             )
         }
     }

@@ -18,7 +18,9 @@ import com.amplifyframework.ui.authenticator.ui.Authenticator
 import hu.bme.aut.thesis.freshfitness.R
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onNavigateViewWorkoutsScreen: () -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
@@ -28,7 +30,10 @@ fun ProfileScreen() {
                 ProfileHeader()
             }
         ) {
-            LoggedInScreen(it)
+            LoggedInScreen(
+                state = it,
+                onNavigateViewWorkoutsScreen = onNavigateViewWorkoutsScreen
+            )
         }
     }
 }
@@ -50,5 +55,5 @@ fun ProfileHeader() {
 @Preview
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen()
+    ProfileScreen {}
 }
