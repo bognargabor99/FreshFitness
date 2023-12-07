@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -69,6 +68,7 @@ import hu.bme.aut.thesis.freshfitness.ui.theme.FreshFitnessTheme
 import hu.bme.aut.thesis.freshfitness.ui.util.DistanceFilter
 import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
+import hu.bme.aut.thesis.freshfitness.ui.util.LocationDisabled
 import hu.bme.aut.thesis.freshfitness.ui.util.MapMarker
 import hu.bme.aut.thesis.freshfitness.ui.util.RequireLocationPermissions
 import hu.bme.aut.thesis.freshfitness.ui.util.ScreenLoading
@@ -202,29 +202,6 @@ fun DeniedLocationPermission() {
         "You did not grant access to your location and without that we cannot show gyms nearby",
         "Please enable the access in your settings"
     )
-}
-
-@Composable
-fun LocationDisabled(
-    onTryAgain: () -> Unit
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .wrapContentSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(modifier = Modifier.fillMaxWidth(0.8f), text = "To continue, please turn on device location and then try again", color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
-            Button(onClick = onTryAgain) {
-                Text(text = "Try again")
-            }
-        }
-    }
 }
 
 @Composable

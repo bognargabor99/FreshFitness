@@ -10,6 +10,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +76,8 @@ import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
 import hu.bme.aut.thesis.freshfitness.service.TrackRunningService
+import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
+import hu.bme.aut.thesis.freshfitness.ui.util.LocationDisabled
 import hu.bme.aut.thesis.freshfitness.ui.util.OkCancelDialog
 import hu.bme.aut.thesis.freshfitness.ui.util.RequireLocationPermissions
 import hu.bme.aut.thesis.freshfitness.ui.util.UploadStateAlert
@@ -92,6 +96,7 @@ fun TrackRunningScreen(
 ) {
     RequireLocationPermissions {
         val runs by viewModel.allRuns.observeAsState()
+        val isServiceRunning by TrackRunningService.isRunning.collectAsState()
         var showRunOnMap by remember { mutableStateOf(false) }
         var shownRun: RunWithCheckpoints? by remember { mutableStateOf(null) }
         var showShareRunDialog by remember { mutableStateOf(false) }
@@ -105,93 +110,161 @@ fun TrackRunningScreen(
         val context = LocalContext.current
         val screenshotState = rememberScreenshotState()
         val coroutineScope = rememberCoroutineScope()
+
         if (showRunOnMap) {
-            Column {
-                AnimatedVisibility(
-                    visible = viewModel.runShared,
-                    enter = slideInVertically(initialOffsetY = { -it }),
-                    exit = slideOutVertically(targetOffsetY = { -it })
-                ) {
-                    SharedRunNotification()
-                }
-                TrackedRun(
-                    run = shownRun!!,
-                    screenshotState = screenshotState,
-                    isLoggedIn = viewModel.isLoggedIn,
-                    onShare = {
-                        coroutineScope.launch {
-                            screenshotState.capture()
-                            showShareRunDialog = true
-                        }
-                    },
-                    onDismiss = { showRunOnMap = false }
-                )
-            }
-            if (showShareRunDialog) {
-                val additionalShareText = shownRun?.let { getAdditionalShareText(it, context) } ?: "Can you bet me?"
-                OkCancelDialog(
-                    title = stringResource(R.string.sharing_run),
-                    subTitle = stringResource(R.string.are_you_sure_to_share_run),
-                    onDismiss = { showShareRunDialog = false },
-                    onOk = {
-                        screenshotState.bitmap?.let {
-                            viewModel.shareRun(context, it, additionalShareText)
-                        }
-                        showShareRunDialog = false
+            RunOnMapScreen(
+                isLoggedIn = viewModel.isLoggedIn,
+                runShared = viewModel.runShared,
+                shownRun = shownRun!!,
+                screenshotState = screenshotState,
+                onShare = {
+                    coroutineScope.launch {
+                        screenshotState.capture()
+                        showShareRunDialog = true
                     }
-                )
-            }
-            if (viewModel.showUploadState) {
-                UploadStateAlert(text = stringResource(R.string.uploading_file), fractionCompleted = viewModel.uploadState)
-            }
+                },
+                onDismiss = { showRunOnMap = false }
+            )
         }
         else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
-            ) {
-                val permissions = arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-                Button(
-                    enabled = viewModel.locationSettingState,
-                    onClick = {
-                        if (!TrackRunningService.isRunning) {
-                            if (permissions.all { ContextCompat.checkSelfPermission(viewModel.context, it) == PackageManager.PERMISSION_GRANTED })
-                                viewModel.startLocationTrackingService()
-                        } else {
-                            viewModel.stopLocationTrackingService()
-                        }
-                    }) {
-                    Text(text = stringResource(if (!TrackRunningService.isRunning) R.string.start else R.string.stop))
-                }
+            TrackRunningList(
+                locationSettingState = viewModel.locationSettingState,
+                isServiceRunning = isServiceRunning,
+                context = context,
+                onStart = viewModel::startLocationTrackingService,
+                onStop = viewModel::stopLocationTrackingService,
+                runs = runs,
+                onClickRun = {
+                    shownRun = it
+                    showRunOnMap = true
+                },
+                onDeleteRun = viewModel::deleteRun,
+                onTryAgain = viewModel::checkLocationState
+            )
+        }
 
-                if (runs?.isNotEmpty() == true) {
-                    LazyColumn(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.previous_runs),
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = MaterialTheme.typography.headlineMedium.fontSize
-                            )
-                        }
-                        items(viewModel.allRuns.value?.size!!) {index ->
-                            viewModel.allRuns.value?.get(index)!!.run {
-                                RunListItem(
-                                    run = this,
-                                    onClick = {
-                                        shownRun = this
-                                        showRunOnMap = true
-                                    },
-                                    onDelete = { viewModel.deleteRun(this.run.id) }
-                                )
-                            }
-                        }
+        AnimatedVisibility(showShareRunDialog) {
+            val additionalShareText = shownRun?.let { getAdditionalShareText(it, context) } ?: "Can you bet me?"
+            OkCancelDialog(
+                title = stringResource(R.string.sharing_run),
+                subTitle = stringResource(R.string.are_you_sure_to_share_run),
+                onDismiss = { showShareRunDialog = false },
+                onOk = {
+                    screenshotState.bitmap?.let {
+                        viewModel.shareRun(context, it, additionalShareText)
+                    }
+                    showShareRunDialog = false
+                }
+            )
+        }
+        AnimatedVisibility(viewModel.showUploadState) {
+            UploadStateAlert(text = stringResource(R.string.uploading_file), fractionCompleted = viewModel.uploadState)
+        }
+    }
+}
+
+@Composable
+fun TrackRunningList(
+    locationSettingState: Boolean,
+    isServiceRunning: Boolean,
+    context: Context,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    runs: List<RunWithCheckpoints>?,
+    onClickRun: (RunWithCheckpoints) -> Unit,
+    onDeleteRun: (Long) -> Unit,
+    onTryAgain: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        if (isServiceRunning || locationSettingState) {
+            StartOrStopTrackButton(isServiceRunning = isServiceRunning, context, onStart, onStop)
+        } else {
+            Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.2f)) {
+                LocationDisabled(onTryAgain = onTryAgain)
+            }
+        }
+        PreviousRunsList(
+            runs = runs,
+            onClickRun = onClickRun,
+            onDeleteRun = onDeleteRun
+        )
+    }
+}
+
+@Composable
+fun RunOnMapScreen(
+    isLoggedIn: Boolean,
+    runShared: Boolean,
+    shownRun: RunWithCheckpoints,
+    screenshotState: ScreenshotState,
+    onShare: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column {
+        SharedRunNotification(visible = runShared)
+        TrackedRun(
+            run = shownRun,
+            screenshotState = screenshotState,
+            isLoggedIn = isLoggedIn,
+            onShare = onShare,
+            onDismiss = onDismiss
+        )
+    }
+}
+
+@Composable
+fun StartOrStopTrackButton(
+    isServiceRunning: Boolean,
+    context: Context,
+    onStart: () -> Unit,
+    onStop: () -> Unit
+
+) {
+    val permissions = arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
+    Button(
+        enabled = true,
+        onClick = {
+            if (!isServiceRunning) {
+                if (permissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED })
+                    onStart()
+            } else {
+                onStop()
+            }
+        }) {
+        Text(text = stringResource(if (!isServiceRunning) R.string.start else R.string.stop))
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun PreviousRunsList(
+    runs: List<RunWithCheckpoints>?,
+    onClickRun: (RunWithCheckpoints) -> Unit,
+    onDeleteRun: (Long) -> Unit
+) {
+    if (runs?.isNotEmpty() == true) {
+        LazyColumn(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            stickyHeader {
+                Text(
+                    text = stringResource(R.string.previous_runs),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = MaterialTheme.typography.headlineMedium.fontSize
+                )
+            }
+            if (runs.isEmpty()) {
+                item { EmptyScreen("There are no previously tracked runs.") }
+            }
+            else {
+                items(runs.size) {index ->
+                    runs[index].run {
+                        RunListItem(run = this, onClick = onClickRun, onDelete = onDeleteRun)
                     }
                 }
             }
@@ -200,7 +273,7 @@ fun TrackRunningScreen(
 }
 
 @SuppressLint("SimpleDateFormat")
-fun getAdditionalShareText(run: RunWithCheckpoints, context: Context): String {
+private fun getAdditionalShareText(run: RunWithCheckpoints, context: Context): String {
     return "I ran ${context.resources.getString(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100)} " +
             "in ${calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" }} minutes " +
             "on ${SimpleDateFormat("MM.dd").format(Date(run.run.startTime))}\n" +
@@ -211,15 +284,15 @@ fun getAdditionalShareText(run: RunWithCheckpoints, context: Context): String {
 @Composable
 fun RunListItem(
     run: RunWithCheckpoints,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
+    onClick: (RunWithCheckpoints) -> Unit,
+    onDelete: (Long) -> Unit
 ) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .padding(6.dp)
-            .clickable(onClick = onClick),
+            .clickable(onClick = { onClick(run) }),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
         )
@@ -235,7 +308,7 @@ fun RunListItem(
             Text(
                 text = SimpleDateFormat("yyy.MM.dd HH").format(Date(run.run.startTime))+"h"
             )
-            IconButton(onClick = onDelete) {
+            IconButton(onClick = { onDelete(run.run.id) }) {
                 Icon(imageVector = Icons.Default.Delete, contentDescription = stringResource(R.string.delete_run))
             }
         }
@@ -258,30 +331,43 @@ fun TrackedRun(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100),
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 20.sp
-            )
-            Text(
-                text = calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" },
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 20.sp
-            )
-        }
+        TrackedRunStatistics(
+            checkpoints = run.checkpoints,
+            startTime = run.run.startTime,
+            endTime = run.run.endTime
+        )
         TrackedRunMap(checkpoints = run.checkpoints, screenshotState = screenshotState)
         if (isLoggedIn) {
             Button(onClick = onShare) {
                 Text(text = stringResource(R.string.share))
             }
         }
+    }
+}
+
+@Composable
+fun TrackedRunStatistics(
+    checkpoints: List<RunCheckpointEntity>,
+    startTime: Long,
+    endTime: Long
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.meters, round(checkpoints.calculateDistanceInMeters() * 100) / 100),
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 20.sp
+        )
+        Text(
+            text = calculateElapsedTime(startTime, endTime).run { "${this / 60}:${this % 60}" },
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 20.sp
+        )
     }
 }
 
@@ -337,18 +423,24 @@ fun TrackedRunMap(
 }
 
 @Composable
-fun SharedRunNotification() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Green.copy(green = 0.5f)),
-        horizontalArrangement = Arrangement.Center
+fun SharedRunNotification(visible: Boolean) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(initialOffsetY = { -it }),
+        exit = slideOutVertically(targetOffsetY = { -it })
     ) {
-        Text(
-            text = "Your run has been shared!\nCheck your social feed!",
-            textAlign = TextAlign.Center,
-            color = Color.White,
-            fontSize = 20.sp
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Green.copy(green = 0.5f)),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Your run has been shared!\nCheck your social feed!",
+                textAlign = TextAlign.Center,
+                color = Color.White,
+                fontSize = 20.sp
+            )
+        }
     }
 }

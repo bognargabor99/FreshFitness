@@ -9,9 +9,6 @@ import android.content.Intent
 import android.location.Location
 import android.os.IBinder
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
@@ -24,6 +21,10 @@ import hu.bme.aut.thesis.freshfitness.repository.RunningRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.round
 
@@ -51,14 +52,11 @@ class TrackRunningService : Service() {
         if (intent.action.equals(STOP_FILTER)) {
             Log.d("trackRunningService", "Stopping tracking running.")
             locationHelper?.stopLocationMonitoring()
-
-            isRunning = false
-
             this.stopSelf()
         }
 
         startForeground(NOTIFICATION_ID, createNotificationWithChannel())
-        isRunning = true
+        _isRunning.update { true }
         if (locationHelper == null) {
             val helper = LocationHelper(applicationContext, TrackRunningServiceCallback())
             helper.startLocationMonitoring()
@@ -122,6 +120,7 @@ class TrackRunningService : Service() {
                 Log.d("trackRunningService", "Inserted new running")
             }
         }
+        _isRunning.update { false }
 
         super.onDestroy()
     }
@@ -130,7 +129,8 @@ class TrackRunningService : Service() {
         private const val STOP_FILTER = "STOP_FRESH_FITNESS_MONITORING"
         private const val NOTIFICATION_ID = 101
         const val CHANNEL_ID = "TrackRunningServiceChannel"
-        var isRunning by mutableStateOf(false)
+        private var _isRunning = MutableStateFlow(false)
+        val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
     }
 
     inner class TrackRunningServiceCallback : LocationCallback() {
