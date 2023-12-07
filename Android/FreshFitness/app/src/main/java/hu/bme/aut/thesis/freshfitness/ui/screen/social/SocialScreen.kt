@@ -936,7 +936,18 @@ fun HeaderPreview() {
 @Preview(showBackground = true)
 @Composable
 fun CommentPreview() {
-    Comment(comment = Comment(0, 0, "Comment in preview", "test_user", "", "2023-12-05T18:42:00"), { false }) { }
+    Comment(
+        comment = Comment(
+            id = 0,
+            postId = 0,
+            text = "Comment in preview",
+            username = "test_user",
+            userImage = "",
+            createdAt = "2023-12-05T18:42:00"
+        ),
+        deleteCommentEnabled = { false },
+        onShowCommentOptions = { }
+    )
 }
 
 @Preview(showBackground = true)
