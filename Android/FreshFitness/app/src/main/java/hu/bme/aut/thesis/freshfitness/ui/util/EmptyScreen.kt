@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,7 +30,7 @@ fun EmptyScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             texts.forEach { text ->
-                Text(text = text, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+                Text(modifier = Modifier.fillMaxWidth(0.9f), text = text, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
             }
         }
     }

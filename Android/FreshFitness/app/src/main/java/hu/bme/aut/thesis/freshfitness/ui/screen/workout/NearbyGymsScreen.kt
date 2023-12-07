@@ -195,6 +195,7 @@ fun NearbyGymsTopAppBar(
     )
 }
 
+@Preview
 @Composable
 fun DeniedLocationPermission() {
     EmptyScreen(
