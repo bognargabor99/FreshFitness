@@ -85,4 +85,6 @@
     <string name="community_workout_benefits">This can be beneficial for creating a daily workout.</string>
     <string name="take_me_there">Take me there!</string>
     <string name="finish">Finish</string>
+    <string name="no_comments">No comments</string>
+    <string name="be_the_first_to_comment">Be the first to comment</string>
 </resources>

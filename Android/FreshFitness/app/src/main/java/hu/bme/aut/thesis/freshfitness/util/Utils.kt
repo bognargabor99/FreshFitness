@@ -86,7 +86,7 @@ fun parseDateToTimeSince(dateStr: String): String {
     else if (date.isAfter(aWeekBefore))
         LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("EEEE HH:mm"))
     else
-        LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("MM-dd HH:mm"))
+        LocalDateTime.parse(dateStr.take(16)).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
 }
 
 @SuppressLint("SimpleDateFormat")

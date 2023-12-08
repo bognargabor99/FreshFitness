@@ -73,9 +73,10 @@ class SocialScreenTests {
                     )
                 }
             }
-            PostCard(
+            PostCardDetailed(
                 modifier = Modifier.semantics(mergeDescendants = false) { },
                 post = post,
+                userName = post.username,
                 editEnabled = editEnabled,
                 onLikePost = onLike,
                 deleteEnabled = true
@@ -92,7 +93,7 @@ class SocialScreenTests {
         composeTestRule
             .onNode(hasTextExactly("gaborbognar123"), useUnmergedTree = true)
             .assertExists()
-            .assert(hasAnySibling(hasText("11-22 10:19")))
+            .assert(hasAnySibling(hasText("11/22 10:19")))
     }
 
     @Test

@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.Chat
+import androidx.compose.material.icons.outlined.PhotoSizeSelectActual
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
@@ -45,7 +46,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -93,6 +93,7 @@ import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
 import hu.bme.aut.thesis.freshfitness.ui.screen.nocontent.NetworkUnavailable
+import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.InfiniteCircularProgressBar
 import hu.bme.aut.thesis.freshfitness.ui.util.OkCancelDialog
@@ -128,7 +129,10 @@ fun SocialScreen(
         }
         else {
             LoadedSocialFeed(
+                contentType = contentType,
                 posts = viewModel.posts,
+                detailedPost = viewModel.detailedPost,
+                onClickPost = viewModel::clickPost,
                 userName = viewModel.userName,
                 createPostEnabled = viewModel.userName.isNotBlank(),
                 onCreatePost = viewModel::floatingButtonClick,
@@ -141,7 +145,8 @@ fun SocialScreen(
                 onImageClick = viewModel::showFullScreenImage,
                 canLoadMore = viewModel.lastFetchedCount != 0,
                 onLoadMore = viewModel::loadMorePosts,
-                isLoadingMore = viewModel.isLoadingMore
+                isLoadingMore = viewModel.isLoadingMore,
+                onShowCommentOptions = viewModel::showCommentOptions
             )
         }
         if (viewModel.showLikesDialog) {
@@ -152,7 +157,7 @@ fun SocialScreen(
                 post = viewModel.shownCommentsPost,
                 deleteCommentEnabled = { viewModel.userName == it },
                 onDismiss =  { viewModel.showCommentsDialog = false },
-                onShowCommentOptions = { viewModel.showCommentOptions(it.id) }
+                onShowCommentOptions = viewModel::showCommentOptions
             )
         }
         if (viewModel.showAddCommentDialog) {
@@ -210,9 +215,73 @@ fun LoadingSocialFeed() {
     ScreenLoading(loadingText = stringResource(R.string.loading_posts))
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LoadedSocialFeed(
+    contentType: FreshFitnessContentType,
+    posts: List<Post>,
+    detailedPost: Post?,
+    onClickPost: (Post) -> Unit,
+    userName: String,
+    createPostEnabled: Boolean,
+    onCreatePost: () -> Unit,
+    onLikePost: (Post) -> Unit,
+    editEnabled: Boolean,
+    onShowLikes: (Int) -> Unit,
+    onShowComments: (Int) -> Unit,
+    onStartComment: (Int) -> Unit,
+    onShowPostOptions: (Int) -> Unit,
+    onImageClick: (String) -> Unit,
+    canLoadMore: Boolean,
+    onLoadMore: () -> Unit,
+    isLoadingMore: Boolean,
+    onShowCommentOptions: (Comment) -> Unit
+) {
+    when(contentType) {
+        FreshFitnessContentType.LIST_ONLY -> {
+            LoadedSocialFeedListOnly(
+                posts = posts,
+                userName = userName,
+                createPostEnabled = createPostEnabled,
+                onCreatePost = onCreatePost,
+                onLikePost = onLikePost,
+                editEnabled = editEnabled,
+                onShowLikes = onShowLikes,
+                onShowComments = onShowComments,
+                onStartComment = onStartComment,
+                onShowPostOptions = onShowPostOptions,
+                onImageClick = onImageClick,
+                canLoadMore = canLoadMore,
+                onLoadMore = onLoadMore,
+                isLoadingMore = isLoadingMore
+            )
+        }
+        FreshFitnessContentType.LIST_AND_DETAIL -> {
+            LoadedSocialFeedListAndDetail(
+                modifier = Modifier,
+                posts = posts,
+                detailedPost = detailedPost,
+                onClickPost = onClickPost,
+                userName = userName,
+                createPostEnabled = createPostEnabled,
+                onCreatePost = onCreatePost,
+                canLoadMore = canLoadMore,
+                onLoadMore = onLoadMore,
+                isLoadingMore = isLoadingMore,
+                onLikePost = onLikePost,
+                editEnabled = editEnabled,
+                onShowLikes = onShowLikes,
+                onStartComment = onStartComment,
+                onShowPostOptions = onShowPostOptions,
+                onImageClick = onImageClick,
+                onShowCommentOptions = onShowCommentOptions
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun LoadedSocialFeedListOnly(
     posts: List<Post>,
     userName: String,
     createPostEnabled: Boolean,
@@ -229,10 +298,7 @@ fun LoadedSocialFeed(
     isLoadingMore: Boolean
 ) {
     val lazyListState = rememberLazyListState()
-    Scaffold(
-        floatingActionButton = { if (createPostEnabled) { NewPostFAB(extended = lazyListState.isScrollingUp(), onClick = onCreatePost) } },
-        floatingActionButtonPosition = FabPosition.End
-    ) {
+    Scaffold(floatingActionButton = { if (createPostEnabled) { NewPostFAB(lazyListState.isScrollingUp(), onCreatePost) } }) {
         if (posts.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier.padding(it),
@@ -242,11 +308,11 @@ fun LoadedSocialFeed(
                 item {
                     Header(stringResource(R.string.newest_posts))
                 }
-
                 itemsIndexed(items = posts, key = { _, p -> p.id }) {_, p ->
-                    PostCard(
+                    PostCardDetailed(
                         modifier = Modifier.animateItemPlacement(animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)),
                         post = p,
+                        userName = userName,
                         onLikePost = onLikePost,
                         editEnabled = editEnabled,
                         onShowLikes = onShowLikes,
@@ -267,23 +333,126 @@ fun LoadedSocialFeed(
                 }
             }
         } else {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            NoPostsOnFeed()
+        }
+    }
+}
+
+@Composable
+fun LoadedSocialFeedListAndDetail(
+    modifier: Modifier = Modifier,
+    posts: List<Post>,
+    detailedPost: Post?,
+    onClickPost: (Post) -> Unit,
+    userName: String,
+    createPostEnabled: Boolean,
+    onCreatePost: () -> Unit,
+    canLoadMore: Boolean,
+    onLoadMore: () -> Unit,
+    isLoadingMore: Boolean,
+    onLikePost: (Post) -> Unit,
+    editEnabled: Boolean,
+    onShowLikes: (Int) -> Unit,
+    onStartComment: (Int) -> Unit,
+    onShowPostOptions: (Int) -> Unit,
+    onImageClick: (String) -> Unit,
+    onShowCommentOptions: (Comment) -> Unit
+) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
+        Column(modifier = modifier.weight(1f)) {
+            PostListListAndDetail(
+                posts = posts,
+                createPostEnabled = createPostEnabled,
+                onCreatePost = onCreatePost,
+                canLoadMore = canLoadMore,
+                onLoadMore = onLoadMore,
+                isLoadingMore = isLoadingMore,
+                onClickPost = onClickPost
+            )
+        }
+        Column(modifier = modifier.weight(1f)) {
+            if (detailedPost != null) {
+                DetailedPost(
+                    post = detailedPost,
+                    userName = userName,
+                    onLikePost = onLikePost,
+                    editEnabled = editEnabled,
+                    onShowLikes = onShowLikes,
+                    onStartComment = onStartComment,
+                    onShowPostOptions = onShowPostOptions,
+                    onImageClick = onImageClick,
+                    deleteCommentEnabled = { it == userName },
+                    onShowCommentOptions = onShowCommentOptions
+                )
+            }
+            else {
+                NoPostSelected()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun PostListListAndDetail(
+    posts: List<Post>,
+    createPostEnabled: Boolean,
+    onCreatePost: () -> Unit,
+    canLoadMore: Boolean,
+    onLoadMore: () -> Unit,
+    isLoadingMore: Boolean,
+    onClickPost: (Post) -> Unit
+) {
+    val lazyListState = rememberLazyListState()
+    Scaffold(floatingActionButton = { if (createPostEnabled) { NewPostFAB(lazyListState.isScrollingUp(), onCreatePost) } }) {
+        if (posts.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier.padding(it),
+                state = lazyListState,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.wrapContentSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        textAlign = TextAlign.Center,
-                        fontSize = 20.sp,
-                        text = stringResource(R.string.no_posts),
-                        color = Color.Black.copy(alpha = 0.5f)
+                item {
+                    Header(stringResource(R.string.newest_posts))
+                }
+                itemsIndexed(items = posts, key = { _, p -> p.id }) {_, p ->
+                    PostCardSimple(
+                        modifier = Modifier.animateItemPlacement(animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)),
+                        post = p,
+                        onClick = onClickPost
                     )
                 }
+                item {
+                    if (isLoadingMore)
+                        InfiniteCircularProgressBar()
+                    else if (canLoadMore)
+                        LoadMoreButton(onClick = onLoadMore)
+                    else
+                        EndOfFeedBanner()
+                }
             }
+        } else {
+            NoPostsOnFeed()
+        }
+    }
+}
+
+@Composable
+fun NoPostsOnFeed() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.wrapContentSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                text = stringResource(R.string.no_posts),
+                color = Color.Black.copy(alpha = 0.5f)
+            )
         }
     }
 }
@@ -299,7 +468,7 @@ fun LoadMoreButton(
 
 @Composable
 fun EndOfFeedBanner() {
-    Text(text = stringResource(R.string.end_of_feed), fontStyle = FontStyle.Italic)
+    Text(modifier = Modifier.padding(4.dp), text = stringResource(R.string.end_of_feed), fontStyle = FontStyle.Italic)
 }
 
 @Composable
@@ -317,16 +486,18 @@ fun Header(
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+
         )
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PostCard(
+fun PostCardDetailed(
     modifier: Modifier = Modifier,
     post: Post,
+    userName: String,
     onLikePost: (Post) -> Unit = { },
     editEnabled: Boolean = false,
     onShowLikes: (Int) -> Unit = { },
@@ -334,7 +505,9 @@ fun PostCard(
     onStartComment: (Int) -> Unit = { },
     onShowPostOptions: (Int) -> Unit = { },
     onImageClick: (String) -> Unit = { },
-    deleteEnabled: Boolean
+    deleteEnabled: Boolean,
+    alwaysShowAllRows: Boolean = false,
+    additionalContent: @Composable () -> Unit = { },
 ) {
     var showAllRows by remember { mutableStateOf(false) }
     val maxLines by animateIntAsState(if (showAllRows) 10 else 1, label = "")
@@ -355,20 +528,54 @@ fun PostCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             PostCardHeader(post = post, deleteEnabled = deleteEnabled, onShowPostOptions = onShowPostOptions)
-            PostCardDetails(details = post.details, maxLines = maxLines)
+            PostCardDetails(details = post.details, maxLines = if (alwaysShowAllRows) 20 else maxLines)
             if (post.imageLocation.isNotBlank())
                 PostCardImage(imageLocation = post.imageLocation, onImageClick = onImageClick)
             PostCardActions(
                 post = post,
-                userName = post.username,
+                userName = userName,
                 onLikePost = onLikePost,
                 editEnabled = editEnabled,
                 onShowLikes = onShowLikes,
                 onShowComments = onShowComments,
                 onStartComment = onStartComment
             )
+            additionalContent()
         }
     }
+}
+
+@Composable
+fun PostCardSimple(
+    modifier: Modifier = Modifier,
+    post: Post,
+    onClick: (Post) -> Unit,
+) {
+    ElevatedCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp, horizontal = 16.dp)
+            .clickable { onClick(post) },
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            PostCardHeader(post = post, deleteEnabled = false)
+            PostCardDetails(details = post.details, maxLines = 1)
+            if (post.imageLocation.isNotBlank())
+                PostCardImageIcon()
+            PostStats(likeCount = post.likeCount, commentCount = post.commentCount)
+        }
+    }
+}
+
+@Composable
+fun NoPostSelected() {
+    EmptyScreen("No post selected.", "Click on a post to show the details of it")
 }
 
 @Composable
@@ -393,7 +600,40 @@ fun PostCardHeader(
             deleteEnabled = deleteEnabled,
             onClick = { onShowPostOptions(post.id) }
         )
+    }
+}
 
+@Composable
+fun PostCardImageIcon() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(modifier = Modifier.size(50.dp), imageVector = Icons.Outlined.PhotoSizeSelectActual, contentDescription = null)
+    }
+}
+
+
+@Composable
+fun PostStats(
+    likeCount: Int,
+    commentCount: Int
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp, start = 8.dp, bottom = 8.dp, end = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = if (likeCount == 1) "1 like" else "$likeCount likes",
+            style = MaterialTheme.typography.titleSmall
+        )
+        Text(
+            text = if (commentCount == 1) "1 comment" else "$commentCount comments",
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
 
@@ -520,26 +760,24 @@ fun PostCardActions(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Comment(
+    modifier: Modifier = Modifier,
     comment: Comment,
     deleteCommentEnabled: (String) -> Boolean,
     onShowCommentOptions: (Comment) -> Unit = { }
 ) {
-    ElevatedCard(
-        modifier = Modifier
+    Column(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 4.dp)
+            .padding(4.dp)
             .combinedClickable(enabled = deleteCommentEnabled(comment.username), onLongClick = {
                 onShowCommentOptions(comment)
             }) { },
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
-        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp, horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             CommentProfileImage(imageKey = comment.userImage)
             CommentContent(userName = comment.username, text = comment.text, createdAt = comment.createdAt)
@@ -773,29 +1011,65 @@ fun CommentsDialog(
     onDismiss: () -> Unit,
     onShowCommentOptions: (Comment) -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss
-    ) {
+    AlertDialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier.wrapContentHeight(),
             shape = MaterialTheme.shapes.large,
             tonalElevation = AlertDialogDefaults.TonalElevation
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            CommentsDialogContent(
+                post = post,
+                deleteCommentEnabled = deleteCommentEnabled,
+                onShowCommentOptions = onShowCommentOptions
+            )
+        }
+    }
+}
+
+@Composable
+fun CommentsDialogContent(
+    post: Post,
+    showTitle: Boolean = true,
+    deleteCommentEnabled: (String) -> Boolean,
+    onShowCommentOptions: (Comment) -> Unit
+) {
+    if (post.comments.isNotEmpty()) {
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (showTitle)
                 Text(text = stringResource(R.string.comments), fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    items(post.commentCount) {index ->
-                        Comment(post.comments[index], deleteCommentEnabled, onShowCommentOptions)
-                    }
+            Column {
+                post.comments.forEach {
+                    Comment(
+                        comment = it,
+                        deleteCommentEnabled = deleteCommentEnabled,
+                        onShowCommentOptions = onShowCommentOptions
+                    )
                 }
             }
         }
+    }
+    else {
+        NoCommentsContent()
+    }
+}
+
+@Composable
+fun NoCommentsContent() {
+    Column(
+        modifier = Modifier
+            .padding(12.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = stringResource(R.string.no_comments), fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+        Text(text = stringResource(R.string.be_the_first_to_comment), fontSize = 16.sp)
     }
 }
 
@@ -885,7 +1159,7 @@ fun OptionsDialog(
 @Preview(showBackground = true)
 @Composable
 fun PostPreview() {
-    PostCard(
+    PostCardDetailed(
         post = Post(
             id = 1,
             details = "My new personal best on the squat machine",
@@ -896,6 +1170,7 @@ fun PostPreview() {
             likeCount = 2,
             commentCount = 7
         ),
+        userName = "gaborbognar123",
         deleteEnabled = true
     )
 }

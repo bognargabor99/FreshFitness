@@ -16,6 +16,7 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.amplify.ApiService
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
 import hu.bme.aut.thesis.freshfitness.amplify.StorageService
+import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.CommentOnPostDto
 import hu.bme.aut.thesis.freshfitness.model.social.CreatePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeleteCommentDto
@@ -31,6 +32,7 @@ import java.net.URLConnection
 
 class SocialFeedViewModel : ViewModel() {
     val posts = mutableStateListOf<Post>()
+    var detailedPost: Post? by mutableStateOf(posts.firstOrNull())
 
     private val postService = PostService()
 
@@ -142,9 +144,9 @@ class SocialFeedViewModel : ViewModel() {
         this.showPostOptionsFor = -1
     }
 
-    fun showCommentOptions(commentId: Int) {
+    fun showCommentOptions(comment: Comment) {
         this.showCommentOptionsDialog = true
-        this.showCommentOptionsFor = commentId
+        this.showCommentOptionsFor = comment.id
     }
 
     fun dismissCommentOptions() {
@@ -182,6 +184,10 @@ class SocialFeedViewModel : ViewModel() {
         fullScreenImageLocation = ""
     }
 
+    fun clickPost(post: Post) {
+        this.detailedPost = post
+    }
+
     fun deleteComment() {
         val deleteCommentDto = DeleteCommentDto(
             id = showCommentOptionsFor,
@@ -192,6 +198,7 @@ class SocialFeedViewModel : ViewModel() {
             val post = this.posts.single { p -> p.comments.singleOrNull { c -> c.id == deleteCommentDto.id } != null }.copy()
             post.commentCount--
             post.comments.removeIf { c -> c.id == deleteCommentDto.id }
+            detailedPost = post
             val indexOfPost = this.posts.indexOfFirst { p -> p.id == post.id }
             this.posts[indexOfPost] = post
         }
@@ -210,6 +217,7 @@ class SocialFeedViewModel : ViewModel() {
         ApiService.deletePost(deletePostDto) {
             val tempPosts = this.posts.map { it.copy() }.toMutableList()
             tempPosts.removeIf { p -> p.id == deletePostDto.postId }
+            detailedPost = tempPosts.firstOrNull()
             this.posts.run {
                 clear()
                 addAll(tempPosts)
@@ -230,8 +238,8 @@ class SocialFeedViewModel : ViewModel() {
                 p.likes.add(this.userName)
             }
         }
-
         this.posts[postToLikeIndex] = postToLike
+        detailedPost = postToLike
 
         ApiService.likePost(post.id, this.userName, onError = {
             val likedPost = this.posts.single { p -> p.id == post.id }
@@ -253,6 +261,9 @@ class SocialFeedViewModel : ViewModel() {
     private fun getCommentsForPost(postId: Int) {
         ApiService.getCommentsForPost(postId, onSuccess = { comments ->
             this.posts.singleOrNull { p -> p.id == postId }?.comments = comments
+            if (detailedPost?.id == postId) {
+                detailedPost = this.posts.singleOrNull { p -> p.id == postId }
+            }
         })
     }
 
@@ -265,6 +276,7 @@ class SocialFeedViewModel : ViewModel() {
             postToComment.comments.add(newComment)
             postToComment.commentCount++
             this.posts[postToCommentIndex] = postToComment
+            this.detailedPost = postToComment
         })
     }
 
@@ -367,6 +379,7 @@ class SocialFeedViewModel : ViewModel() {
             this.posts.removeIf { p -> postsToAdd.any { it.id == p.id } }
             this.posts.addAll(postsToAdd)
             this.posts.sortByDescending { it.id }
+            this.detailedPost = this.posts.firstOrNull()
             isLoading = false
             isLoadingMore = false
             nextPage++
