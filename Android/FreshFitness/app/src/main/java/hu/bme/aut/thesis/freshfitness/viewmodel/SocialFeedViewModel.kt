@@ -3,10 +3,7 @@ package hu.bme.aut.thesis.freshfitness.viewmodel
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
@@ -22,8 +19,13 @@ import hu.bme.aut.thesis.freshfitness.model.social.CreatePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeleteCommentDto
 import hu.bme.aut.thesis.freshfitness.model.social.DeletePostDto
 import hu.bme.aut.thesis.freshfitness.model.social.Post
+import hu.bme.aut.thesis.freshfitness.model.state.SocialState
 import hu.bme.aut.thesis.freshfitness.service.PostService
 import hu.bme.aut.thesis.freshfitness.util.decodeJWT
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
@@ -31,70 +33,34 @@ import java.io.File
 import java.net.URLConnection
 
 class SocialFeedViewModel : ViewModel() {
-    val posts = mutableStateListOf<Post>()
-    var detailedPost: Post? by mutableStateOf(posts.firstOrNull())
-
     private val postService = PostService()
+    val posts = mutableStateListOf<Post>()
 
-    var isLoading by mutableStateOf(true)
-    var isLoadingMore by mutableStateOf(true)
-    private var nextPage: Int = 0
-    var lastFetchedCount by mutableStateOf(10)
-
-    // For enabling user input
-    var isLoggedIn by mutableStateOf(false)
-    var userName by mutableStateOf("")
+    private val _socialState = MutableStateFlow(SocialState())
+    val socialState: StateFlow<SocialState> = _socialState.asStateFlow()
 
     // Showing AlertDialog likes
-    var showLikesDialog by mutableStateOf(false)
     lateinit var shownLikesPost: Post
 
     // Showing AlertDialog comments
-    var showCommentsDialog by mutableStateOf(false)
     lateinit var shownCommentsPost: Post
 
     // Showing AddCommentDialog
-    var showAddCommentDialog by mutableStateOf(false)
     private lateinit var commentedPost: Post
-
-    // Creating a Post
-    var showCreatePostDialog by mutableStateOf(false)
-    var postCreationButtonsEnabled by mutableStateOf(true)
-
-    // Deleting a post
-    var showDeletePostAlert by mutableStateOf(false)
-
-    // Deleting a comment
-    var showDeleteCommentAlert by mutableStateOf(false)
-
-    // Show options dialog for a post
-    var showPostOptionsDialog by mutableStateOf(false)
-    private var showPostOptionsFor: Int = -1
-
-    // Show options dialog for a comment
-    var showCommentOptionsDialog by mutableStateOf(false)
-    private var showCommentOptionsFor: Int = -1
-
-    // Show uploaded percentage of file
-    var showUploadState by mutableStateOf(false)
-    var uploadState: Double by mutableStateOf(0.0)
-    var uploadText by mutableStateOf("")
-
-    // Show fullscreen of image
-    var showImageFullScreen by mutableStateOf(false)
-    var fullScreenImageLocation: String = ""
 
     fun initFeed() {
         AuthService.fetchAuthSession(onSuccess = {
             if (it.isSignedIn) {
-                this.isLoggedIn = true
                 val session = (it as AWSCognitoAuthSession)
                 val jwt = decodeJWT(session.accessToken!!.split(".").getOrElse(1) { "" })
                 val jsonObject = JSONObject(jwt)
-                this.userName = jsonObject.getString("username")
+                _socialState.update { state ->
+                    state.copy(isLoggedIn = true, username = jsonObject.getString("username"))
+                }
             } else {
-                this.isLoggedIn = false
-                this.userName = ""
+                _socialState.update { state ->
+                    state.copy(isLoggedIn = false, username = "")
+                }
             }
             resetFeed()
         }, onError = {
@@ -104,101 +70,143 @@ class SocialFeedViewModel : ViewModel() {
 
     fun showLikes(postId: Int) {
         this.shownLikesPost = this.posts.single { p -> p.id == postId }
-        this.showLikesDialog = true
+        _socialState.update { state ->
+            state.copy(showLikesDialog = true)
+        }
+    }
+
+    fun hideLikes() {
+        _socialState.update { state ->
+            state.copy(showLikesDialog = false)
+        }
     }
 
     fun showComments(postId: Int) {
         this.shownCommentsPost = this.posts.single { p -> p.id == postId }
-        this.showCommentsDialog = true
+        _socialState.update { state ->
+            state.copy(showCommentsDialog = true)
+        }
+    }
+
+    fun hideComments() {
+        _socialState.update { state ->
+            state.copy(showCommentsDialog = false)
+        }
     }
 
     fun startCommenting(postId: Int) {
         this.commentedPost = this.posts.single { p -> p.id == postId }
-        this.showAddCommentDialog = true
+        _socialState.update { state ->
+            state.copy(showAddCommentDialog = true)
+        }
+    }
+
+    fun endCommenting() {
+        _socialState.update { state ->
+            state.copy(showAddCommentDialog = false)
+        }
     }
 
     fun addComment(text: String) {
         val commentDto = CommentOnPostDto(
             postId = this.commentedPost.id,
             text = text.trim(),
-            username = this.userName
+            username = this._socialState.value.username
         )
         commentOnPost(commentDto)
     }
 
     fun floatingButtonClick() {
-        this.showCreatePostDialog = true
+        _socialState.update { state ->
+            state.copy(showCreatePostDialog = true)
+        }
     }
 
     fun dismissCreatePostDialog() {
-        this.showCreatePostDialog = false
+        _socialState.update { state ->
+            state.copy(showCreatePostDialog = false)
+        }
     }
 
     fun showPostOptions(postId: Int) {
-        this.showPostOptionsDialog = true
-        this.showPostOptionsFor = postId
+        _socialState.update { state ->
+            state.copy(showPostOptionsDialog = true, showPostOptionsFor = postId)
+        }
     }
 
     fun dismissPostOptions() {
-        this.showPostOptionsDialog = false
-        this.showPostOptionsFor = -1
+        _socialState.update { state ->
+            state.copy(showPostOptionsDialog = false, showPostOptionsFor = -1)
+        }
     }
 
     fun showCommentOptions(comment: Comment) {
-        this.showCommentOptionsDialog = true
-        this.showCommentOptionsFor = comment.id
+        _socialState.update { state ->
+            state.copy(showCommentOptionsDialog = true, showCommentOptionsFor = comment.id)
+        }
     }
 
     fun dismissCommentOptions() {
-        this.showCommentOptionsDialog = false
-        this.showCommentOptionsFor = -1
+        _socialState.update { state ->
+            state.copy(showCommentOptionsDialog = false, showCommentOptionsFor = -1)
+        }
     }
 
     fun showDeleteCommentAlert() {
-        this.showCommentOptionsDialog = false
-        this.showDeleteCommentAlert = true
+        _socialState.update { state ->
+            state.copy(
+                showCommentOptionsDialog = false, showDeleteCommentAlert = true
+            )
+        }
     }
 
     fun dismissDeleteCommentAlert() {
-        this.showDeleteCommentAlert = false
-        this.showCommentOptionsFor = -1
+        _socialState.update { state ->
+            state.copy(showDeleteCommentAlert = false, showCommentOptionsFor = -1)
+        }
     }
 
     fun showDeletePostAlert() {
-        this.showPostOptionsDialog = false
-        this.showDeletePostAlert = true
+        _socialState.update { state ->
+            state.copy(showPostOptionsDialog = false, showDeletePostAlert = true)
+        }
     }
 
     fun dismissDeletePostAlert() {
-        this.showDeletePostAlert = false
-        this.showPostOptionsFor = -1
+        _socialState.update { state ->
+            state.copy(showDeletePostAlert = false, showPostOptionsFor = -1)
+        }
     }
 
     fun showFullScreenImage(location: String) {
-        fullScreenImageLocation = "${BuildConfig.S3_IMAGES_BASE_URL}$location"
-        showImageFullScreen = true
+        _socialState.update { state ->
+            state.copy(fullScreenImageLocation = "${BuildConfig.S3_IMAGES_BASE_URL}$location", showImageFullScreen = true)
+        }
     }
 
     fun hideFullScreenImage() {
-        showImageFullScreen = false
-        fullScreenImageLocation = ""
+        _socialState.update { state ->
+            state.copy(showImageFullScreen = false, fullScreenImageLocation = "")
+        }
     }
 
-    fun clickPost(post: Post) {
-        this.detailedPost = post
+    fun setDetailedPost(post: Post) {
+        _socialState.update { state ->
+            state.copy(detailedPost = post)
+        }
     }
 
     fun deleteComment() {
         val deleteCommentDto = DeleteCommentDto(
-            id = showCommentOptionsFor,
-            username = this.userName
+            id = _socialState.value.showCommentOptionsFor,
+            username = _socialState.value.username
         )
         this.dismissDeleteCommentAlert()
         ApiService.deleteComment(deleteCommentDto) {
             val post = this.posts.single { p -> p.comments.singleOrNull { c -> c.id == deleteCommentDto.id } != null }.copy()
             post.commentCount--
             post.comments.removeIf { c -> c.id == deleteCommentDto.id }
-            detailedPost = post
+            setDetailedPost(post)
             val indexOfPost = this.posts.indexOfFirst { p -> p.id == post.id }
             this.posts[indexOfPost] = post
         }
@@ -206,8 +214,8 @@ class SocialFeedViewModel : ViewModel() {
 
     fun deletePost() {
         val deletePostDto = DeletePostDto(
-            postId = this.showPostOptionsFor,
-            username = userName
+            postId = _socialState.value.showPostOptionsFor,
+            username = _socialState.value.username
         )
         val imageToDelete = this.posts.single { p -> p.id == deletePostDto.postId }.imageLocation
         this.dismissDeletePostAlert()
@@ -217,7 +225,10 @@ class SocialFeedViewModel : ViewModel() {
         ApiService.deletePost(deletePostDto) {
             val tempPosts = this.posts.map { it.copy() }.toMutableList()
             tempPosts.removeIf { p -> p.id == deletePostDto.postId }
-            detailedPost = tempPosts.firstOrNull()
+            tempPosts.firstOrNull()
+            _socialState.update { state ->
+                state.copy(detailedPost = tempPosts.firstOrNull())
+            }
             this.posts.run {
                 clear()
                 addAll(tempPosts)
@@ -230,28 +241,28 @@ class SocialFeedViewModel : ViewModel() {
         val postToLikeIndex = this.posts.indexOfFirst { p -> p.id == post.id }
 
         postToLike.also { p ->
-            if (p.likes.contains(this.userName)) {
+            if (p.likes.contains(_socialState.value.username)) {
                 p.likeCount--
-                p.likes.remove(this.userName)
+                p.likes.remove(_socialState.value.username)
             } else {
                 p.likeCount++
-                p.likes.add(this.userName)
+                p.likes.add(_socialState.value.username)
             }
         }
         this.posts[postToLikeIndex] = postToLike
-        detailedPost = postToLike
+        setDetailedPost(postToLike)
 
-        ApiService.likePost(post.id, this.userName, onError = {
+        ApiService.likePost(post.id, _socialState.value.username, onError = {
             val likedPost = this.posts.single { p -> p.id == post.id }
             val likedPostIndex = this.posts.indexOfFirst { p -> p.id == post.id }
 
             likedPost.also { p ->
-                if (p.likes.contains(this.userName)) {
+                if (p.likes.contains(_socialState.value.username)) {
                     p.likeCount--
-                    p.likes.remove(this.userName)
+                    p.likes.remove(_socialState.value.username)
                 } else {
                     p.likeCount++
-                    p.likes.add(this.userName)
+                    p.likes.add(_socialState.value.username)
                 }
             }
             this.posts[likedPostIndex] = likedPost
@@ -261,14 +272,16 @@ class SocialFeedViewModel : ViewModel() {
     private fun getCommentsForPost(postId: Int) {
         ApiService.getCommentsForPost(postId, onSuccess = { comments ->
             this.posts.singleOrNull { p -> p.id == postId }?.comments = comments
-            if (detailedPost?.id == postId) {
-                detailedPost = this.posts.singleOrNull { p -> p.id == postId }
+            if (_socialState.value.detailedPost == null || _socialState.value.detailedPost?.id == postId) {
+                setDetailedPost(this.posts.single { p -> p.id == postId })
             }
         })
     }
 
     private fun commentOnPost(commentDto: CommentOnPostDto) {
-        this.showAddCommentDialog = false
+        _socialState.update {
+            it.copy(showAddCommentDialog = false)
+        }
 
         ApiService.commentOnPost(commentDto, onSuccess = { newComment ->
             val postToComment = this.posts.single { p -> p.id == commentDto.postId }.copy()
@@ -276,14 +289,14 @@ class SocialFeedViewModel : ViewModel() {
             postToComment.comments.add(newComment)
             postToComment.commentCount++
             this.posts[postToCommentIndex] = postToComment
-            this.detailedPost = postToComment
+            setDetailedPost(postToComment)
         })
     }
 
     fun createPost(text: String, contentUri: Uri?, context: Context) {
-        this.postCreationButtonsEnabled = false
-        this.showUploadState = true
-        this.uploadText = "Processing file..."
+        _socialState.update {
+            it.copy(postCreationButtonsEnabled = false, showUploadState = true, uploadText = "Processing file...")
+        }
         var mimeType: String? = null
         var buffer: ByteArrayOutputStream? = null
         if (contentUri != null) {
@@ -309,28 +322,28 @@ class SocialFeedViewModel : ViewModel() {
         val updatePosts: (String) -> Unit = { location ->
             val createPostDto = CreatePostDto(
                 details = text,
-                username = this.userName,
+                username = _socialState.value.username,
                 imageLocation = location
             )
-            this.showUploadState = false
-            this.uploadState = 0.0
-            this.uploadText = ""
-            this.showCreatePostDialog = false
+            _socialState.update {
+                it.copy(showUploadState = false, uploadState = 0.0, uploadText = "", showCreatePostDialog = false, postCreationButtonsEnabled = true)
+            }
             ApiService.createPost(createPostDto) { post ->
                 this.posts.add(0, post)
             }
-            this.postCreationButtonsEnabled = true
         }
 
         if (buffer != null && !mimeType.isNullOrBlank() && mimeType.startsWith("image/")) {
-            this.uploadText = "Uploading file..."
+            _socialState.update {
+                it.copy(uploadText = "Uploading file...")
+            }
             val f = File(context.filesDir, "tempFile.${mimeType.substring(6)}")
             f.writeBytes(buffer.toByteArray())
             postService.uploadFile(
-                userName = this.userName,
+                userName = _socialState.value.username,
                 file = f,
                 extension = mimeType.substring(6),
-                onFractionCompleted = { this.uploadState = it },
+                onFractionCompleted = { fraction -> _socialState.update { it.copy(uploadState = fraction) } },
                 onSuccess = { location ->
                     f.delete()
                     updatePosts(location)
@@ -342,18 +355,21 @@ class SocialFeedViewModel : ViewModel() {
 
     private fun resetFeed() {
         posts.clear()
-        nextPage = 0
-        isLoading = true
+        _socialState.update {
+            it.copy(nextPage = 0,isLoading = true)
+        }
         getNextPosts()
     }
 
     fun loadMorePosts() {
-        isLoadingMore = true
+        _socialState.update {
+            it.copy(isLoadingMore = true)
+        }
         getNextPosts()
     }
 
     private fun getNextPosts() {
-        ApiService.getPosts(this.nextPage, onSuccess = { newPosts ->
+        ApiService.getPosts(_socialState.value.nextPage, onSuccess = { newPosts ->
             val postsToAdd = mutableListOf<Post>()
             newPosts.forEach { pagedPost ->
                 val index = postsToAdd.indexOfFirst { p -> p.id == pagedPost.id }
@@ -379,11 +395,9 @@ class SocialFeedViewModel : ViewModel() {
             this.posts.removeIf { p -> postsToAdd.any { it.id == p.id } }
             this.posts.addAll(postsToAdd)
             this.posts.sortByDescending { it.id }
-            this.detailedPost = this.posts.firstOrNull()
-            isLoading = false
-            isLoadingMore = false
-            nextPage++
-            lastFetchedCount = newPosts.size
+            _socialState.update {
+                it.copy(detailedPost = this.posts.firstOrNull(), isLoading = false, isLoadingMore = false, nextPage = it.nextPage + 1, lastFetchedCount = newPosts.size)
+            }
             for (post in postsToAdd) {
                 getCommentsForPost(post.id)
             }

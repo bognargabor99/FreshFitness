@@ -38,7 +38,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.Chat
-import androidx.compose.material.icons.outlined.PhotoSizeSelectActual
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
@@ -58,6 +57,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,6 +92,7 @@ import hu.bme.aut.thesis.freshfitness.BuildConfig
 import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.model.social.Comment
 import hu.bme.aut.thesis.freshfitness.model.social.Post
+import hu.bme.aut.thesis.freshfitness.model.state.SocialState
 import hu.bme.aut.thesis.freshfitness.ui.screen.nocontent.NetworkUnavailable
 import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
 import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
@@ -112,6 +113,8 @@ fun SocialScreen(
     viewModel: SocialFeedViewModel = viewModel(factory = SocialFeedViewModel.factory)
 ) {
     val context = LocalContext.current
+    val state by viewModel.socialState.collectAsState()
+
     LaunchedEffect(key1 = networkAvailable) {
         if (networkAvailable && viewModel.posts.isEmpty())
             viewModel.initFeed()
@@ -124,86 +127,81 @@ fun SocialScreen(
         if (!networkAvailable && viewModel.posts.isEmpty()) {
             NetworkUnavailable()
         }
-        else if (viewModel.isLoading) {
+        else if (state.isLoading) {
             LoadingSocialFeed()
         }
         else {
             LoadedSocialFeed(
                 contentType = contentType,
                 posts = viewModel.posts,
-                detailedPost = viewModel.detailedPost,
-                onClickPost = viewModel::clickPost,
-                userName = viewModel.userName,
-                createPostEnabled = viewModel.userName.isNotBlank(),
+                state = state,
+                onClickPost = viewModel::setDetailedPost,
                 onCreatePost = viewModel::floatingButtonClick,
                 onLikePost = viewModel::likePost,
-                editEnabled = viewModel.isLoggedIn,
                 onShowLikes = viewModel::showLikes,
                 onShowComments = viewModel::showComments,
                 onStartComment = viewModel::startCommenting,
                 onShowPostOptions = viewModel::showPostOptions,
                 onImageClick = viewModel::showFullScreenImage,
-                canLoadMore = viewModel.lastFetchedCount != 0,
                 onLoadMore = viewModel::loadMorePosts,
-                isLoadingMore = viewModel.isLoadingMore,
                 onShowCommentOptions = viewModel::showCommentOptions
             )
         }
-        if (viewModel.showLikesDialog) {
-            LikesDialog(viewModel.shownLikesPost) { viewModel.showLikesDialog = false }
+        if (state.showLikesDialog) {
+            LikesDialog(post = viewModel.shownLikesPost, onDismiss = viewModel::hideLikes)
         }
-        if (viewModel.showCommentsDialog) {
+        if (state.showCommentsDialog) {
             CommentsDialog(
                 post = viewModel.shownCommentsPost,
-                deleteCommentEnabled = { viewModel.userName == it },
-                onDismiss =  { viewModel.showCommentsDialog = false },
+                deleteCommentEnabled = { state.username == it },
+                onDismiss =  viewModel::hideComments,
                 onShowCommentOptions = viewModel::showCommentOptions
             )
         }
-        if (viewModel.showAddCommentDialog) {
-            AddCommentDialog(onComment = viewModel::addComment) { viewModel.showAddCommentDialog = false }
+        if (state.showAddCommentDialog) {
+            AddCommentDialog(onComment = viewModel::addComment, onDismiss = viewModel::endCommenting)
         }
-        if (viewModel.showCreatePostDialog) {
+        if (state.showCreatePostDialog) {
             CreatePostDialog(
-                postCreationButtonsEnabled = viewModel.postCreationButtonsEnabled,
+                postCreationButtonsEnabled = state.postCreationButtonsEnabled,
                 onPost = { text, contentUri -> viewModel.createPost(text, contentUri, context) },
                 onDismiss = viewModel::dismissCreatePostDialog
             )
         }
-        if (viewModel.showUploadState) {
-            UploadStateAlert(text = viewModel.uploadText, fractionCompleted = viewModel.uploadState)
+        if (state.showUploadState) {
+            UploadStateAlert(text = state.uploadText, fractionCompleted = state.uploadState)
         }
-        if (viewModel.showPostOptionsDialog) {
+        if (state.showPostOptionsDialog) {
             OptionsDialog(
                 onDelete = viewModel::showDeletePostAlert,
                 onDismiss = viewModel::dismissPostOptions
             )
         }
-        if (viewModel.showCommentOptionsDialog) {
+        if (state.showCommentOptionsDialog) {
             OptionsDialog(
                 onDelete = {
-                    viewModel.showCommentsDialog = false
+                    viewModel.hideComments()
                     viewModel.showDeleteCommentAlert() },
                 onDismiss = viewModel::dismissCommentOptions
             )
         }
-        if (viewModel.showDeletePostAlert) {
+        if (state.showDeletePostAlert) {
             DeleteAlert(
                 what = "post",
                 onDelete = viewModel::deletePost,
                 onDismiss = viewModel::dismissDeletePostAlert
             )
         }
-        if (viewModel.showDeleteCommentAlert) {
+        if (state.showDeleteCommentAlert) {
             DeleteAlert(
                 what = "comment",
                 onDelete = viewModel::deleteComment,
                 onDismiss = viewModel::dismissDeleteCommentAlert
             )
         }
-        if (viewModel.showImageFullScreen) {
+        if (state.showImageFullScreen) {
             FullScreenImage(
-                imageUrl = viewModel.fullScreenImageLocation,
+                imageUrl = state.fullScreenImageLocation,
                 onDismiss = viewModel::hideFullScreenImage
             )
         }
@@ -219,56 +217,42 @@ fun LoadingSocialFeed() {
 fun LoadedSocialFeed(
     contentType: FreshFitnessContentType,
     posts: List<Post>,
-    detailedPost: Post?,
+    state: SocialState,
     onClickPost: (Post) -> Unit,
-    userName: String,
-    createPostEnabled: Boolean,
     onCreatePost: () -> Unit,
     onLikePost: (Post) -> Unit,
-    editEnabled: Boolean,
     onShowLikes: (Int) -> Unit,
     onShowComments: (Int) -> Unit,
     onStartComment: (Int) -> Unit,
     onShowPostOptions: (Int) -> Unit,
     onImageClick: (String) -> Unit,
-    canLoadMore: Boolean,
     onLoadMore: () -> Unit,
-    isLoadingMore: Boolean,
     onShowCommentOptions: (Comment) -> Unit
 ) {
     when(contentType) {
         FreshFitnessContentType.LIST_ONLY -> {
             LoadedSocialFeedListOnly(
                 posts = posts,
-                userName = userName,
-                createPostEnabled = createPostEnabled,
+                state = state,
                 onCreatePost = onCreatePost,
                 onLikePost = onLikePost,
-                editEnabled = editEnabled,
                 onShowLikes = onShowLikes,
                 onShowComments = onShowComments,
                 onStartComment = onStartComment,
                 onShowPostOptions = onShowPostOptions,
                 onImageClick = onImageClick,
-                canLoadMore = canLoadMore,
-                onLoadMore = onLoadMore,
-                isLoadingMore = isLoadingMore
+                onLoadMore = onLoadMore
             )
         }
         FreshFitnessContentType.LIST_AND_DETAIL -> {
             LoadedSocialFeedListAndDetail(
                 modifier = Modifier,
                 posts = posts,
-                detailedPost = detailedPost,
+                state = state,
                 onClickPost = onClickPost,
-                userName = userName,
-                createPostEnabled = createPostEnabled,
                 onCreatePost = onCreatePost,
-                canLoadMore = canLoadMore,
                 onLoadMore = onLoadMore,
-                isLoadingMore = isLoadingMore,
                 onLikePost = onLikePost,
-                editEnabled = editEnabled,
                 onShowLikes = onShowLikes,
                 onStartComment = onStartComment,
                 onShowPostOptions = onShowPostOptions,
@@ -283,22 +267,18 @@ fun LoadedSocialFeed(
 @Composable
 fun LoadedSocialFeedListOnly(
     posts: List<Post>,
-    userName: String,
-    createPostEnabled: Boolean,
+    state: SocialState,
     onCreatePost: () -> Unit,
     onLikePost: (Post) -> Unit,
-    editEnabled: Boolean,
     onShowLikes: (Int) -> Unit,
     onShowComments: (Int) -> Unit,
     onStartComment: (Int) -> Unit,
     onShowPostOptions: (Int) -> Unit,
     onImageClick: (String) -> Unit,
-    canLoadMore: Boolean,
     onLoadMore: () -> Unit,
-    isLoadingMore: Boolean
 ) {
     val lazyListState = rememberLazyListState()
-    Scaffold(floatingActionButton = { if (createPostEnabled) { NewPostFAB(lazyListState.isScrollingUp(), onCreatePost) } }) {
+    Scaffold(floatingActionButton = { if (state.username.isNotBlank()) { NewPostFAB(lazyListState.isScrollingUp(), onCreatePost) } }) {
         if (posts.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier.padding(it),
@@ -312,21 +292,21 @@ fun LoadedSocialFeedListOnly(
                     PostCardDetailed(
                         modifier = Modifier.animateItemPlacement(animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)),
                         post = p,
-                        userName = userName,
+                        userName = state.username,
                         onLikePost = onLikePost,
-                        editEnabled = editEnabled,
+                        editEnabled = state.isLoggedIn,
                         onShowLikes = onShowLikes,
                         onShowComments = onShowComments,
                         onStartComment = onStartComment,
                         onShowPostOptions = onShowPostOptions,
                         onImageClick = onImageClick,
-                        deleteEnabled = p.username == userName
+                        deleteEnabled = p.username == state.username
                     )
                 }
                 item {
-                    if (isLoadingMore)
+                    if (state.isLoadingMore)
                         InfiniteCircularProgressBar()
-                    else if (canLoadMore)
+                    else if (state.lastFetchedCount != 0)
                         LoadMoreButton(onClick = onLoadMore)
                     else
                         EndOfFeedBanner()
@@ -342,16 +322,11 @@ fun LoadedSocialFeedListOnly(
 fun LoadedSocialFeedListAndDetail(
     modifier: Modifier = Modifier,
     posts: List<Post>,
-    detailedPost: Post?,
+    state: SocialState,
     onClickPost: (Post) -> Unit,
-    userName: String,
-    createPostEnabled: Boolean,
     onCreatePost: () -> Unit,
-    canLoadMore: Boolean,
     onLoadMore: () -> Unit,
-    isLoadingMore: Boolean,
     onLikePost: (Post) -> Unit,
-    editEnabled: Boolean,
     onShowLikes: (Int) -> Unit,
     onStartComment: (Int) -> Unit,
     onShowPostOptions: (Int) -> Unit,
@@ -362,26 +337,26 @@ fun LoadedSocialFeedListAndDetail(
         Column(modifier = modifier.weight(1f)) {
             PostListListAndDetail(
                 posts = posts,
-                createPostEnabled = createPostEnabled,
+                createPostEnabled = state.username.isNotBlank(),
                 onCreatePost = onCreatePost,
-                canLoadMore = canLoadMore,
+                canLoadMore = state.lastFetchedCount != 0,
                 onLoadMore = onLoadMore,
-                isLoadingMore = isLoadingMore,
+                isLoadingMore = state.isLoadingMore,
                 onClickPost = onClickPost
             )
         }
         Column(modifier = modifier.weight(1f)) {
-            if (detailedPost != null) {
+            if (state.detailedPost != null) {
                 DetailedPost(
-                    post = detailedPost,
-                    userName = userName,
+                    post = state.detailedPost!!,
+                    userName = state.username,
                     onLikePost = onLikePost,
-                    editEnabled = editEnabled,
+                    editEnabled = state.isLoggedIn,
                     onShowLikes = onShowLikes,
                     onStartComment = onStartComment,
                     onShowPostOptions = onShowPostOptions,
                     onImageClick = onImageClick,
-                    deleteCommentEnabled = { it == userName },
+                    deleteCommentEnabled = { it == state.username },
                     onShowCommentOptions = onShowCommentOptions
                 )
             }
@@ -566,8 +541,6 @@ fun PostCardSimple(
         ) {
             PostCardHeader(post = post, deleteEnabled = false)
             PostCardDetails(details = post.details, maxLines = 1)
-            if (post.imageLocation.isNotBlank())
-                PostCardImageIcon()
             PostStats(likeCount = post.likeCount, commentCount = post.commentCount)
         }
     }
@@ -600,16 +573,6 @@ fun PostCardHeader(
             deleteEnabled = deleteEnabled,
             onClick = { onShowPostOptions(post.id) }
         )
-    }
-}
-
-@Composable
-fun PostCardImageIcon() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Icon(modifier = Modifier.size(50.dp), imageVector = Icons.Outlined.PhotoSizeSelectActual, contentDescription = null)
     }
 }
 
