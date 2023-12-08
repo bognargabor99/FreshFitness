@@ -89,7 +89,7 @@ fun FreshFitnessNavigationHost(
                 NearbyGymsScreen(networkAvailable = viewModel.networkAvailable, contentType = contentType)
             }
             composable(route = TrackRunning.route) {
-                TrackRunningScreen()
+                TrackRunningScreen(contentType = contentType)
             }
             composable(route = WorkoutPlanning.route) {
                 ViewWorkoutsScreen(contentType = contentType, networkAvailable = viewModel.networkAvailable)

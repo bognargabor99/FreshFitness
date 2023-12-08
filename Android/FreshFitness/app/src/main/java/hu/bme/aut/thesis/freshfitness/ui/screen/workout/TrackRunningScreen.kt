@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.Dash
 import com.google.android.gms.maps.model.Gap
@@ -77,12 +78,14 @@ import hu.bme.aut.thesis.freshfitness.persistence.model.RunCheckpointEntity
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
 import hu.bme.aut.thesis.freshfitness.service.TrackRunningService
 import hu.bme.aut.thesis.freshfitness.ui.util.EmptyScreen
+import hu.bme.aut.thesis.freshfitness.ui.util.FreshFitnessContentType
 import hu.bme.aut.thesis.freshfitness.ui.util.LocationDisabled
 import hu.bme.aut.thesis.freshfitness.ui.util.OkCancelDialog
 import hu.bme.aut.thesis.freshfitness.ui.util.RequireLocationPermissions
 import hu.bme.aut.thesis.freshfitness.ui.util.UploadStateAlert
 import hu.bme.aut.thesis.freshfitness.util.calculateDistanceInMeters
 import hu.bme.aut.thesis.freshfitness.util.calculateElapsedTime
+import hu.bme.aut.thesis.freshfitness.util.calculateMiddlePoint
 import hu.bme.aut.thesis.freshfitness.util.setCustomMapIcon
 import hu.bme.aut.thesis.freshfitness.viewmodel.TrackRunningViewModel
 import kotlinx.coroutines.launch
@@ -92,6 +95,7 @@ import kotlin.math.round
 @SuppressLint("SimpleDateFormat")
 @Composable
 fun TrackRunningScreen(
+    contentType: FreshFitnessContentType,
     viewModel: TrackRunningViewModel = viewModel(factory = TrackRunningViewModel.factory)
 ) {
     RequireLocationPermissions {
@@ -100,47 +104,57 @@ fun TrackRunningScreen(
         var showRunOnMap by remember { mutableStateOf(false) }
         var shownRun: RunWithCheckpoints? by remember { mutableStateOf(null) }
         var showShareRunDialog by remember { mutableStateOf(false) }
+        val context = LocalContext.current
+        val screenshotState = rememberScreenshotState()
+        val coroutineScope = rememberCoroutineScope()
+
+        val onShare: () -> Unit = {
+            coroutineScope.launch {
+                screenshotState.capture()
+                showShareRunDialog = true
+            }
+        }
+        val onClickRun: (RunWithCheckpoints) -> Unit = {
+            shownRun = it
+            showRunOnMap = true
+        }
 
         LaunchedEffect(key1 = false) {
             viewModel.getSession()
             viewModel.checkLocationState()
             viewModel.fetchRuns()
         }
-
-        val context = LocalContext.current
-        val screenshotState = rememberScreenshotState()
-        val coroutineScope = rememberCoroutineScope()
-
-        if (showRunOnMap) {
-            RunOnMapScreen(
-                isLoggedIn = viewModel.isLoggedIn,
-                runShared = viewModel.runShared,
-                shownRun = shownRun!!,
-                screenshotState = screenshotState,
-                onShare = {
-                    coroutineScope.launch {
-                        screenshotState.capture()
-                        showShareRunDialog = true
+        Box(modifier = Modifier.fillMaxSize()) {
+            SharedRunNotification(visible = viewModel.runShared)
+            Column {
+                when (contentType) {
+                    FreshFitnessContentType.LIST_ONLY -> {
+                        TrackRunningScreenListOnly(
+                            viewModel = viewModel,
+                            showRunOnMap = showRunOnMap,
+                            shownRun = shownRun,
+                            screenshotState = screenshotState,
+                            onShare = onShare,
+                            onDismissShowRun = { showRunOnMap = false },
+                            isServiceRunning = isServiceRunning,
+                            runs = runs,
+                            onClickRun = onClickRun
+                        )
                     }
-                },
-                onDismiss = { showRunOnMap = false }
-            )
-        }
-        else {
-            TrackRunningList(
-                locationSettingState = viewModel.locationSettingState,
-                isServiceRunning = isServiceRunning,
-                context = context,
-                onStart = viewModel::startLocationTrackingService,
-                onStop = viewModel::stopLocationTrackingService,
-                runs = runs,
-                onClickRun = {
-                    shownRun = it
-                    showRunOnMap = true
-                },
-                onDeleteRun = viewModel::deleteRun,
-                onTryAgain = viewModel::checkLocationState
-            )
+                    FreshFitnessContentType.LIST_AND_DETAIL -> {
+                        TrackRunningScreenListAndDetail(
+                            viewModel = viewModel,
+                            showRunOnMap = showRunOnMap,
+                            shownRun = shownRun,
+                            screenshotState = screenshotState,
+                            onShare = onShare,
+                            isServiceRunning = isServiceRunning,
+                            runs = runs,
+                            onClickRun = onClickRun
+                        )
+                    }
+                }
+            }
         }
 
         AnimatedVisibility(showShareRunDialog) {
@@ -159,6 +173,85 @@ fun TrackRunningScreen(
         }
         AnimatedVisibility(viewModel.showUploadState) {
             UploadStateAlert(text = stringResource(R.string.uploading_file), fractionCompleted = viewModel.uploadState)
+        }
+    }
+}
+
+@Composable
+fun TrackRunningScreenListOnly(
+    viewModel: TrackRunningViewModel,
+    showRunOnMap: Boolean,
+    shownRun: RunWithCheckpoints?,
+    screenshotState: ScreenshotState,
+    onShare: () -> Unit,
+    onDismissShowRun: () -> Unit,
+    isServiceRunning: Boolean,
+    runs: List<RunWithCheckpoints>?,
+    onClickRun: (RunWithCheckpoints) -> Unit,
+) {
+    val context = LocalContext.current
+    if (showRunOnMap) {
+        RunOnMap(
+            isLoggedIn = viewModel.isLoggedIn,
+            shownRun = shownRun!!,
+            screenshotState = screenshotState,
+            onShare = onShare,
+            onDismiss = onDismissShowRun
+        )
+    }
+    else {
+        TrackRunningList(
+            locationSettingState = viewModel.locationSettingState,
+            isServiceRunning = isServiceRunning,
+            context = context,
+            onStart = viewModel::startLocationTrackingService,
+            onStop = viewModel::stopLocationTrackingService,
+            runs = runs,
+            onClickRun = onClickRun,
+            onDeleteRun = viewModel::deleteRun,
+            onTryAgain = viewModel::checkLocationState
+        )
+    }
+}
+
+@Composable
+fun TrackRunningScreenListAndDetail(
+    modifier: Modifier = Modifier,
+    viewModel: TrackRunningViewModel,
+    showRunOnMap: Boolean,
+    shownRun: RunWithCheckpoints?,
+    screenshotState: ScreenshotState,
+    onShare: () -> Unit,
+    isServiceRunning: Boolean,
+    runs: List<RunWithCheckpoints>?,
+    onClickRun: (RunWithCheckpoints) -> Unit,
+) {
+    val context = LocalContext.current
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = modifier.weight(1f)) {
+            TrackRunningList(
+                locationSettingState = viewModel.locationSettingState,
+                isServiceRunning = isServiceRunning,
+                context = context,
+                onStart = viewModel::startLocationTrackingService,
+                onStop = viewModel::stopLocationTrackingService,
+                runs = runs,
+                onClickRun = onClickRun,
+                onDeleteRun = viewModel::deleteRun,
+                onTryAgain = viewModel::checkLocationState
+            )
+        }
+        Column(modifier = modifier.weight(1f)) {
+            if (showRunOnMap) {
+                RunOnMap(
+                    isLoggedIn = viewModel.isLoggedIn,
+                    shownRun = shownRun!!,
+                    screenshotState = screenshotState,
+                    onShare = onShare
+                )
+            } else {
+                EmptyScreen("No run selected.", "Click on a run to show here")
+            }
         }
     }
 }
@@ -183,7 +276,9 @@ fun TrackRunningList(
         if (isServiceRunning || locationSettingState) {
             StartOrStopTrackButton(isServiceRunning = isServiceRunning, context, onStart, onStop)
         } else {
-            Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.2f)) {
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.2f)) {
                 LocationDisabled(onTryAgain = onTryAgain)
             }
         }
@@ -196,24 +291,20 @@ fun TrackRunningList(
 }
 
 @Composable
-fun RunOnMapScreen(
+fun RunOnMap(
     isLoggedIn: Boolean,
-    runShared: Boolean,
     shownRun: RunWithCheckpoints,
     screenshotState: ScreenshotState,
     onShare: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit = { }
 ) {
-    Column {
-        SharedRunNotification(visible = runShared)
-        TrackedRun(
-            run = shownRun,
-            screenshotState = screenshotState,
-            isLoggedIn = isLoggedIn,
-            onShare = onShare,
-            onDismiss = onDismiss
-        )
-    }
+    TrackedRun(
+        run = shownRun,
+        screenshotState = screenshotState,
+        isLoggedIn = isLoggedIn,
+        onShare = onShare,
+        onDismiss = onDismiss
+    )
 }
 
 @Composable
@@ -273,12 +364,11 @@ fun PreviousRunsList(
 }
 
 @SuppressLint("SimpleDateFormat")
-private fun getAdditionalShareText(run: RunWithCheckpoints, context: Context): String {
-    return "I ran ${context.resources.getString(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100)} " +
-            "in ${calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" }} minutes " +
-            "on ${SimpleDateFormat("MM.dd").format(Date(run.run.startTime))}\n" +
-            "Can you beat me?"
-}
+private fun getAdditionalShareText(run: RunWithCheckpoints, context: Context): String =
+    "I ran ${context.resources.getString(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100)} " +
+    "in ${calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" }} minutes " +
+    "on ${SimpleDateFormat("MM.dd").format(Date(run.run.startTime))}\n" +
+    "Can you beat me?"
 
 @SuppressLint("SimpleDateFormat")
 @Composable
@@ -377,7 +467,15 @@ fun TrackedRunMap(
     screenshotState: ScreenshotState,
 ) {
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(checkpoints.first().run { LatLng(this.latitude, this.longitude) }, 15f)
+        position = CameraPosition.fromLatLngZoom(calculateMiddlePoint(checkpoints.first(), checkpoints.last()), 15f)
+    }
+    LaunchedEffect(key1 = checkpoints) {
+        cameraPositionState.animate(
+            update = CameraUpdateFactory.newCameraPosition(
+                CameraPosition(calculateMiddlePoint(checkpoints.first(), checkpoints.last()), 15f, 0f, 0f)
+            ),
+            durationMs = 1000
+        )
     }
     Box(
         modifier = Modifier
@@ -396,30 +494,47 @@ fun TrackedRunMap(
                     mapToolbarEnabled = false
                 )
             ) {
-                Marker(
-                    state = MarkerState(checkpoints.map { LatLng(it.latitude, it.longitude) }
-                        .first()),
-                    icon = setCustomMapIcon(stringResource(R.string.start)),
-                    zIndex = 50f
-                )
-                Polyline(
-                    points = checkpoints.map { LatLng(it.latitude, it.longitude) },
-                    color = Color(0, 150, 255),
-                    jointType = JointType.DEFAULT,
-                    pattern = listOf(Dash(20f), Gap(8f)),
-                    startCap = RoundCap(),
-                    endCap = RoundCap(),
-                    width = 6f
-                )
-                Marker(
-                    state = MarkerState(checkpoints.map { LatLng(it.latitude, it.longitude) }
-                        .last()),
-                    icon = setCustomMapIcon(stringResource(R.string.end)),
-                    zIndex = 49f
-                )
+                StartMarker(checkpoints.first().let { LatLng(it.latitude, it.longitude) })
+                PolylineRun(checkpoints.map { LatLng(it.latitude, it.longitude) })
+                FinishMarker(checkpoints.last().let { LatLng(it.latitude, it.longitude) })
             }
         }
     }
+}
+
+@Composable
+fun StartMarker(
+    latLng: LatLng
+) {
+    Marker(
+        state = MarkerState(latLng),
+        icon = setCustomMapIcon(stringResource(R.string.start)),
+        zIndex = 50f
+    )
+}
+
+@Composable
+fun PolylineRun(
+    points: List<LatLng>
+) {
+    Polyline(
+        points = points,
+        color = Color(0, 150, 255),
+        jointType = JointType.DEFAULT,
+        pattern = listOf(Dash(20f), Gap(8f)),
+        startCap = RoundCap(),
+        endCap = RoundCap(),
+        width = 6f
+    )
+}
+
+@Composable
+fun FinishMarker(latLng: LatLng) {
+    Marker(
+        state = MarkerState(latLng),
+        icon = setCustomMapIcon(stringResource(R.string.finish)),
+        zIndex = 49f
+    )
 }
 
 @Composable
@@ -432,13 +547,13 @@ fun SharedRunNotification(visible: Boolean) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Green.copy(green = 0.5f)),
+                .background(MaterialTheme.colorScheme.background),
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "Your run has been shared!\nCheck your social feed!",
                 textAlign = TextAlign.Center,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 20.sp
             )
         }

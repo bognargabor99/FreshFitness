@@ -17,7 +17,6 @@
     <string name="previous_runs">Previous runs</string>
     <string name="delete_run">Delete run</string>
     <string name="meters">%1$.2f meters</string>
-    <string name="end">End</string>
     <string name="gyms_nearby">Gyms nearby</string>
     <string name="refresh">Refresh</string>
     <string name="view_saved">View saved places</string>
@@ -85,4 +84,5 @@
     <string name="admin_abilities">By being an admin, you can create a workout which appears for everybody.</string>
     <string name="community_workout_benefits">This can be beneficial for creating a daily workout.</string>
     <string name="take_me_there">Take me there!</string>
+    <string name="finish">Finish</string>
 </resources>

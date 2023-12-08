@@ -40,8 +40,8 @@ fun calculateElapsedTime(start: Long, end: Long) : Long =
     TimeUnit.MILLISECONDS.toSeconds(end - start)
 
 fun setCustomMapIcon(message: String): BitmapDescriptor {
-    val height = 150f
-    val widthPadding = 80.dp.value
+    val height = 110.dp.value
+    val widthPadding = 55.dp.value
     val width = paintTextWhite.measureText(message, 0, message.length) + widthPadding
     val roundStart = height/3
     val path = Path().apply {
@@ -122,6 +122,14 @@ fun getEquipmentsOfWorkout(workout: Workout): MutableList<Equipment> {
         .toMutableList()
 }
 
+fun calculateMiddlePoint(
+    start: RunCheckpointEntity,
+    finish: RunCheckpointEntity,
+) = LatLng(
+     (start.latitude + finish.latitude) / 2,
+    (start.longitude + finish.longitude) / 2
+)
+
 fun getWorkoutDescription(workout: Workout, start: Long): String {
     val date = Instant
         .ofEpochMilli(start)
@@ -173,7 +181,7 @@ val paintTextWhite = Paint().apply {
     color = Color.WHITE
     textAlign = Paint.Align.CENTER
     strokeWidth = 6.dp.value
-    textSize = 48.dp.value
+    textSize = 32.dp.value
 }
 
 val paintWhite = Paint().apply {
