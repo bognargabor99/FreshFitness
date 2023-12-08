@@ -224,7 +224,7 @@ fun ScheduleScreenLoadedListOnly(
     initialDate: LocalDate,
 ) {
     val currentDate = remember { LocalDate.now() }
-    val startDate = remember { currentDate.with(WeekFields.ISO.dayOfWeek(), 1) }
+    val startDate = remember { currentDate.minusWeeks(1).with(WeekFields.ISO.dayOfWeek(), 1) }
     val endDate = remember { currentDate.plusWeeks(1).with(WeekFields.ISO.dayOfWeek(), 7) }
     var selection by remember { mutableStateOf(initialDate) }
 

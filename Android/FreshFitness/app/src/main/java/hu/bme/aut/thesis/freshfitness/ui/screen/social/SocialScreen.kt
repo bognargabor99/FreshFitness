@@ -591,7 +591,7 @@ fun PostStats(
     ) {
         Text(
             text = if (likeCount == 1) "1 like" else "$likeCount likes",
-            style = MaterialTheme.typography.titleSmall
+            style = MaterialTheme.typography.bodyLarge
         )
         Text(
             text = if (commentCount == 1) "1 comment" else "$commentCount comments",
@@ -868,6 +868,7 @@ fun CreatePostDialogTextField(
     onValueChange: (String) -> Unit
 ) {
     OutlinedTextField(
+        modifier = Modifier.fillMaxWidth(),
         enabled = enabled,
         minLines = 3,
         maxLines = 5,
@@ -1117,6 +1118,12 @@ fun OptionsDialog(
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun CreatePostDialogPreview() {
+    CreatePostDialog(postCreationButtonsEnabled = true, onPost = { _, _ -> }, {})
 }
 
 @Preview(showBackground = true)
