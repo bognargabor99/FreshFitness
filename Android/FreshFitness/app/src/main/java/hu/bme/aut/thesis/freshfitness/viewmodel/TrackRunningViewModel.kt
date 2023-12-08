@@ -1,8 +1,10 @@
 package hu.bme.aut.thesis.freshfitness.viewmodel
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.icu.text.SimpleDateFormat
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,16 +19,21 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import hu.bme.aut.thesis.freshfitness.FreshFitnessApplication
+import hu.bme.aut.thesis.freshfitness.R
 import hu.bme.aut.thesis.freshfitness.amplify.AuthService
 import hu.bme.aut.thesis.freshfitness.persistence.model.RunWithCheckpoints
 import hu.bme.aut.thesis.freshfitness.repository.RunningRepository
 import hu.bme.aut.thesis.freshfitness.service.PostService
 import hu.bme.aut.thesis.freshfitness.service.TrackRunningService
+import hu.bme.aut.thesis.freshfitness.util.calculateDistanceInMeters
+import hu.bme.aut.thesis.freshfitness.util.calculateElapsedTime
 import hu.bme.aut.thesis.freshfitness.util.decodeJWT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.util.Date
+import kotlin.math.round
 
 class TrackRunningViewModel(val context: Context) : ViewModel() {
     // Needed for sharing on social feed
@@ -112,6 +119,14 @@ class TrackRunningViewModel(val context: Context) : ViewModel() {
             }
         )
     }
+
+    @SuppressLint("SimpleDateFormat")
+    fun getAdditionalShareText(run: RunWithCheckpoints): String =
+        "I ran ${context.resources.getString(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100)} " +
+        "in ${calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" }} minutes " +
+        "on ${SimpleDateFormat("MM.dd").format(Date(run.run.startTime))}\n" +
+        "Can you beat me?"
+
 
     companion object {
         val factory: ViewModelProvider.Factory = viewModelFactory {

@@ -158,7 +158,7 @@ fun TrackRunningScreen(
         }
 
         AnimatedVisibility(showShareRunDialog) {
-            val additionalShareText = shownRun?.let { getAdditionalShareText(it, context) } ?: "Can you bet me?"
+            val additionalShareText = shownRun?.let { viewModel.getAdditionalShareText(it) } ?: "Can you bet me?"
             OkCancelDialog(
                 title = stringResource(R.string.sharing_run),
                 subTitle = stringResource(R.string.are_you_sure_to_share_run),
@@ -362,13 +362,6 @@ fun PreviousRunsList(
         }
     }
 }
-
-@SuppressLint("SimpleDateFormat")
-private fun getAdditionalShareText(run: RunWithCheckpoints, context: Context): String =
-    "I ran ${context.resources.getString(R.string.meters, round(run.checkpoints.calculateDistanceInMeters() * 100) / 100)} " +
-    "in ${calculateElapsedTime(run.run.startTime, run.run.endTime).run { "${this / 60}:${this % 60}" }} minutes " +
-    "on ${SimpleDateFormat("MM.dd").format(Date(run.run.startTime))}\n" +
-    "Can you beat me?"
 
 @SuppressLint("SimpleDateFormat")
 @Composable
