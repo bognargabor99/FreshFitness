@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -99,7 +99,7 @@ fun WorkoutCover(
                         onClick = onSave,
                         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.background)
                     ) {
-                        Icon(imageVector = Icons.Filled.SaveAlt, tint = Color.White.copy(red = 0.95f, green = 0.95f, blue = 0.95f), contentDescription = null)
+                        Icon(imageVector = Icons.Filled.CalendarToday, tint = Color.White.copy(red = 0.95f, green = 0.95f, blue = 0.95f), contentDescription = null)
                     }
                 if (isSaved && deleteEnabled)
                     IconButton(
